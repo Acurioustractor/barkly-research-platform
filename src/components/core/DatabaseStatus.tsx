@@ -46,7 +46,7 @@ export const DatabaseStatus = () => {
               <strong>Next steps:</strong>
               <ol className="list-decimal list-inside mt-1 space-y-1">
                 <li>Go to your Vercel project dashboard</li>
-                <li>Click "Integrations" → "Supabase"</li>
+                <li>Click &quot;Integrations&quot; → &quot;Supabase&quot;</li>
                 <li>Follow the setup wizard</li>
                 <li>Redeploy your application</li>
               </ol>

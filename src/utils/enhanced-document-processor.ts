@@ -116,7 +116,7 @@ export class EnhancedDocumentProcessor {
       console.error('Error processing document:', error);
 
       // Update document status to failed if it was created
-      if (documentId) {
+      if (documentId && prisma) {
         await prisma.document.update({
           where: { id: documentId },
           data: {
@@ -165,6 +165,8 @@ export class EnhancedDocumentProcessor {
    * Store document chunks in database
    */
   private async storeChunks(documentId: string, chunks: DocumentChunk[]): Promise<void> {
+    if (!prisma) return;
+    
     const chunkData = chunks.map(chunk => ({
       documentId,
       chunkIndex: chunk.index,
@@ -186,6 +188,8 @@ export class EnhancedDocumentProcessor {
    * Store document themes
    */
   private async storeThemes(documentId: string, themes: string[]): Promise<void> {
+    if (!prisma) return;
+    
     const themeData = themes.map(theme => ({
       documentId,
       theme,
@@ -201,6 +205,8 @@ export class EnhancedDocumentProcessor {
    * Store document quotes
    */
   private async storeQuotes(documentId: string, quotes: any[]): Promise<void> {
+    if (!prisma) return;
+    
     const quoteData = quotes.map(quote => ({
       documentId,
       text: quote.text,
@@ -220,6 +226,8 @@ export class EnhancedDocumentProcessor {
    * Store document insights
    */
   private async storeInsights(documentId: string, insights: string[]): Promise<void> {
+    if (!prisma) return;
+    
     const insightData = insights.map(insight => ({
       documentId,
       insight,
@@ -236,6 +244,8 @@ export class EnhancedDocumentProcessor {
    * Store document keywords
    */
   private async storeKeywords(documentId: string, keywords: string[]): Promise<void> {
+    if (!prisma) return;
+    
     const keywordData = keywords.map((keyword, index) => ({
       documentId,
       keyword,
@@ -308,6 +318,8 @@ export class EnhancedDocumentProcessor {
    * Retrieve document with all related data
    */
   async getDocument(documentId: string) {
+    if (!prisma) throw new Error('Database not available');
+    
     return await prisma.document.findUnique({
       where: { id: documentId },
       include: {
@@ -360,6 +372,8 @@ export class EnhancedDocumentProcessor {
       };
     }
 
+    if (!prisma) throw new Error('Database not available');
+    
     return await prisma.document.findMany({
       where,
       include: {
@@ -387,6 +401,8 @@ export class EnhancedDocumentProcessor {
     offset?: number;
     contentType?: string;
   }) {
+    if (!prisma) throw new Error('Database not available');
+    
     return await prisma.documentChunk.findMany({
       where: { 
         documentId
@@ -401,6 +417,8 @@ export class EnhancedDocumentProcessor {
    * Create a document collection
    */
   async createCollection(name: string, description?: string, tags?: string[], isPublic: boolean = false) {
+    if (!prisma) throw new Error('Database not available');
+    
     return await prisma.documentCollection.create({
       data: {
         name,
@@ -415,6 +433,8 @@ export class EnhancedDocumentProcessor {
    * Add documents to a collection
    */
   async addDocumentsToCollection(collectionId: string, documentIds: string[]) {
+    if (!prisma) throw new Error('Database not available');
+    
     const data = documentIds.map((documentId, index) => ({
       collectionId,
       documentId,
