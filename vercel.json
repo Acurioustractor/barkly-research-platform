@@ -3,13 +3,5 @@
     "app/api/**/*.ts": {
       "maxDuration": 300
     }
-  },
-  "env": {
-    "DATABASE_URL": "@database_url"
-  },
-  "build": {
-    "env": {
-      "DATABASE_URL": "@database_url"
-    }
   }
 }
