@@ -37,14 +37,34 @@ export const SystemsMap: React.FC<SystemsMapProps> = ({
   useEffect(() => {
     if (!svgRef.current || nodes.length === 0) return;
 
-    // Clear previous visualization
-    d3.select(svgRef.current).selectAll('*').remove();
-
-    const svg = d3.select(svgRef.current);
+    // Wait for element to be properly sized
     const width = svgRef.current.clientWidth;
-    const margin = { top: 20, right: 20, bottom: 20, left: 20 };
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
+    if (width === 0) {
+      // Try again after a brief delay
+      const timer = setTimeout(() => {
+        if (svgRef.current) {
+          const retryWidth = svgRef.current.clientWidth;
+          if (retryWidth > 0) {
+            initializeVisualization();
+          }
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+
+    return initializeVisualization();
+
+    function initializeVisualization() {
+      if (!svgRef.current) return;
+
+      // Clear previous visualization
+      d3.select(svgRef.current).selectAll('*').remove();
+
+      const svg = d3.select(svgRef.current);
+      const width = svgRef.current.clientWidth || 800; // Fallback width
+      const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
 
     // Create main group
     const g = svg
@@ -225,6 +245,7 @@ export const SystemsMap: React.FC<SystemsMapProps> = ({
     return () => {
       simulation.stop();
     };
+    }
   }, [nodes, connections, height]);
 
   const selectedNodeData = nodes.find(n => n.id === selectedNode);
