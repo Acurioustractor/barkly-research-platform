@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EnhancedDocumentProcessor } from '@/utils/enhanced-document-processor';
+import { isDatabaseAvailable } from '@/lib/database-safe';
 
 export async function GET(request: NextRequest) {
   try {
+    if (!isDatabaseAvailable()) {
+      return NextResponse.json(
+        { error: 'Database not configured yet. Please set up Supabase integration.' },
+        { status: 503 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     
     const query = {
@@ -58,6 +66,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isDatabaseAvailable()) {
+      return NextResponse.json(
+        { error: 'Database not configured yet. Please set up Supabase integration.' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const { 
       text, 

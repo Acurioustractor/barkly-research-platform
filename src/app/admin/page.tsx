@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { BulkUploader } from '@/components/admin/BulkUploader';
+import { DatabaseStatus } from '@/components/core/DatabaseStatus';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/core/Card';
 import { Button } from '@/components/core/Button';
 
@@ -46,6 +47,9 @@ export default function AdminPage() {
             ))}
           </nav>
         </div>
+
+        {/* Database Status */}
+        <DatabaseStatus />
 
         {/* Tab Content */}
         <div className="space-y-6">

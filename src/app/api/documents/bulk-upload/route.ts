@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EnhancedDocumentProcessor } from '@/utils/enhanced-document-processor';
+import { isDatabaseAvailable } from '@/lib/database-safe';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if database is available
+    if (!isDatabaseAvailable()) {
+      return NextResponse.json(
+        { error: 'Database not configured yet. Please set up Supabase integration.' },
+        { status: 503 }
+      );
+    }
+
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
     const source = formData.get('source') as string || 'bulk_upload';

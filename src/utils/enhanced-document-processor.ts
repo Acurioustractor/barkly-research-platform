@@ -3,7 +3,7 @@
  * Supports scalable document processing with persistence
  */
 
-import { prisma } from '@/lib/database';
+import { prisma } from '@/lib/database-safe';
 import { DocumentChunker, type DocumentChunk } from './document-chunker';
 import { DocumentProcessor } from './document-processor';
 import type { ProcessingStatus } from '@prisma/client';
@@ -53,6 +53,10 @@ export class EnhancedDocumentProcessor {
     let documentId: string | undefined;
 
     try {
+      if (!prisma) {
+        throw new Error('Database not available');
+      }
+
       // Create document record
       const document = await prisma.document.create({
         data: {
