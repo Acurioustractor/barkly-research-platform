@@ -14,10 +14,10 @@ export interface PageLayoutProps {
 const defaultNavItems: NavigationItem[] = [
   { label: 'Home', href: '/' },
   { label: 'Youth Stories', href: '/stories' },
-  { label: 'Data Insights', href: '/insights' },
+  { label: 'Data Insights', href: '/data-insights' },
   { label: 'Systems Map', href: '/systems' },
-  { label: 'Resources', href: '/resources' },
-  { label: 'About', href: '/about' },
+  { label: 'Documents', href: '/documents' },
+  { label: 'Admin', href: '/admin' },
 ];
 
 const defaultFooterSections: FooterSection[] = [
@@ -25,7 +25,7 @@ const defaultFooterSections: FooterSection[] = [
     title: 'Explore',
     links: [
       { label: 'Youth Voices', href: '/stories' },
-      { label: 'Community Insights', href: '/insights' },
+      { label: 'Community Insights', href: '/data-insights' },
       { label: 'Interactive Map', href: '/systems' },
     ],
   },
