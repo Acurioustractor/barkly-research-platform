@@ -67,7 +67,7 @@ export const DatabaseStatus = () => {
                     <ul className="mt-1">
                       {Object.entries(debugInfo.urlPreview).map(([key, value]) => (
                         <li key={key} className="truncate">
-                          {key}: {value}
+                          {key}: {String(value)}
                         </li>
                       ))}
                     </ul>
