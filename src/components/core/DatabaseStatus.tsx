@@ -5,12 +5,20 @@ import { Card, CardContent } from './Card';
 
 export const DatabaseStatus = () => {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   useEffect(() => {
     // Check database status by trying to hit an API endpoint
-    fetch('/api/documents/search?limit=1')
-      .then(response => {
-        setIsConnected(response.status !== 503);
+    Promise.all([
+      fetch('/api/documents/search?limit=1'),
+      fetch('/api/debug/env')
+    ])
+      .then(async ([searchResponse, debugResponse]) => {
+        setIsConnected(searchResponse.status !== 503);
+        if (debugResponse.ok) {
+          const debug = await debugResponse.json();
+          setDebugInfo(debug);
+        }
       })
       .catch(() => {
         setIsConnected(false);
@@ -42,12 +50,38 @@ export const DatabaseStatus = () => {
             <p className="text-sm text-orange-700">
               Document processing features are disabled until Supabase integration is complete.
             </p>
+            
+            {debugInfo && (
+              <div className="text-xs text-orange-600 bg-orange-100 p-2 rounded">
+                <strong>Debug info:</strong>
+                <ul className="mt-1 space-y-1">
+                  {Object.entries(debugInfo.envVars || {}).map(([key, value]) => (
+                    <li key={key}>
+                      {key}: {value ? '✅' : '❌'}
+                    </li>
+                  ))}
+                </ul>
+                {debugInfo.urlPreview && (
+                  <div className="mt-2">
+                    <strong>URL Preview:</strong>
+                    <ul className="mt-1">
+                      {Object.entries(debugInfo.urlPreview).map(([key, value]) => (
+                        <li key={key} className="truncate">
+                          {key}: {value}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div className="text-xs text-orange-600">
               <strong>Next steps:</strong>
               <ol className="list-decimal list-inside mt-1 space-y-1">
-                <li>Go to your Vercel project dashboard</li>
-                <li>Click &quot;Integrations&quot; → &quot;Supabase&quot;</li>
-                <li>Follow the setup wizard</li>
+                <li>Check that Supabase environment variables are set in Vercel</li>
+                <li>Ensure DATABASE_URL or POSTGRES_URL is available</li>
+                <li>Run database migrations: <code className="bg-orange-200 px-1 rounded">npx prisma db push</code></li>
                 <li>Redeploy your application</li>
               </ol>
             </div>
