@@ -1,0 +1,55 @@
+# Barkly Research Platform - Cursor Rules
+
+## Project Context
+This is a sophisticated community research dashboard focusing on Indigenous-led research methodologies, particularly the Barkly Regional Deal Youth Case Study. The platform uses storytelling, systems thinking, and interactive visualization to make complex community data accessible and actionable.
+
+## Code Standards
+- Use TypeScript for type safety
+- Follow React best practices with hooks
+- Implement responsive design with Tailwind CSS
+- Prioritize accessibility (WCAG 2.1 AA)
+- Use semantic HTML and proper ARIA labels
+- Write comprehensive JSDoc comments
+
+## Component Architecture
+- Build modular, reusable components
+- Separate visualization logic from data logic
+- Use composition over inheritance
+- Implement proper error boundaries
+- Design for multi-project scalability
+
+## Data Handling
+- Use immutable data patterns
+- Implement proper loading states
+- Handle edge cases gracefully
+- Cache expensive computations
+- Support offline functionality where possible
+
+## Cultural Sensitivity
+- Always respect Indigenous data sovereignty
+- Follow CARE+ principles (Collective benefit, Authority to control, Responsibility, Ethics + Cultural safety)
+- Implement appropriate access controls
+- Use inclusive language and imagery
+- Allow for customization of cultural elements
+
+## Performance
+- Optimize for mobile devices
+- Implement code splitting
+- Use React.memo for expensive components
+- Optimize images and assets
+- Monitor bundle size
+
+## Accessibility
+- Ensure keyboard navigation works everywhere
+- Provide proper focus management
+- Use sufficient color contrast
+- Support screen readers
+- Implement proper heading hierarchy
+
+## When building new features:
+1. Consider how it scales to other projects
+2. Think about cultural appropriateness
+3. Ensure mobile responsiveness
+4. Add proper TypeScript types
+5. Include error handling
+6. Write clear documentation
