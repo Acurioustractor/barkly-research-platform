@@ -1,0 +1,185 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  uploadedAt  DateTime @default(now())
+  processedAt DateTime?
+  
+  // Document metadata
+  pageCount   Int?
+  wordCount   Int?
+  language    String?
+  source      String? // e.g., "community_research", "policy_doc", "interview"
+  category    String? // e.g., "youth_voice", "education", "health"
+  tags        Json?   // Array of tags
+  
+  // Processing status
+  status      ProcessingStatus @default(PENDING)
+  errorMessage String?
+  
+  // Content storage
+  fullText    String? // Full extracted text
+  summary     String? // AI-generated summary
+  
+  // Relationships
+  chunks      DocumentChunk[]
+  themes      DocumentTheme[]
+  quotes      DocumentQuote[]
+  insights    DocumentInsight[]
+  keywords    DocumentKeyword[]
+  
+  @@map("documents")
+}
+
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  chunkIndex Int      // Order within document
+  startPage  Int?
+  endPage    Int?
+  startChar  Int?
+  endChar    Int?
+  
+  // Chunk content
+  text       String   // Text content of this chunk
+  wordCount  Int
+  
+  // Semantic information
+  embedding  Json?    // Vector embedding for semantic search
+  topics     Json?    // Array of topics identified in this chunk
+  
+  // Relationships
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  @@map("document_chunks")
+  @@index([documentId, chunkIndex])
+}
+
+model DocumentTheme {
+  id         String   @id @default(cuid())
+  documentId String
+  
+  theme      String   // Theme name (e.g., "Youth Voice", "Cultural Identity")
+  confidence Float    // Confidence score 0-1
+  context    String?  // Context where theme was identified
+  
+  // Relationships
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  @@map("document_themes")
+  @@index([documentId])
+  @@index([theme])
+}
+
+model DocumentQuote {
+  id         String   @id @default(cuid())
+  documentId String
+  
+  text       String   // Quote text
+  context    String?  // Surrounding context
+  speaker    String?  // Who said it (if identified)
+  page       Int?     // Page number
+  confidence Float    // Confidence score 0-1
+  
+  // Classification
+  category   String?  // e.g., "youth_voice", "community_concern", "success_story"
+  
+  // Relationships
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  @@map("document_quotes")
+  @@index([documentId])
+  @@index([category])
+}
+
+model DocumentInsight {
+  id         String   @id @default(cuid())
+  documentId String
+  
+  insight    String   // AI-generated insight
+  type       String   // e.g., "pattern", "gap", "opportunity", "challenge"
+  confidence Float    // Confidence score 0-1
+  evidence   Json?    // Supporting evidence/references
+  
+  // Relationships
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  @@map("document_insights")
+  @@index([documentId])
+  @@index([type])
+}
+
+model DocumentKeyword {
+  id         String   @id @default(cuid())
+  documentId String
+  
+  keyword    String   // Keyword/phrase
+  frequency  Int      // How many times it appears
+  relevance  Float    // Relevance score 0-1
+  category   String?  // e.g., "community_term", "technical_term", "emotional_term"
+  
+  // Relationships
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  @@map("document_keywords")
+  @@index([documentId])
+  @@index([keyword])
+}
+
+// Document collections for organizing related documents
+model DocumentCollection {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Collection metadata
+  tags        Json?    // Array of tags
+  isPublic    Boolean  @default(false)
+  
+  // Relationships
+  documents   DocumentInCollection[]
+  
+  @@map("document_collections")
+}
+
+model DocumentInCollection {
+  id           String             @id @default(cuid())
+  documentId   String
+  collectionId String
+  addedAt      DateTime           @default(now())
+  order        Int?               // Order within collection
+  
+  // Note about why this document is in this collection
+  note         String?
+  
+  // Relationships
+  collection   DocumentCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  
+  @@map("documents_in_collections")
+  @@unique([documentId, collectionId])
+  @@index([collectionId])
+}
+
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  ARCHIVED
+}

@@ -1,40 +1,73 @@
-# Barkly Research Platform
+# Barkly Youth Research Platform
 
-A sophisticated community research dashboard focusing on Indigenous-led research methodologies, particularly the Barkly Regional Deal Youth Case Study. The platform uses storytelling, systems thinking, and interactive visualization to make complex community data accessible and actionable.
+A community-led research platform showcasing Indigenous youth voices and insights from the Barkly region, built with Next.js, TypeScript, and modern web technologies.
 
 ## 🌟 Features
 
-- **Youth Voices**: Real stories from young people sharing their experiences
-- **Interactive Visualizations**: Systems maps and data flow diagrams
-- **UMEL Framework**: Indigenous-led research methodology implementation
-- **Choose Your Adventure**: Interactive scenarios for exploring different perspectives
-- **Cultural Sensitivity**: Built with respect for Indigenous data sovereignty
+### 🎯 Core Functionality
+- **Interactive Storytelling**: Choose-your-adventure style navigation through youth stories
+- **Data Visualization**: Systems maps, data rivers, and theme relationships using D3.js
+- **Document Processing**: AI-powered PDF analysis with theme extraction and quote identification
+- **Bulk Document Management**: Upload and process up to 100 documents simultaneously
+
+### 📊 Document Analysis
+- **Smart Chunking**: Intelligent text splitting for large documents
+- **Theme Identification**: Automatically identify key themes related to youth voices, cultural identity, education, and health
+- **Quote Extraction**: Extract meaningful quotes with confidence scoring
+- **Insight Generation**: AI-generated insights based on content patterns
+- **Search & Filter**: Advanced search across documents, themes, and metadata
+
+### 🛠️ Technical Stack
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **Backend**: Next.js API routes, Prisma ORM, PostgreSQL
+- **Processing**: PDF parsing, text analysis, document chunking
+- **Visualization**: D3.js, Recharts
+- **Deployment**: Vercel with PostgreSQL database
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
 - Node.js 18+ 
 - npm or yarn
-- Git
+- PostgreSQL database (for production)
 
-### Installation
+### Local Development
 
-```bash
-# Clone the repository
-git clone https://github.com/your-org/barkly-research-platform.git
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd barkly-research-platform
+   ```
 
-# Navigate to the project directory
-cd barkly-research-platform
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-# Install dependencies
-npm install
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Update `.env.local` with your database URL and other configuration:
+   ```
+   DATABASE_URL="your-postgresql-connection-string"
+   NEXTAUTH_URL="http://localhost:3000"
+   NEXTAUTH_SECRET="your-secret-key"
+   ```
 
-# Run the development server
-npm run dev
-```
+4. **Set up the database**
+   ```bash
+   npm run db:push
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 🏗️ Project Structure
 
@@ -105,12 +138,86 @@ npm run build
 npm start
 ```
 
-## 🚀 Deployment
+## 🚀 Deployment on Vercel
 
-The application is configured for deployment on:
-- Vercel (recommended)
-- AWS Amplify
-- Netlify
+### Step 1: Set up a PostgreSQL Database
+
+**Option A: Vercel Postgres (Recommended)**
+1. Go to your [Vercel Dashboard](https://vercel.com/dashboard)
+2. Create a new project or select existing
+3. Go to Storage tab → Create Database → PostgreSQL
+4. Copy the connection string
+
+**Option B: External Provider (Neon, Supabase, etc.)**
+1. Create a PostgreSQL database with your preferred provider
+2. Get the connection string
+
+### Step 2: Deploy to Vercel
+
+1. **Connect your repository to Vercel**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click "New Project"
+   - Import your Git repository
+
+2. **Configure environment variables**
+   In your Vercel project settings, add:
+   ```
+   DATABASE_URL=your-postgresql-connection-string
+   NEXTAUTH_URL=https://your-app.vercel.app
+   NEXTAUTH_SECRET=your-generated-secret
+   ```
+
+3. **Deploy**
+   - Vercel will automatically detect Next.js and deploy
+   - The `vercel-build` script will handle Prisma setup
+
+### Step 3: Initialize the Database
+
+After deployment, the database schema will be automatically created via the `vercel-build` script.
+
+## 📱 Usage
+
+### For End Users
+- **Document Upload**: Visit `/documents` to upload and analyze PDF documents
+- **Story Navigation**: Explore `/stories` for interactive youth narratives  
+- **Systems Visualization**: View `/systems` for data relationships and insights
+
+### For Administrators
+- **Bulk Upload**: Visit `/admin` to upload multiple documents simultaneously
+- **Document Management**: Search, filter, and organize document collections
+- **Analytics**: Monitor processing statistics and repository insights
+
+## 🔗 API Endpoints
+
+### Document Management
+- `POST /api/documents/bulk-upload` - Upload multiple documents
+- `GET /api/documents/search` - Search documents with filters
+- `GET /api/documents/[id]` - Get document details with chunks
+- `GET /api/documents/[id]/chunks` - Get paginated document chunks
+- `POST /api/documents/collections` - Create and manage collections
+
+### Legacy Endpoints
+- `POST /api/upload` - Single document upload (legacy)
+
+## 🔄 Document Processing Pipeline
+
+1. **Upload**: PDF files up to 50MB each
+2. **Text Extraction**: Extract text content using pdf-parse
+3. **Chunking**: Split documents into manageable pieces with overlap
+4. **Analysis**: Identify themes, extract quotes, generate insights
+5. **Storage**: Store in PostgreSQL with full-text search capabilities
+
+## 📊 UMEL Framework Integration
+
+The platform incorporates the UMEL (Understanding, Measurement, Evaluation, Learning) framework for Indigenous research methodologies.
+
+## 🛡️ CARE+ Principles
+
+Adheres to CARE+ principles:
+- **Collective benefit**: Community-focused outcomes
+- **Authority to control**: Indigenous data sovereignty
+- **Responsibility**: Ethical research practices  
+- **Ethics**: Cultural safety and respect
 
 ## 🤝 Contributing
 
