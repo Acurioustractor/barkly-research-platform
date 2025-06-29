@@ -10,17 +10,29 @@ export const DatabaseStatus = () => {
   useEffect(() => {
     // Check database status by trying to hit an API endpoint
     Promise.all([
-      fetch('/api/documents/search?limit=1'),
+      fetch('/api/test-db'),
       fetch('/api/debug/env')
     ])
-      .then(async ([searchResponse, debugResponse]) => {
-        setIsConnected(searchResponse.status !== 503);
-        if (debugResponse.ok) {
-          const debug = await debugResponse.json();
-          setDebugInfo(debug);
+      .then(async ([testResponse, debugResponse]) => {
+        try {
+          if (testResponse.ok) {
+            const testData = await testResponse.json();
+            setIsConnected(testData.database?.available || false);
+          } else {
+            setIsConnected(false);
+          }
+          
+          if (debugResponse.ok) {
+            const debug = await debugResponse.json();
+            setDebugInfo(debug);
+          }
+        } catch (e) {
+          console.error('Error checking database status:', e);
+          setIsConnected(false);
         }
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error('Database status check failed:', error);
         setIsConnected(false);
       });
   }, []);

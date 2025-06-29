@@ -6,11 +6,25 @@ const globalForPrisma = globalThis as unknown as {
 
 // Check for various Supabase environment variable patterns
 const getDatabaseUrl = () => {
-  return process.env.DATABASE_URL || 
-         process.env.POSTGRES_URL || 
-         process.env.SUPABASE_URL ||
-         process.env.POSTGRES_PRISMA_URL ||
-         process.env.POSTGRES_URL_NON_POOLING;
+  const url = process.env.DATABASE_URL || 
+              process.env.POSTGRES_URL || 
+              process.env.SUPABASE_URL ||
+              process.env.POSTGRES_PRISMA_URL ||
+              process.env.POSTGRES_URL_NON_POOLING;
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[database-safe] Checking for database URL:', {
+      hasUrl: Boolean(url),
+      urlLength: url?.length || 0,
+      envVars: {
+        DATABASE_URL: Boolean(process.env.DATABASE_URL),
+        POSTGRES_URL: Boolean(process.env.POSTGRES_URL),
+        POSTGRES_PRISMA_URL: Boolean(process.env.POSTGRES_PRISMA_URL)
+      }
+    });
+  }
+  
+  return url;
 }
 
 const databaseUrl = getDatabaseUrl();

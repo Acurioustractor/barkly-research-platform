@@ -4,10 +4,14 @@ import { isDatabaseAvailable } from '@/lib/database-safe';
 
 export async function GET(request: NextRequest) {
   try {
+    // Check database availability FIRST
     if (!isDatabaseAvailable()) {
       return NextResponse.json(
         { error: 'Database not configured yet. Please set up Supabase integration.' },
-        { status: 503 }
+        { 
+          status: 503,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
@@ -54,12 +58,27 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Document search error:', error);
     
+    // Check if this is a database connection error
+    if (error instanceof Error && error.message.includes('Database not available')) {
+      return NextResponse.json(
+        { error: 'Database not configured yet. Please set up Supabase integration.' },
+        { 
+          status: 503,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
     return NextResponse.json(
       { 
         error: 'Failed to search documents',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
       },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
   }
 }
