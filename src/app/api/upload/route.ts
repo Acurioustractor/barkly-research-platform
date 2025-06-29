@@ -66,7 +66,10 @@ export async function POST(request: NextRequest) {
         error: 'Failed to process documents',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
   }
 }

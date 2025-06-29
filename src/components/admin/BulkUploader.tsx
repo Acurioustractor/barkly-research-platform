@@ -133,10 +133,20 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
         body: formData,
       });
 
-      const result = await response.json();
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      let result;
+      
+      if (contentType && contentType.includes('application/json')) {
+        result = await response.json();
+      } else {
+        // Handle non-JSON responses (like HTML error pages)
+        const text = await response.text();
+        result = { error: `Server error: ${response.status} ${response.statusText}`, details: text.substring(0, 200) + '...' };
+      }
 
       if (!response.ok) {
-        throw new Error(result.error || 'Upload failed');
+        throw new Error(result.error || `Upload failed with status ${response.status}`);
       }
 
       setState(prev => ({

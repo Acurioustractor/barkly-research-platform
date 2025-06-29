@@ -7,8 +7,11 @@ export async function POST(request: NextRequest) {
     // Check if database is available
     if (!isDatabaseAvailable()) {
       return NextResponse.json(
-        { error: 'Database not configured yet. Please set up Supabase integration.' },
-        { status: 503 }
+        { error: 'Database not configured yet. Please set up Supabase integration before uploading documents.' },
+        { 
+          status: 503,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
@@ -104,7 +107,10 @@ export async function POST(request: NextRequest) {
         error: 'Failed to process bulk upload',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
   }
 }
