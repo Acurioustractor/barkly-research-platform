@@ -4,8 +4,8 @@
 
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
-// Disable worker to avoid issues in serverless
-pdfjsLib.GlobalWorkerOptions.workerSrc = false;
+// Set worker to empty string to disable in serverless
+pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 export async function extractTextFromPDF(buffer: Buffer): Promise<{
   text: string;
