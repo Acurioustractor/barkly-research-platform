@@ -128,7 +128,7 @@ Provide analysis in this exact JSON format:
       });
 
       const content = completion.content[0];
-      if (content.type !== 'text') {
+      if (!content || content.type !== 'text') {
         throw new Error('Unexpected response type from Anthropic');
       }
       
@@ -203,7 +203,7 @@ ${truncatedText}`;
       });
 
       const content = completion.content[0];
-      if (content.type !== 'text') {
+      if (!content || content.type !== 'text') {
         throw new Error('Unexpected response type from Anthropic');
       }
       
@@ -273,7 +273,7 @@ Respond in JSON format: [{"name": "theme", "confidence": 0.0-1.0, "evidence": "s
       });
 
       const content = completion.content[0];
-      if (content.type !== 'text') {
+      if (!content || content.type !== 'text') {
         throw new Error('Unexpected response type from Anthropic');
       }
       
@@ -338,7 +338,7 @@ Respond in JSON format: [{"text": "insight", "category": "theme", "importance": 
       });
 
       const content = completion.content[0];
-      if (content.type !== 'text') {
+      if (!content || content.type !== 'text') {
         throw new Error('Unexpected response type from Anthropic');
       }
       
