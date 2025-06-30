@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './Card';
+import Link from 'next/link';
 
 interface Document {
   id: string;
@@ -73,7 +74,9 @@ export const DocumentList = () => {
               <div key={doc.id} className="border rounded-lg p-4 space-y-2">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-medium">{doc.originalName}</h3>
+                    <Link href={`/documents/${doc.id}`} className="hover:underline">
+                      <h3 className="font-medium text-blue-600">{doc.originalName}</h3>
+                    </Link>
                     <p className="text-sm text-muted-foreground">
                       {new Date(doc.uploadedAt).toLocaleString()}
                     </p>
