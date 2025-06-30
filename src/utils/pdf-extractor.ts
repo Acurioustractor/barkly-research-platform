@@ -2,7 +2,6 @@
  * PDF text extraction using PDF.js - works in Vercel serverless
  */
 
-// @ts-expect-error - PDF.js types are complex
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 // Disable worker to avoid issues in serverless
