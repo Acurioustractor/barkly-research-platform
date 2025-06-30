@@ -128,7 +128,7 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
       formData.append('category', options.category);
       formData.append('tags', options.tags);
 
-      const response = await fetch('/api/documents/bulk-upload', {
+      const response = await fetch('/api/upload-simple', {
         method: 'POST',
         body: formData,
       });
