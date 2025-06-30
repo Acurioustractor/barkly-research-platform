@@ -4,22 +4,33 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Check for various Supabase environment variable patterns
+// Check for various Supabase/Vercel Postgres environment variable patterns
 const getDatabaseUrl = () => {
-  const url = process.env.DATABASE_URL || 
-              process.env.POSTGRES_URL || 
-              process.env.SUPABASE_URL ||
-              process.env.POSTGRES_PRISMA_URL ||
-              process.env.POSTGRES_URL_NON_POOLING;
+  // Skip SQLite URLs in production
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
   
-  if (process.env.NODE_ENV === 'development') {
+  if (isProduction && process.env.DATABASE_URL?.startsWith('file:')) {
+    console.warn('[database-safe] Ignoring SQLite URL in production');
+    // Don't use SQLite in production
+  }
+  
+  const url = process.env.POSTGRES_PRISMA_URL || // Vercel Postgres (recommended for Prisma)
+              process.env.DATABASE_URL || 
+              process.env.POSTGRES_URL || 
+              process.env.POSTGRES_URL_NON_POOLING ||
+              process.env.SUPABASE_URL;
+  
+  if (process.env.NODE_ENV === 'development' || process.env.VERCEL) {
     console.log('[database-safe] Checking for database URL:', {
       hasUrl: Boolean(url),
       urlLength: url?.length || 0,
+      isProduction,
       envVars: {
         DATABASE_URL: Boolean(process.env.DATABASE_URL),
         POSTGRES_URL: Boolean(process.env.POSTGRES_URL),
-        POSTGRES_PRISMA_URL: Boolean(process.env.POSTGRES_PRISMA_URL)
+        POSTGRES_PRISMA_URL: Boolean(process.env.POSTGRES_PRISMA_URL),
+        POSTGRES_URL_NON_POOLING: Boolean(process.env.POSTGRES_URL_NON_POOLING),
+        SUPABASE_URL: Boolean(process.env.SUPABASE_URL)
       }
     });
   }
