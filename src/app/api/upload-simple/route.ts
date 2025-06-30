@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         let pageCount = 0;
         
         if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-          const extraction = await extractTextFromPDF(buffer);
+          const extraction = await extractTextFromPDF();
           extractedText = extraction.text;
           pageCount = extraction.pageCount;
           

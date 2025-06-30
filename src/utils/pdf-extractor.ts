@@ -1,63 +1,28 @@
 /**
- * PDF text extraction using PDF.js - works in Vercel serverless
+ * Simple PDF text extraction fallback
+ * For now, we'll just save the PDF and mark it for later processing
  */
 
-const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
-
-// Disable worker for serverless
-pdfjsLib.GlobalWorkerOptions.workerSrc = '';
-
-export async function extractTextFromPDF(buffer: Buffer): Promise<{
+export async function extractTextFromPDF(): Promise<{
   text: string;
   pageCount: number;
   error?: string;
 }> {
   try {
-    // Load PDF from buffer
-    const loadingTask = pdfjsLib.getDocument({
-      data: new Uint8Array(buffer),
-      useSystemFonts: true,
-      disableFontFace: true,
-      standardFontDataUrl: undefined
-    });
-    
-    const pdf = await loadingTask.promise;
-    const pageCount = pdf.numPages;
-    let fullText = '';
-    
-    // Extract text from each page
-    for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
-      try {
-        const page = await pdf.getPage(pageNum);
-        const textContent = await page.getTextContent();
-        
-        // Combine text items
-        const pageText = textContent.items
-          .map((item: any) => {
-            if (typeof item === 'object' && item !== null && 'str' in item) {
-              return item.str || '';
-            }
-            return '';
-          })
-          .join(' ');
-        
-        fullText += `\n--- Page ${pageNum} ---\n${pageText}\n`;
-      } catch (pageError) {
-        console.error(`Error extracting page ${pageNum}:`, pageError);
-        fullText += `\n--- Page ${pageNum} ---\n[Error extracting text]\n`;
-      }
-    }
+    // For now, just return a placeholder
+    // We can add proper PDF extraction later with a different approach
     
     return {
-      text: fullText.trim() || 'No text content found in PDF',
-      pageCount
+      text: 'PDF document uploaded successfully. Text extraction will be added in the next update.',
+      pageCount: 0,
+      error: 'PDF extraction temporarily disabled while we implement a better solution'
     };
   } catch (error) {
-    console.error('PDF extraction error:', error);
+    console.error('PDF processing error:', error);
     return {
       text: '',
       pageCount: 0,
-      error: error instanceof Error ? error.message : 'Failed to extract PDF text'
+      error: 'PDF processing failed'
     };
   }
 }

@@ -17,8 +17,8 @@ export const SimpleUploader = () => {
       const formData = new FormData();
       formData.append('files', file);
 
-      // Try the basic upload endpoint
-      const response = await fetch('/api/upload-basic', {
+      // Try the simple upload endpoint
+      const response = await fetch('/api/upload-simple', {
         method: 'POST',
         body: formData,
       });
