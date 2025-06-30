@@ -123,7 +123,8 @@ export default function DocumentNetwork() {
           'Leadership': '#6366f1',
           'Social Justice': '#ef4444'
         };
-        return themeColors[d.themes[0]] || '#6b7280';
+        const firstTheme = d.themes?.[0];
+        return firstTheme ? themeColors[firstTheme] || '#6b7280' : '#6b7280';
       })
       .attr('stroke', '#fff')
       .attr('stroke-width', 3);
