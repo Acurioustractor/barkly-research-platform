@@ -32,6 +32,7 @@ export async function GET(
       uploadedAt: document.uploadedAt,
       processedAt: document.processedAt,
       status: document.status,
+      errorMessage: document.errorMessage,
       source: document.source,
       category: document.category,
       tags: document.tags ? JSON.parse(document.tags as string) : [],
