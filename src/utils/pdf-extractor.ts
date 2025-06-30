@@ -2,7 +2,7 @@
  * PDF text extraction using PDF.js - works in Vercel serverless
  */
 
-// @ts-ignore - PDF.js types are complex
+// @ts-expect-error - PDF.js types are complex
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 // Disable worker to avoid issues in serverless
@@ -34,7 +34,7 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<{
         
         // Combine text items
         const pageText = textContent.items
-          .map((item: any) => item.str || '')
+          .map((item: { str?: string }) => item.str || '')
           .join(' ');
         
         fullText += `\n--- Page ${pageNum} ---\n${pageText}\n`;
