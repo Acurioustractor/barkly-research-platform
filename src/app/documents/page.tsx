@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { DocumentUpload } from '@/components/core/DocumentUpload';
 import { DocumentResults } from '@/components/core/DocumentResults';
 import { DatabaseStatus } from '@/components/core/DatabaseStatus';
+import { DocumentList } from '@/components/core/DocumentList';
 import type { ExtractedContent } from '@/utils/document-processor';
 
 export default function DocumentsPage() {
@@ -29,6 +30,9 @@ export default function DocumentsPage() {
 
         {/* Database Status */}
         <DatabaseStatus />
+
+        {/* Document List */}
+        <DocumentList />
 
         {/* Upload Section */}
         <DocumentUpload 
