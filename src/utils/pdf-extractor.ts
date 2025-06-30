@@ -4,6 +4,34 @@
  */
 import { extractText } from 'unpdf';
 
+export class PDFExtractor {
+  private buffer: Buffer;
+
+  constructor(buffer: Buffer) {
+    this.buffer = buffer;
+  }
+
+  async extractText(): Promise<string> {
+    const result = await extractTextFromPDF(this.buffer);
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    return result.text;
+  }
+
+  async getMetadata(): Promise<{ pageCount: number; wordCount: number }> {
+    const result = await extractTextFromPDF(this.buffer);
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    const wordCount = result.text.split(/\s+/).filter(word => word.length > 0).length;
+    return {
+      pageCount: result.pageCount,
+      wordCount
+    };
+  }
+}
+
 export async function extractTextFromPDF(buffer: Buffer): Promise<{
   text: string;
   pageCount: number;

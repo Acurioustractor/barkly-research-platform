@@ -42,3 +42,26 @@ next-env.d.ts
 
 /src/generated/prisma
 .env*.local
+
+# Redis
+dump.rdb
+
+# Logs
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+
+# Test artifacts
+test-results/
+.nyc_output/

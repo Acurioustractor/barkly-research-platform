@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { EnhancedDocumentProcessor } from '@/utils/enhanced-document-processor';
+import { AIEnhancedDocumentProcessor } from '@/utils/ai-enhanced-document-processor';
 import { isDatabaseAvailable } from '@/lib/database-safe';
 
 export const maxDuration = 300; // 5 minutes
@@ -64,12 +64,19 @@ export async function POST(request: NextRequest) {
       }))
     );
 
-    // Process documents with enhanced processor
-    const processor = new EnhancedDocumentProcessor();
+    // Process documents with AI-enhanced processor
+    const processor = new AIEnhancedDocumentProcessor();
+    const useAI = formData.get('useAI') !== 'false'; // Default to true
+    const generateSummary = formData.get('generateSummary') === 'true';
+    const generateEmbeddings = formData.get('generateEmbeddings') === 'true';
+    
     const processingOptions = {
       source,
       category,
-      tags: tags ? tags.split(',').map(tag => tag.trim()) : []
+      tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+      useAI,
+      generateSummary,
+      generateEmbeddings
     };
 
     // Process in smaller batches to avoid memory issues
@@ -148,7 +155,11 @@ export async function GET() {
       'Insight generation',
       'Keyword analysis',
       'Database storage',
-      'Metadata management'
+      'Metadata management',
+      'AI-powered analysis (OpenAI/Anthropic)',
+      'Intelligent document summarization',
+      'Context-aware theme extraction',
+      'Semantic quote identification'
     ]
   });
 }

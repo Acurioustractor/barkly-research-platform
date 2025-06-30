@@ -1,18 +1,47 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BulkUploader } from '@/components/admin/BulkUploader';
 import { DatabaseStatus } from '@/components/core/DatabaseStatus';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/core/Card';
 import { Button } from '@/components/core/Button';
+import dynamic from 'next/dynamic';
+
+const AIConfigPanel = dynamic(() => import('@/components/admin/AIConfigPanel'), {
+  ssr: false,
+  loading: () => <div className="p-4">Loading AI configuration...</div>
+});
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'upload' | 'manage' | 'analytics'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'manage' | 'analytics' | 'ai'>('upload');
+  const [stats, setStats] = useState<{ totalDocuments: number; totalChunks: number; totalThemes: number; totalQuotes: number } | null>(null);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/documents/metrics');
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data.summary);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+  
+  const ProcessingMetrics = dynamic(() => import('@/components/visualization/ProcessingMetrics'), {
+    ssr: false,
+    loading: () => <div className="animate-pulse h-96 bg-gray-100 rounded-lg"></div>
+  });
 
   const tabs = [
     { id: 'upload', label: 'Bulk Upload', description: 'Upload multiple documents for processing' },
     { id: 'manage', label: 'Document Management', description: 'Search, organize, and manage documents' },
-    { id: 'analytics', label: 'Analytics', description: 'View processing statistics and insights' }
+    { id: 'analytics', label: 'Analytics', description: 'View processing statistics and insights' },
+    { id: 'ai', label: 'AI Config', description: 'Configure AI models and processing options' }
   ];
 
   return (
@@ -35,7 +64,7 @@ export default function AdminPage() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'upload' | 'manage' | 'analytics' | 'ai')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-primary text-primary'
@@ -140,19 +169,20 @@ export default function AdminPage() {
                 </p>
               </div>
               
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center py-12">
-                    <h3 className="text-lg font-medium mb-2">Analytics Dashboard</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Coming soon - Processing statistics, theme trends, and repository insights
-                    </p>
-                    <Button variant="secondary" disabled>
-                      View Analytics
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <ProcessingMetrics />
+            </div>
+          )}
+
+          {activeTab === 'ai' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-semibold mb-2">AI Configuration</h2>
+                <p className="text-muted-foreground">
+                  Configure AI models, processing profiles, and cost settings.
+                </p>
+              </div>
+              
+              <AIConfigPanel />
             </div>
           )}
         </div>
@@ -166,19 +196,19 @@ export default function AdminPage() {
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-4">
               <div className="text-center">
-                <div className="text-2xl font-bold">-</div>
+                <div className="text-2xl font-bold">{stats?.totalDocuments || '-'}</div>
                 <p className="text-xs text-muted-foreground">Total Documents</p>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">-</div>
+                <div className="text-2xl font-bold">{stats?.totalChunks || '-'}</div>
                 <p className="text-xs text-muted-foreground">Processed Chunks</p>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">-</div>
+                <div className="text-2xl font-bold">{stats?.totalThemes || '-'}</div>
                 <p className="text-xs text-muted-foreground">Identified Themes</p>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">-</div>
+                <div className="text-2xl font-bold">{stats?.totalQuotes || '-'}</div>
                 <p className="text-xs text-muted-foreground">Extracted Quotes</p>
               </div>
             </div>
@@ -212,6 +242,30 @@ export default function AdminPage() {
               <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
                 <code>POST /api/documents/collections</code>
                 <span className="text-muted-foreground">Create collections</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                <code>POST /api/documents/search/semantic</code>
+                <span className="text-muted-foreground">Semantic search</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                <code>POST /api/documents/async-upload</code>
+                <span className="text-muted-foreground">Async bulk upload</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                <code>GET /api/ai/config</code>
+                <span className="text-muted-foreground">AI configuration</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                <code>GET /api/documents/insights</code>
+                <span className="text-muted-foreground">Document insights</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                <code>GET /api/documents/metrics</code>
+                <span className="text-muted-foreground">Processing metrics</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                <code>GET /api/documents/network</code>
+                <span className="text-muted-foreground">Document network</span>
               </div>
             </div>
           </CardContent>

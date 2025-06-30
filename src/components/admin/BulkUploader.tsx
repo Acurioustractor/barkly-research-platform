@@ -4,6 +4,12 @@ import React, { useState, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/core/Card';
 import { Button } from '@/components/core/Button';
 import { cn } from '@/utils/cn';
+import dynamic from 'next/dynamic';
+
+const AIProviderStatus = dynamic(() => import('./AIProviderStatus'), {
+  ssr: false,
+  loading: () => <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+});
 
 interface BulkUploadProps {
   onUploadComplete?: (results: any) => void;
@@ -198,10 +204,15 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Bulk Document Upload</CardTitle>
-        <CardDescription>
-          Upload multiple PDF documents for batch processing. Supports up to 100 files, 50MB each.
-        </CardDescription>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>Bulk Document Upload</CardTitle>
+            <CardDescription>
+              Upload multiple PDF documents for batch processing. Supports up to 100 files, 50MB each.
+            </CardDescription>
+          </div>
+          <AIProviderStatus />
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {!state.results ? (
