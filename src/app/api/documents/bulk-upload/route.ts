@@ -5,14 +5,12 @@ import { isDatabaseAvailable } from '@/lib/database-safe';
 export async function POST(request: NextRequest) {
   try {
     // Check if database is available
-    if (!isDatabaseAvailable()) {
-      return NextResponse.json(
-        { error: 'Database not configured yet. Please set up Supabase integration before uploading documents.' },
-        { 
-          status: 503,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
+    const dbAvailable = isDatabaseAvailable();
+    console.log('[bulk-upload] Database available:', dbAvailable);
+    
+    if (!dbAvailable) {
+      console.error('[bulk-upload] Database not available - processing will continue without DB storage');
+      // Continue processing without database storage for now
     }
 
     const formData = await request.formData();
@@ -62,22 +60,57 @@ export async function POST(request: NextRequest) {
       }))
     );
 
-    // Process documents with enhanced processor
-    const processor = new EnhancedDocumentProcessor();
-    const processingOptions = {
-      source,
-      category,
-      tags: tags ? tags.split(',').map(tag => tag.trim()) : []
-    };
-
-    // Process in smaller batches to avoid memory issues
-    const batchSize = 5;
+    // Process documents - use basic processor if database not available
     const results = [];
     
-    for (let i = 0; i < documents.length; i += batchSize) {
-      const batch = documents.slice(i, i + batchSize);
-      const batchResults = await processor.processBatchDocuments(batch, processingOptions);
-      results.push(...batchResults);
+    if (dbAvailable) {
+      // Use enhanced processor with database
+      const processor = new EnhancedDocumentProcessor();
+      const processingOptions = {
+        source,
+        category,
+        tags: tags ? tags.split(',').map(tag => tag.trim()) : []
+      };
+
+      // Process in smaller batches to avoid memory issues
+      const batchSize = 5;
+      
+      for (let i = 0; i < documents.length; i += batchSize) {
+        const batch = documents.slice(i, i + batchSize);
+        const batchResults = await processor.processBatchDocuments(batch, processingOptions);
+        results.push(...batchResults);
+      }
+    } else {
+      // Fallback: Use basic processor without database
+      const { DocumentProcessor } = await import('@/utils/document-processor');
+      
+      for (const doc of documents) {
+        try {
+          const extractedContent = await DocumentProcessor.extractTextFromPDF(doc.buffer, doc.filename);
+          results.push({
+            documentId: doc.filename,
+            status: 'COMPLETED' as const,
+            chunks: Math.ceil(extractedContent.text.length / 1500), // Estimate chunks
+            themes: extractedContent.themes.length,
+            quotes: extractedContent.quotes.length,
+            insights: extractedContent.insights.length,
+            keywords: extractedContent.keywords.length,
+            extractedContent // Include the actual content in results
+          });
+        } catch (error) {
+          console.error(`Failed to process ${doc.originalName}:`, error);
+          results.push({
+            documentId: doc.filename,
+            status: 'FAILED' as const,
+            chunks: 0,
+            themes: 0,
+            quotes: 0,
+            insights: 0,
+            keywords: 0,
+            errorMessage: error instanceof Error ? error.message : 'Processing failed'
+          });
+        }
+      }
     }
 
     // Summary statistics

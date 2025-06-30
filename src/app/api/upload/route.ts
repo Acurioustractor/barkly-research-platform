@@ -41,15 +41,37 @@ export async function POST(request: NextRequest) {
     );
 
     let result;
-    if (documents.length === 1) {
-      // Single document processing
-      result = await DocumentProcessor.extractTextFromPDF(
-        documents[0]!.buffer,
-        documents[0]!.filename
-      );
-    } else {
-      // Multiple document processing with comparative analysis
-      result = await DocumentProcessor.processMultipleDocuments(documents);
+    try {
+      if (documents.length === 1) {
+        // Single document processing
+        result = await DocumentProcessor.extractTextFromPDF(
+          documents[0]!.buffer,
+          documents[0]!.filename
+        );
+      } else {
+        // Multiple document processing with comparative analysis
+        result = await DocumentProcessor.processMultipleDocuments(documents);
+      }
+    } catch (processingError) {
+      console.error('PDF processing error:', processingError);
+      
+      // Provide more detailed error information
+      const errorMessage = processingError instanceof Error ? processingError.message : 'Unknown error';
+      
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to process PDF',
+        details: errorMessage,
+        // Add helpful information
+        hints: [
+          'Ensure the PDF is not corrupted',
+          'Check if the PDF is password protected',
+          'Verify the PDF contains extractable text (not just images)'
+        ]
+      }, { 
+        status: 422,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     return NextResponse.json({
