@@ -120,21 +120,21 @@ export default function ResearchPage() {
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-3">
               <Button
-                variant="outline"
+                variant="secondary"
                 className="justify-start"
                 onClick={() => window.location.href = '/admin#upload'}
               >
                 Upload Documents
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 className="justify-start"
                 onClick={() => window.location.href = '/admin#analytics'}
               >
                 View Analytics
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 className="justify-start"
                 onClick={() => window.location.href = '/admin#ai'}
               >
