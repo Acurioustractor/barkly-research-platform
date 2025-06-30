@@ -14,9 +14,10 @@ const getDatabaseUrl = () => {
     // Don't use SQLite in production
   }
   
+  // Use POSTGRES_PRISMA_URL first as it's available in your Vercel deployment
   const url = process.env.POSTGRES_PRISMA_URL || // Vercel Postgres (recommended for Prisma)
-              process.env.DATABASE_URL || 
               process.env.POSTGRES_URL || 
+              process.env.DATABASE_URL || 
               process.env.POSTGRES_URL_NON_POOLING ||
               process.env.SUPABASE_URL;
   
@@ -39,6 +40,11 @@ const getDatabaseUrl = () => {
 }
 
 const databaseUrl = getDatabaseUrl();
+
+// Set DATABASE_URL if not present but other URLs are available
+if (!process.env.DATABASE_URL && databaseUrl) {
+  process.env.DATABASE_URL = databaseUrl;
+}
 
 // Only create Prisma client if DATABASE_URL exists
 export const prisma = databaseUrl 
