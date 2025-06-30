@@ -103,7 +103,7 @@ export default function ResearchInsights() {
                   <p className="text-sm text-gray-600 mt-1">From: {insight.documentName}</p>
                   <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                     <span className="flex items-center gap-1">
-                      <div className={`w-2 h-2 rounded-full ${getThemeColor(insight.theme)}`}></div>
+                      <div className={`w-2 h-2 rounded-full ${getThemeColor(insight.type)}`}></div>
                       {insight.type}
                     </span>
                     <span>Confidence: {(insight.confidence * 100).toFixed(0)}%</span>
