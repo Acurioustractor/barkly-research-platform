@@ -15,7 +15,7 @@ export async function GET() {
     let canCreatePDF = false;
     try {
       const { PDFDocument } = await import('pdf-lib');
-      const pdfDoc = await PDFDocument.create();
+      await PDFDocument.create();
       canCreatePDF = true;
     } catch (e) {
       console.error('PDF creation error:', e);
