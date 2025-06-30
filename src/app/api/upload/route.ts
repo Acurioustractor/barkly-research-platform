@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DocumentProcessor } from '@/utils/document-processor';
 
+export const maxDuration = 60; // 1 minute
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -22,12 +25,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file sizes (max 10MB per file)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    // Validate file sizes (max 4.5MB per file due to Vercel limit)
+    const maxSize = 4.5 * 1024 * 1024; // 4.5MB
     const oversizedFiles = files.filter(file => file.size > maxSize);
     if (oversizedFiles.length > 0) {
       return NextResponse.json(
-        { error: 'File size must be less than 10MB' },
+        { error: 'File size must be less than 4.5MB due to server limits' },
         { status: 400 }
       );
     }

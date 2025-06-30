@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { EnhancedDocumentProcessor } from '@/utils/enhanced-document-processor';
 import { isDatabaseAvailable } from '@/lib/database-safe';
 
+export const maxDuration = 300; // 5 minutes
+export const dynamic = 'force-dynamic';
+
+// Increase body size limit to 50MB
 export async function POST(request: NextRequest) {
   try {
     // Check if database is available
@@ -27,8 +31,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file types and sizes
-    const maxSize = 50 * 1024 * 1024; // 50MB per file for bulk upload
-    const maxFiles = 100; // Allow up to 100 files in bulk
+    const maxSize = 4.5 * 1024 * 1024; // 4.5MB per file (Vercel limit)
+    const maxFiles = 10; // Reduce to 10 files to stay under limits
 
     if (files.length > maxFiles) {
       return NextResponse.json(
