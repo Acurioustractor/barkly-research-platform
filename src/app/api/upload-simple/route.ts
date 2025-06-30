@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Return the format the BulkUploader expects
-    const results = files.map(f => ({
+    const results = files.map(() => ({
       documentId: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       status: 'COMPLETED',
       chunks: 0,
