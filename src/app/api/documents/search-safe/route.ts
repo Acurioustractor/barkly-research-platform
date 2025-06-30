@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // Simple safe endpoint that always returns valid JSON
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     // For now, just return empty results until database is connected
     return NextResponse.json({
