@@ -60,7 +60,7 @@ export async function analyzeDocumentChunk(
   chunkText: string,
   documentContext?: string
 ): Promise<AIAnalysisResult> {
-  if (!openai && !useAnthropic) {
+  if (!openai && !anthropic) {
     throw new Error('AI service not configured. Please set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.');
   }
 
@@ -375,7 +375,7 @@ export async function intelligentChunkText(
   maxChunkSize: number = 2000,
   overlapSize: number = 200
 ): Promise<Array<{ text: string; startIndex: number; endIndex: number }>> {
-  if (!openai && !useAnthropic) {
+  if (!openai && !anthropic) {
     // Fallback to basic chunking
     return basicChunkText(text, maxChunkSize, overlapSize);
   }
