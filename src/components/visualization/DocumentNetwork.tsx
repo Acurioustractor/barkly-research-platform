@@ -20,7 +20,7 @@ interface Link {
 export default function DocumentNetwork() {
   const svgRef = useRef<SVGSVGElement>(null);
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
-  const [hoveredDoc, setHoveredDoc] = useState<string | null>(null); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [, setHoveredDoc] = useState<string | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(true);
