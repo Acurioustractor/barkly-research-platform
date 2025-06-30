@@ -15,11 +15,16 @@ const getDatabaseUrl = () => {
   }
   
   // Use POSTGRES_PRISMA_URL first as it's available in your Vercel deployment
-  const url = process.env.POSTGRES_PRISMA_URL || // Vercel Postgres (recommended for Prisma)
-              process.env.POSTGRES_URL || 
-              process.env.DATABASE_URL || 
-              process.env.POSTGRES_URL_NON_POOLING ||
-              process.env.SUPABASE_URL;
+  let url = process.env.POSTGRES_PRISMA_URL || // Vercel Postgres (recommended for Prisma)
+            process.env.POSTGRES_URL || 
+            process.env.DATABASE_URL || 
+            process.env.POSTGRES_URL_NON_POOLING ||
+            process.env.SUPABASE_URL;
+  
+  // Add pgbouncer mode to prevent prepared statement errors
+  if (url && url.includes('pooler.supabase.com') && !url.includes('pgbouncer=true')) {
+    url = url.includes('?') ? `${url}&pgbouncer=true` : `${url}?pgbouncer=true`;
+  }
   
   if (process.env.NODE_ENV === 'development' || process.env.VERCEL) {
     console.log('[database-safe] Checking for database URL:', {
@@ -53,7 +58,8 @@ export const prisma = databaseUrl
         db: {
           url: databaseUrl
         }
-      }
+      },
+      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
     }))
   : null
 
