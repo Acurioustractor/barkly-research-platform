@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database-safe';
+import { extractTextFromPDF } from '@/utils/pdf-extractor';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +19,23 @@ export async function POST(request: NextRequest) {
         // Get file buffer
         const buffer = Buffer.from(await file.arrayBuffer());
         
+        // Extract text from PDF
+        let extractedText = '';
+        let pageCount = 0;
+        
+        if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+          const extraction = await extractTextFromPDF(buffer);
+          extractedText = extraction.text;
+          pageCount = extraction.pageCount;
+          
+          if (extraction.error) {
+            console.warn('PDF extraction warning:', extraction.error);
+            extractedText = `PDF uploaded but text extraction limited: ${extraction.error}`;
+          }
+        } else {
+          extractedText = `Non-PDF file uploaded: ${file.name}`;
+        }
+        
         // Save to database if available
         if (prisma) {
           const doc = await prisma.document.create({
@@ -27,7 +45,9 @@ export async function POST(request: NextRequest) {
               mimeType: file.type || 'application/pdf',
               size: buffer.length,
               status: 'COMPLETED',
-              fullText: `Document uploaded: ${file.name}`,
+              fullText: extractedText,
+              pageCount: pageCount || null,
+              wordCount: extractedText.split(/\s+/).filter(w => w.length > 0).length,
               processedAt: new Date()
             }
           });
