@@ -7,11 +7,11 @@ export async function POST(request: NextRequest) {
     // Check if database is available
     const dbAvailable = isDatabaseAvailable();
     console.log('[bulk-upload] Database available:', dbAvailable);
-    
-    if (!dbAvailable) {
-      console.error('[bulk-upload] Database not available - processing will continue without DB storage');
-      // Continue processing without database storage for now
-    }
+    console.log('[bulk-upload] Environment check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      VERCEL: Boolean(process.env.VERCEL),
+      hasPostgresUrl: Boolean(process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL)
+    });
 
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
@@ -60,45 +60,27 @@ export async function POST(request: NextRequest) {
       }))
     );
 
-    // Process documents - use basic processor if database not available
+    // Process documents with enhanced processor
+    const processor = new EnhancedDocumentProcessor();
+    const processingOptions = {
+      source,
+      category,
+      tags: tags ? tags.split(',').map(tag => tag.trim()) : []
+    };
+
+    // Process in smaller batches to avoid memory issues
+    const batchSize = 5;
     const results = [];
     
-    if (dbAvailable) {
-      // Use enhanced processor with database
-      const processor = new EnhancedDocumentProcessor();
-      const processingOptions = {
-        source,
-        category,
-        tags: tags ? tags.split(',').map(tag => tag.trim()) : []
-      };
-
-      // Process in smaller batches to avoid memory issues
-      const batchSize = 5;
-      
-      for (let i = 0; i < documents.length; i += batchSize) {
-        const batch = documents.slice(i, i + batchSize);
+    for (let i = 0; i < documents.length; i += batchSize) {
+      const batch = documents.slice(i, i + batchSize);
+      try {
         const batchResults = await processor.processBatchDocuments(batch, processingOptions);
         results.push(...batchResults);
-      }
-    } else {
-      // Fallback: Use basic processor without database
-      const { DocumentProcessor } = await import('@/utils/document-processor');
-      
-      for (const doc of documents) {
-        try {
-          const extractedContent = await DocumentProcessor.extractTextFromPDF(doc.buffer, doc.filename);
-          results.push({
-            documentId: doc.filename,
-            status: 'COMPLETED' as const,
-            chunks: Math.ceil(extractedContent.text.length / 1500), // Estimate chunks
-            themes: extractedContent.themes.length,
-            quotes: extractedContent.quotes.length,
-            insights: extractedContent.insights.length,
-            keywords: extractedContent.keywords.length,
-            extractedContent // Include the actual content in results
-          });
-        } catch (error) {
-          console.error(`Failed to process ${doc.originalName}:`, error);
+      } catch (batchError) {
+        console.error(`Batch ${i/batchSize + 1} failed:`, batchError);
+        // Add failed results for this batch
+        batch.forEach(doc => {
           results.push({
             documentId: doc.filename,
             status: 'FAILED' as const,
@@ -107,9 +89,9 @@ export async function POST(request: NextRequest) {
             quotes: 0,
             insights: 0,
             keywords: 0,
-            errorMessage: error instanceof Error ? error.message : 'Processing failed'
+            errorMessage: batchError instanceof Error ? batchError.message : 'Batch processing failed'
           });
-        }
+        });
       }
     }
 
