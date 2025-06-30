@@ -48,20 +48,22 @@ export default function AIProviderStatus() {
     );
   }
 
-  const providerColors = {
+  const providerColors: Record<string, string> = {
     openai: 'bg-green-100 text-green-700',
     anthropic: 'bg-purple-100 text-purple-700'
   };
 
-  const providerLabels = {
+  const providerLabels: Record<string, string> = {
     openai: 'OpenAI',
     anthropic: 'Anthropic'
   };
 
+  const providerKey = status.provider || 'unknown';
+  
   return (
-    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${providerColors[status.provider] || 'bg-gray-100 text-gray-700'}`}>
+    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${providerColors[providerKey] || 'bg-gray-100 text-gray-700'}`}>
       <span className={`w-2 h-2 rounded-full mr-2 ${status.provider === 'anthropic' ? 'bg-purple-500' : 'bg-green-500'}`}></span>
-      {providerLabels[status.provider]} - {status.model}
+      {providerLabels[providerKey] || 'Unknown'} - {status.model}
     </div>
   );
 }
