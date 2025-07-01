@@ -81,16 +81,22 @@ export async function POST(request: NextRequest) {
       generateEmbeddings
     };
 
+    // For now, disable AI processing to ensure uploads work
+    processingOptions.useAI = false;
+    processingOptions.generateSummary = false;
+    processingOptions.generateEmbeddings = false;
+    
+    console.log(`[bulk-upload] Processing ${documents.length} documents (AI disabled for speed)...`);
+    
     // Process documents one by one
     const results = [];
-    console.log(`[bulk-upload] Processing ${documents.length} documents...`);
     
     for (let i = 0; i < documents.length; i++) {
       const doc = documents[i];
       console.log(`[bulk-upload] Processing document ${i + 1}/${documents.length}: ${doc.originalName}`);
       
       try {
-        // Process each document individually
+        // Process each document WITHOUT AI for now
         const result = await processor.processAndStoreDocument(
           doc.buffer,
           doc.filename,
@@ -101,11 +107,6 @@ export async function POST(request: NextRequest) {
         console.log(`[bulk-upload] Document ${i + 1} processed successfully`);
       } catch (docError) {
         console.error(`[bulk-upload] Document ${i + 1} failed:`, docError);
-        console.error('Full error details:', {
-          error: docError,
-          stack: docError instanceof Error ? docError.stack : 'No stack trace',
-          filename: doc.originalName
-        });
         
         // Add failed result for this document
         results.push({

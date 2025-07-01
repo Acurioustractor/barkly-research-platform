@@ -196,11 +196,23 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
 
       let response;
       try {
-        response = await fetch('/api/documents/bulk-upload', {
-          method: 'POST',
-          body: formData,
-          signal: controller.signal
-        });
+        // FOR NOW: Use quick-upload endpoint that actually works
+        if (state.files.length === 1) {
+          const quickFormData = new FormData();
+          quickFormData.append('file', state.files[0]);
+          
+          response = await fetch('/api/documents/quick-upload', {
+            method: 'POST',
+            body: quickFormData,
+            signal: controller.signal
+          });
+        } else {
+          response = await fetch('/api/documents/bulk-upload', {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal
+          });
+        }
         clearTimeout(fetchTimeout);
         console.log('Server response received:', response.status);
       } catch (fetchError) {
