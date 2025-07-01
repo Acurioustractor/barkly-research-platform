@@ -242,13 +242,7 @@ export class WorldClassDocumentProcessor {
           pageCount: metadata.pageCount,
           wordCount: metadata.wordCount,
           status: 'COMPLETED',
-          processedAt: new Date(),
-          metadata: JSON.stringify({
-            executiveSummary: comprehensiveSummary?.executiveSummary,
-            keyTakeaways: comprehensiveSummary?.keyTakeaways,
-            sentimentScore: aggregatedResults.sentimentScore,
-            processingOptions: options
-          })
+          processedAt: new Date()
         }
       });
 
@@ -522,8 +516,7 @@ export class WorldClassDocumentProcessor {
           startChar: semanticChunk.startChar + granularChunk.startChar,
           endChar: semanticChunk.startChar + granularChunk.endChar,
           metadata: {
-            ...granularChunk.metadata,
-            semanticContext: semanticChunk.metadata
+            ...granularChunk.metadata
           }
         });
       }
@@ -554,10 +547,10 @@ export class WorldClassDocumentProcessor {
           chunk.text,
           documentName,
           {
-            chunkIndex: chunk.index,
+            chunkIndex: chunk.index || 0,
             totalChunks: chunks.length,
-            previousChunk: chunk.index > 0 ? chunks[chunk.index - 1]?.text : undefined,
-            nextChunk: chunk.index < chunks.length - 1 ? chunks[chunk.index + 1]?.text : undefined,
+            previousChunk: chunk.index && chunk.index > 0 ? chunks[chunk.index - 1]?.text : undefined,
+            nextChunk: chunk.index && chunk.index < chunks.length - 1 ? chunks[chunk.index + 1]?.text : undefined,
             analysisDepth: depth,
             numberOfPasses: passes,
             extractEntities: options.extractEntities !== false,
@@ -725,7 +718,9 @@ export class WorldClassDocumentProcessor {
       
       if (existing) {
         existing.importance = Math.max(existing.importance, insight.importance);
-        existing.actionability = Math.max(existing.actionability || 0, insight.actionability || 0);
+        if ('actionability' in existing && 'actionability' in insight) {
+          existing.actionability = Math.max(existing.actionability || 0, insight.actionability || 0);
+        }
       } else {
         insightMap.set(key, { ...insight });
       }
@@ -734,8 +729,10 @@ export class WorldClassDocumentProcessor {
     return Array.from(insightMap.values())
       .sort((a, b) => {
         // Sort by combination of importance and actionability
-        const scoreA = a.importance + (a.actionability || 0) * 0.5;
-        const scoreB = b.importance + (b.actionability || 0) * 0.5;
+        const actionabilityA = 'actionability' in a ? (a.actionability || 0) : 0;
+        const actionabilityB = 'actionability' in b ? (b.actionability || 0) : 0;
+        const scoreA = a.importance + actionabilityA * 0.5;
+        const scoreB = b.importance + actionabilityB * 0.5;
         return scoreB - scoreA;
       });
   }
@@ -920,13 +917,13 @@ export class WorldClassDocumentProcessor {
     
     const chunkData = chunks.map(chunk => ({
       documentId,
-      chunkIndex: chunk.index,
-      startPage: chunk.startPage,
-      endPage: chunk.endPage,
+      chunkIndex: chunk.index ?? 0,
+      startPage: chunk.startPage ?? 0,
+      endPage: chunk.endPage ?? 0,
       startChar: chunk.startChar,
       endChar: chunk.endChar,
       text: chunk.text,
-      wordCount: chunk.wordCount,
+      wordCount: chunk.wordCount || chunk.text.split(/\s+/).filter(w => w.length > 0).length,
       topics: chunk.metadata ? JSON.stringify(chunk.metadata) : undefined
     }));
 

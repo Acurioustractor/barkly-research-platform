@@ -3,7 +3,7 @@
  * Supports various chunking strategies for different processing needs
  */
 
-import { AdaptiveChunker, ChunkingStrategies, type AdaptiveChunk, type AdaptiveChunkingOptions } from './adaptive-chunker';
+import { AdaptiveChunker, type AdaptiveChunk } from './adaptive-chunker';
 
 export interface ChunkOptions {
   maxChunkSize?: number;      // Maximum characters per chunk
@@ -313,13 +313,34 @@ export class DocumentChunker {
     
     switch (documentType) {
       case 'academic':
-        chunker = ChunkingStrategies.forAcademicPapers();
+        chunker = new AdaptiveChunker({
+          minChunkSize: 200,
+          maxChunkSize: 800,
+          targetChunkSize: 500,
+          preserveSections: true,
+          detectHeaders: true,
+          strategy: 'structural'
+        });
         break;
       case 'conversational':
-        chunker = ChunkingStrategies.forConversationalData();
+        chunker = new AdaptiveChunker({
+          minChunkSize: 100,
+          maxChunkSize: 400,
+          targetChunkSize: 250,
+          preserveSentences: true,
+          detectQuotes: true,
+          strategy: 'semantic'
+        });
         break;
       case 'technical':
-        chunker = ChunkingStrategies.forTechnicalDocuments();
+        chunker = new AdaptiveChunker({
+          minChunkSize: 150,
+          maxChunkSize: 600,
+          targetChunkSize: 400,
+          detectCodeBlocks: true,
+          detectLists: true,
+          strategy: 'hybrid'
+        });
         break;
       default:
         chunker = this.adaptiveChunker;
@@ -409,6 +430,7 @@ export class DocumentChunker {
     const sentenceChunker = new AdaptiveChunker({
       minChunkSize: 10,
       maxChunkSize: 100,
+      targetChunkSize: 50,
       preserveSentences: true,
       strategy: 'semantic'
     });

@@ -394,15 +394,15 @@ export class AIEnhancedDocumentProcessor {
   private async storeChunks(documentId: string, chunks: DocumentChunk[]): Promise<Array<{ id: string; text: string }>> {
     if (!prisma) return [];
     
-    const chunkData = chunks.map(chunk => ({
+    const chunkData = chunks.map((chunk, idx) => ({
       documentId,
-      chunkIndex: chunk.index,
-      startPage: chunk.startPage,
-      endPage: chunk.endPage,
+      chunkIndex: chunk.index ?? idx,
+      startPage: chunk.startPage ?? 0,
+      endPage: chunk.endPage ?? 0,
       startChar: chunk.startChar,
       endChar: chunk.endChar,
       text: chunk.text,
-      wordCount: chunk.wordCount,
+      wordCount: chunk.wordCount ?? chunk.text.split(/\s+/).length,
       topics: chunk.metadata ? JSON.stringify(chunk.metadata) : undefined
     }));
 

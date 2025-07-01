@@ -3,6 +3,7 @@
 ## Pre-deployment Steps
 
 ### 1. Environment Variables
+Copy `.env.example` to `.env.local` and configure all required variables.
 Ensure the following environment variables are set in Vercel:
 
 **Required:**
@@ -13,9 +14,18 @@ Ensure the following environment variables are set in Vercel:
 - [ ] `OPENAI_API_KEY` - For OpenAI GPT models and embeddings
 - [ ] `ANTHROPIC_API_KEY` - For Claude models
 
-**Optional:**
+**Optional Services:**
 - [ ] `REDIS_URL` - For background job processing (defaults to in-memory)
+
+**Feature Flags (all optional, see .env.example for full list):**
+- [ ] `ENABLE_AI_ANALYSIS` - Enable AI analysis (default: true)
+- [ ] `ENABLE_EMBEDDINGS` - Enable semantic search (default: true)
+- [ ] `ENABLE_PARALLEL_PROCESSING` - Process multiple docs (default: true)
+
+**Configuration:**
 - [ ] `NODE_ENV` - Set to 'production'
+- [ ] `MAX_FILE_SIZE` - Max upload size in bytes (default: 10MB)
+- [ ] `AI_TIMEOUT_MS` - AI service timeout (default: 30000ms)
 
 ### 2. Database Setup
 - [ ] Ensure PostgreSQL database is provisioned

@@ -58,11 +58,11 @@ export interface ProcessingMetrics {
 
 export class ParallelProcessor<T, R> extends EventEmitter {
   private options: Required<ParallelProcessingOptions>;
-  private queue: ProcessingTask<T, R>[] = [];
+  private queue: ProcessingTask<T>[] = [];
   private activeProcessing = new Map<string, Promise<R>>();
   private rateLimiter: RateLimiter;
   private metrics: ProcessingMetrics;
-  private metricsTimer?: NodeJS.Timer;
+  private metricsTimer?: NodeJS.Timeout;
   private paused = false;
 
   constructor(options: ParallelProcessingOptions = {}) {
@@ -106,8 +106,8 @@ export class ParallelProcessor<T, R> extends EventEmitter {
   /**
    * Process a single task
    */
-  async processTask<T, R>(
-    task: ProcessingTask<T, R>,
+  async processTask(
+    task: ProcessingTask<T>,
     processor: (data: T) => Promise<R>
   ): Promise<ProcessingResult<R>> {
     const startTime = Date.now();
@@ -160,7 +160,7 @@ export class ParallelProcessor<T, R> extends EventEmitter {
   /**
    * Process multiple tasks in parallel
    */
-  async processBatch<T, R>(
+  async processBatch(
     tasks: T[],
     processor: (data: T) => Promise<R>,
     options?: {
@@ -169,7 +169,7 @@ export class ParallelProcessor<T, R> extends EventEmitter {
     }
   ): Promise<ProcessingResult<R>[]> {
     // Convert to processing tasks
-    const processingTasks: ProcessingTask<T, R>[] = tasks.map((data, index) => ({
+    const processingTasks: ProcessingTask<T>[] = tasks.map((data, index) => ({
       id: `task-${Date.now()}-${index}`,
       data,
       createdAt: new Date()
@@ -229,11 +229,11 @@ export class ParallelProcessor<T, R> extends EventEmitter {
   /**
    * Process tasks with streaming results
    */
-  async *processStream<T, R>(
+  async *processStream(
     tasks: T[],
     processor: (data: T) => Promise<R>
   ): AsyncGenerator<ProcessingResult<R>, void, unknown> {
-    const processingTasks: ProcessingTask<T, R>[] = tasks.map((data, index) => ({
+    const processingTasks: ProcessingTask<T>[] = tasks.map((data, index) => ({
       id: `task-${Date.now()}-${index}`,
       data,
       createdAt: new Date()
@@ -327,7 +327,7 @@ export class ParallelProcessor<T, R> extends EventEmitter {
     this.emit('shutdown');
   }
 
-  private addToQueue(tasks: ProcessingTask<T, R>[]) {
+  private addToQueue(tasks: ProcessingTask<T>[]) {
     for (const task of tasks) {
       if (this.queue.length >= this.options.maxQueueSize) {
         throw new Error(`Queue size limit exceeded: ${this.options.maxQueueSize}`);
@@ -339,7 +339,7 @@ export class ParallelProcessor<T, R> extends EventEmitter {
     this.metrics.totalTasks += tasks.length;
   }
 
-  private getNextTask(): ProcessingTask<T, R> | null {
+  private getNextTask(): ProcessingTask<T> | null {
     if (this.queue.length === 0) return null;
     
     // Sort by priority if available
@@ -351,7 +351,7 @@ export class ParallelProcessor<T, R> extends EventEmitter {
     return task;
   }
 
-  private shouldRetry(task: ProcessingTask<T, R>, error: Error): boolean {
+  private shouldRetry(task: ProcessingTask<T>, error: Error): boolean {
     const retryCount = task.retryCount || 0;
     
     if (retryCount >= this.options.maxRetries) {
@@ -514,14 +514,14 @@ export class BatchProcessor<T, R> {
       // Process if batch is full
       if (this.batchQueue.length >= this.options.maxBatchSize) {
         this.processBatch().then(results => {
-          resolve(results[resultIndex]);
+          resolve(results[resultIndex] as R);
         }).catch(reject);
       } else {
         // Set timer for batch delay
         if (!this.batchTimer) {
           this.batchTimer = setTimeout(() => {
             this.processBatch().then(results => {
-              resolve(results[resultIndex]);
+              resolve(results[resultIndex] as R);
             }).catch(reject);
           }, this.options.maxBatchDelay);
         }

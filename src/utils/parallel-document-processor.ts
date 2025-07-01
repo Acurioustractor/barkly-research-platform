@@ -4,7 +4,6 @@
  */
 
 import { ParallelProcessor, BatchProcessor, type ProcessingResult } from './parallel-processor';
-import { EnhancedWorldClassDocumentProcessor } from './world-class-document-processor-enhanced';
 import { 
   analyzeDocumentChunk, 
   generateDocumentSummary,
@@ -39,7 +38,6 @@ export class ParallelDocumentProcessor {
   private chunkProcessor: ParallelProcessor<ChunkProcessingTask, AIAnalysisResult>;
   private embeddingProcessor: ParallelProcessor<EmbeddingTask, void>;
   private batchAnalyzer?: BatchProcessor<ChunkAnalysisRequest, AIAnalysisResult>;
-  private worldClassProcessor: EnhancedWorldClassDocumentProcessor;
   private embeddingsService: EmbeddingsService;
 
   constructor(options: ParallelDocumentProcessingOptions = {}) {
@@ -70,7 +68,7 @@ export class ParallelDocumentProcessor {
           // Batch analyze multiple chunks
           return Promise.all(
             requests.map(req => 
-              analyzeDocumentChunk(req.chunk.text, req.documentName, req.context)
+              analyzeDocumentChunk(req.chunk.text, `${req.documentName}${req.context ? `: ${req.context}` : ''}`)
             )
           );
         },
@@ -85,7 +83,6 @@ export class ParallelDocumentProcessor {
       );
     }
 
-    this.worldClassProcessor = new EnhancedWorldClassDocumentProcessor();
     this.embeddingsService = new EmbeddingsService();
 
     // Set up event listeners
@@ -103,7 +100,11 @@ export class ParallelDocumentProcessor {
     }>,
     options: ParallelDocumentProcessingOptions = {}
   ): Promise<ProcessingResult<any>[]> {
-    const documentProcessor = new ParallelProcessor({
+    const documentProcessor = new ParallelProcessor<{
+      buffer: Buffer;
+      filename: string;
+      originalName: string;
+    }, any>({
       maxConcurrency: options.maxConcurrentDocuments || 3,
       maxRequestsPerMinute: 30,
       enableMetrics: true
@@ -179,7 +180,7 @@ export class ParallelDocumentProcessor {
 
       // Step 5: Generate summary
       const summary = options.generateSummary !== false
-        ? await generateDocumentSummary(chunks.map(c => c.text).join('\n\n'))
+        ? await generateDocumentSummary(chunks.map(c => c.text), documentId)
         : undefined;
 
       if (options.onProgress) {
@@ -211,9 +212,9 @@ export class ParallelDocumentProcessor {
    */
   private async extractAndChunk(
     buffer: Buffer,
-    filename: string,
-    originalName: string,
-    options: ParallelDocumentProcessingOptions
+    _filename: string,
+    _originalName: string,
+    _options: ParallelDocumentProcessingOptions
   ): Promise<{ documentId: string; chunks: DocumentChunk[] }> {
     // Use the world-class processor for extraction and chunking
     // This part remains sequential as it's already optimized
@@ -268,8 +269,7 @@ export class ParallelDocumentProcessor {
             })
           : await analyzeDocumentChunk(
               task.chunk.text,
-              task.documentName,
-              task.context
+              `${task.documentName}${task.context ? `: ${task.context}` : ''}`
             );
 
         processedCount++;
@@ -317,11 +317,7 @@ export class ParallelDocumentProcessor {
     await this.embeddingProcessor.processBatch(
       embeddingTasks,
       async (task) => {
-        await this.embeddingsService.generateAndStoreEmbedding({
-          documentId: task.documentId,
-          chunkId: task.chunkId,
-          text: task.text
-        });
+        await this.embeddingsService.generateEmbedding(task.text);
 
         embeddedCount++;
         
@@ -349,7 +345,11 @@ export class ParallelDocumentProcessor {
     }>,
     options: ParallelDocumentProcessingOptions = {}
   ): AsyncGenerator<ProcessingResult<any>, void, unknown> {
-    const processor = new ParallelProcessor({
+    const processor = new ParallelProcessor<{
+      buffer: Buffer;
+      filename: string;
+      originalName: string;
+    }, any>({
       maxConcurrency: options.maxConcurrentDocuments || 2,
       maxRequestsPerMinute: 30
     });
@@ -375,13 +375,7 @@ export class ParallelDocumentProcessor {
       themes: [] as any[],
       keywords: [] as any[],
       quotes: [] as any[],
-      insights: [] as any[],
-      entities: [] as any[],
-      sentiment: {
-        positive: 0,
-        negative: 0,
-        neutral: 0
-      }
+      insights: [] as any[]
     };
 
     // Merge all results
@@ -390,31 +384,11 @@ export class ParallelDocumentProcessor {
       if (result.keywords) aggregated.keywords.push(...result.keywords);
       if (result.quotes) aggregated.quotes.push(...result.quotes);
       if (result.insights) aggregated.insights.push(...result.insights);
-      if (result.entities) aggregated.entities.push(...result.entities);
-      
-      // Aggregate sentiment
-      if (result.sentiment) {
-        aggregated.sentiment.positive += result.sentiment.positive || 0;
-        aggregated.sentiment.negative += result.sentiment.negative || 0;
-        aggregated.sentiment.neutral += result.sentiment.neutral || 0;
-      }
     }
 
     // Deduplicate and rank
     aggregated.themes = this.deduplicateAndRank(aggregated.themes, 'name');
     aggregated.keywords = this.deduplicateAndRank(aggregated.keywords, 'word');
-    aggregated.entities = this.deduplicateAndRank(aggregated.entities, 'name');
-
-    // Normalize sentiment
-    const totalSentiment = aggregated.sentiment.positive + 
-                          aggregated.sentiment.negative + 
-                          aggregated.sentiment.neutral;
-    
-    if (totalSentiment > 0) {
-      aggregated.sentiment.positive /= totalSentiment;
-      aggregated.sentiment.negative /= totalSentiment;
-      aggregated.sentiment.neutral /= totalSentiment;
-    }
 
     return aggregated;
   }

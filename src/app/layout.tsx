@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Fira_Code } from "next/font/google";
 import "./globals.css";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { MonitoringDashboard } from "@/components/monitoring-dashboard";
+import '@/lib/global-error-handler';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,7 +37,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${firaCode.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased">
-        {children}
+        <ErrorBoundary>
+          {children}
+          <MonitoringDashboard />
+        </ErrorBoundary>
       </body>
     </html>
   );

@@ -1,0 +1,77 @@
+name: Database Management
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Database action to perform'
+        required: true
+        type: choice
+        options:
+          - migrate
+          - seed
+          - backup
+          - restore
+
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+jobs:
+  database-action:
+    name: Database ${{ github.event.inputs.action }}
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run migrations
+        if: github.event.inputs.action == 'migrate'
+        run: |
+          echo "Running database migrations..."
+          npx prisma migrate deploy
+          echo "Migrations completed successfully!"
+      
+      - name: Seed database
+        if: github.event.inputs.action == 'seed'
+        run: |
+          echo "Seeding database..."
+          npx prisma db seed
+          echo "Database seeded successfully!"
+      
+      - name: Backup database
+        if: github.event.inputs.action == 'backup'
+        run: |
+          echo "Creating database backup..."
+          timestamp=$(date +%Y%m%d_%H%M%S)
+          pg_dump $DATABASE_URL > backup_$timestamp.sql
+          
+          # Upload backup to artifact storage
+          echo "Uploading backup..."
+          gzip backup_$timestamp.sql
+          
+          echo "backup_file=backup_$timestamp.sql.gz" >> $GITHUB_OUTPUT
+      
+      - name: Upload backup artifact
+        if: github.event.inputs.action == 'backup'
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-backup-${{ steps.backup.outputs.timestamp }}
+          path: backup_*.sql.gz
+          retention-days: 30
+      
+      - name: Restore database
+        if: github.event.inputs.action == 'restore'
+        run: |
+          echo "Database restore requires manual intervention"
+          echo "Please download the backup artifact and restore manually"

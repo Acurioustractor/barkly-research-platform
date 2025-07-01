@@ -1,0 +1,69 @@
+name: Dependencies
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Update npm dependencies
+        run: |
+          # Update dependencies to latest minor/patch versions
+          npm update
+          
+          # Check for major updates
+          npx npm-check-updates -u --target minor
+          
+          # Install updated dependencies
+          npm install
+      
+      - name: Run tests
+        run: |
+          npm run test:ci || echo "Tests failed, will create PR anyway"
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          DIRECT_URL: postgresql://test:test@localhost:5432/test
+      
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update dependencies'
+          title: 'Weekly dependency updates'
+          body: |
+            ## Automated Dependency Updates
+            
+            This PR contains dependency updates performed by the automated workflow.
+            
+            ### What's included:
+            - Minor and patch version updates for all dependencies
+            - Updated lock file
+            
+            ### Next steps:
+            1. Review the changes in package.json and package-lock.json
+            2. Check the test results
+            3. Test the application locally if needed
+            4. Merge if everything looks good
+            
+            *This is an automated PR created by the dependencies workflow.*
+          branch: deps/update-dependencies
+          delete-branch: true
+          labels: |
+            dependencies
+            automated

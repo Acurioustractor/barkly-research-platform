@@ -177,7 +177,7 @@ export class EnhancedWorldClassDocumentProcessor {
 
       // Step 6: Store analysis results
       await this.storeAnalysisResults(
-        documentId, analysisResult, degradation
+        documentId, analysisResult
       );
 
       // Step 7: Generate embeddings if available
@@ -189,10 +189,10 @@ export class EnhancedWorldClassDocumentProcessor {
 
       // Step 8: Update document status
       processingLevel = this.progressiveEnhancement.getAvailableLevel(
-        degradation.capabilities as any
+        degradation.getCapabilities() as any
       );
 
-      const finalStatus = degradation.shouldContinue() ? 'COMPLETED' : 'PARTIAL';
+      const finalStatus = degradation.shouldContinue() ? 'COMPLETED' : 'FAILED';
       
       await prisma?.document.update({
         where: { id: documentId },
@@ -201,12 +201,7 @@ export class EnhancedWorldClassDocumentProcessor {
           fullText: text.substring(0, 50000), // Limit stored text
           pageCount: metadata.pageCount,
           wordCount: metadata.wordCount,
-          processedAt: new Date(),
-          metadata: JSON.stringify({
-            processingLevel,
-            warnings,
-            capabilities: degradation.capabilities
-          })
+          processedAt: new Date()
         }
       });
 
@@ -226,7 +221,7 @@ export class EnhancedWorldClassDocumentProcessor {
         executiveSummary: analysisResult.executiveSummary,
         keyTakeaways: analysisResult.keyTakeaways,
         warnings,
-        degradedCapabilities: Object.entries(degradation.capabilities)
+        degradedCapabilities: Object.entries(degradation.getCapabilities())
           .filter(([, enabled]) => !enabled)
           .map(([cap]) => cap),
         processingLevel
@@ -241,12 +236,7 @@ export class EnhancedWorldClassDocumentProcessor {
           where: { id: documentId },
           data: {
             status: 'FAILED',
-            errorMessage: error instanceof Error ? error.message : 'Unknown error',
-            metadata: JSON.stringify({
-              errorType: error instanceof DocumentProcessingError ? error.type : 'UNKNOWN',
-              warnings,
-              partialResults: degradation.capabilities
-            })
+            errorMessage: error instanceof Error ? error.message : 'Unknown error'
           }
         }).catch(console.error);
       }
@@ -256,7 +246,7 @@ export class EnhancedWorldClassDocumentProcessor {
       if (partialResult.partial && options.allowPartialSuccess) {
         return {
           documentId: documentId || '',
-          status: 'PARTIAL',
+          status: 'FAILED' as ProcessingStatus,
           chunks: 0,
           themes: 0,
           quotes: 0,
@@ -267,7 +257,7 @@ export class EnhancedWorldClassDocumentProcessor {
           contradictions: 0,
           errorMessage: degradation.getDegradationMessage(),
           warnings,
-          degradedCapabilities: Object.entries(degradation.capabilities)
+          degradedCapabilities: Object.entries(degradation.getCapabilities())
             .filter(([, enabled]) => !enabled)
             .map(([cap]) => cap),
           processingLevel: 'minimal'
@@ -402,7 +392,7 @@ export class EnhancedWorldClassDocumentProcessor {
     degradation: GracefulDegradation
   ): Promise<DocumentChunk[]> {
     try {
-      if (degradation.capabilities.advancedChunking) {
+      if (degradation.getCapabilities().advancedChunking) {
         return await this.createIntelligentChunks(text, options);
       }
     } catch (error) {
@@ -450,7 +440,7 @@ export class EnhancedWorldClassDocumentProcessor {
     options: WorldClassProcessingOptions,
     degradation: GracefulDegradation
   ): Promise<any> {
-    const capabilities = degradation.capabilities as any;
+    const capabilities = degradation.getCapabilities() as any;
     
     // Try AI analysis first
     if (capabilities.aiAnalysis && options.multiPassAnalysis !== false) {
@@ -534,17 +524,17 @@ export class EnhancedWorldClassDocumentProcessor {
     
     const chunkRecords = await Promise.all(
       chunks.map((chunk, index) =>
-        prisma.chunk.create({
+        prisma!.documentChunk.create({
           data: {
             documentId,
-            content: chunk.text,
-            chunkNumber: index + 1,
+            text: chunk.text,
+            chunkIndex: index,
             startChar: chunk.startChar,
             endChar: chunk.endChar,
-            metadata: JSON.stringify({
-              totalChunks: chunks.length,
-              wordCount: chunk.text.split(/\s+/).length
-            })
+            startPage: chunk.startPage,
+            endPage: chunk.endPage,
+            wordCount: chunk.wordCount || chunk.text.split(/\s+/).length,
+            topics: chunk.metadata ? JSON.stringify(chunk.metadata) : undefined
           }
         })
       )
@@ -577,11 +567,7 @@ export class EnhancedWorldClassDocumentProcessor {
   ): Promise<void> {
     // Placeholder - implement based on your embeddings service
     for (const chunk of chunks) {
-      await this.embeddingsService.generateAndStoreEmbedding({
-        documentId,
-        chunkId: chunk.id,
-        text: chunk.content
-      });
+      await this.embeddingsService.generateEmbedding(chunk.text || '');
     }
   }
 
@@ -591,12 +577,12 @@ export class EnhancedWorldClassDocumentProcessor {
     
     await Promise.all(
       themes.map(theme =>
-        prisma.theme.create({
+        prisma!.documentTheme.create({
           data: {
             documentId,
-            name: theme.name || theme,
+            theme: theme.name || theme,
             confidence: theme.confidence || 0.8,
-            evidence: theme.evidence || ''
+            context: theme.evidence || ''
           }
         })
       )
@@ -609,7 +595,7 @@ export class EnhancedWorldClassDocumentProcessor {
     
     await Promise.all(
       quotes.map(quote =>
-        prisma.quote.create({
+        prisma!.documentQuote.create({
           data: {
             documentId,
             text: quote.text,
@@ -628,12 +614,13 @@ export class EnhancedWorldClassDocumentProcessor {
     
     await Promise.all(
       insights.map(insight =>
-        prisma.insight.create({
+        prisma!.documentInsight.create({
           data: {
             documentId,
-            content: typeof insight === 'string' ? insight : insight.content,
-            type: insight.type || 'general',
-            importance: insight.importance || 0.5
+            insight: typeof insight === 'string' ? insight : (insight.text || insight.content),
+            type: insight.type || insight.category || 'general',
+            confidence: insight.importance || insight.confidence || 0.5,
+            evidence: insight.evidence ? JSON.stringify(insight.evidence) : undefined
           }
         })
       )
@@ -646,12 +633,13 @@ export class EnhancedWorldClassDocumentProcessor {
     
     await Promise.all(
       keywords.map(keyword =>
-        prisma.keyword.create({
+        prisma!.documentKeyword.create({
           data: {
             documentId,
-            word: typeof keyword === 'string' ? keyword : keyword.word,
+            keyword: typeof keyword === 'string' ? keyword : (keyword.term || keyword.word),
             frequency: keyword.frequency || 1,
-            relevance: keyword.relevance || 0.5
+            relevance: keyword.relevance || 0.5,
+            category: keyword.category
           }
         })
       )

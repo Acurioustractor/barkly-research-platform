@@ -88,7 +88,7 @@ async function backfillEmbeddings(options: BackfillOptions = {}) {
     let failed = 0;
     const startTime = Date.now();
 
-    const processor = new ParallelProcessor({
+    const processor = new ParallelProcessor<{ id: string; documentId: string; text: string }, { success: boolean; error?: string }>({
       maxConcurrency: maxConcurrent,
       maxRequestsPerMinute: 60,
       enableMetrics: true

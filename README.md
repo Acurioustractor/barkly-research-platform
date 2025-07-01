@@ -23,6 +23,9 @@ A community-led research platform showcasing Indigenous youth voices and insight
 - **Processing**: PDF parsing, text analysis, document chunking
 - **Visualization**: D3.js, Recharts
 - **Deployment**: Vercel with PostgreSQL database
+- **CI/CD**: GitHub Actions with automated testing and deployment
+- **Testing**: Jest, React Testing Library
+- **Error Handling**: Structured logging, error boundaries, monitoring
 
 ## 🚀 Getting Started
 
@@ -121,12 +124,39 @@ This platform handles sensitive Indigenous community data. We follow:
 # Run unit tests
 npm test
 
-# Run e2e tests
-npm run test:e2e
+# Run tests in watch mode
+npm run test:watch
 
-# Run accessibility tests
-npm run test:a11y
+# Run tests with coverage
+npm run test:coverage
+
+# Run CI tests
+npm run test:ci
 ```
+
+## 🔄 CI/CD Pipeline
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+### Automated Workflows
+- **CI Pipeline**: Runs on every push and PR
+  - Linting (ESLint)
+  - Type checking (TypeScript)
+  - Unit tests (Jest)
+  - Build verification
+  - Security scanning
+  
+- **Deployment**: Automatic deployment to Vercel
+  - Preview deployments for PRs
+  - Production deployment on merge to main
+  - Post-deployment smoke tests
+
+- **Dependencies**: Weekly automated updates
+  - Security patches
+  - Minor version updates
+  - Automated PR creation
+
+See [CI/CD Guide](./CI-CD-GUIDE.md) for detailed documentation.
 
 ## 📦 Building for Production
 

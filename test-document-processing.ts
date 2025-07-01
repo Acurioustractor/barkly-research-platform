@@ -14,6 +14,7 @@ import { ParallelDocumentProcessor } from './src/utils/parallel-document-process
 import { EnhancedEmbeddingsService } from './src/lib/embeddings-service-enhanced';
 import { 
   ErrorHandler, 
+  ErrorType,
   DocumentProcessingError,
   RetryHandler,
   CircuitBreaker 
@@ -218,7 +219,7 @@ async function testErrorHandling() {
         throw new Error('Service failure');
       });
     } catch (error) {
-      if (error instanceof DocumentProcessingError && error.type === 'RATE_LIMIT') {
+      if (error instanceof DocumentProcessingError && error.type === ErrorType.RATE_LIMIT) {
         circuitOpened = true;
       }
     }
@@ -235,12 +236,17 @@ async function testErrorHandling() {
 async function testGracefulDegradation() {
   const degradation = new GracefulDegradation({
     allowPartialSuccess: true,
-    minimumSuccessRate: 0.5
+    minimumSuccessRate: 0.5,
+    fallbackStrategies: {
+      aiAnalysis: true,
+      embeddings: true,
+      advancedChunking: true
+    }
   });
   
   // Simulate failures
   degradation.recordFailure('aiAnalysis', new DocumentProcessingError({
-    type: 'AI_ANALYSIS',
+    type: ErrorType.AI_ANALYSIS,
     message: 'AI service unavailable',
     recoverable: true,
     retryable: true

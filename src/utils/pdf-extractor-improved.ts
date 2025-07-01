@@ -23,7 +23,6 @@ export interface ExtractionResult {
 
 export class ImprovedPDFExtractor {
   private buffer: Buffer;
-  private maxRetries: number = 3;
   
   constructor(buffer: Buffer) {
     this.buffer = buffer;
@@ -117,7 +116,7 @@ export class ImprovedPDFExtractor {
   private async extractWithPdfParse(): Promise<Omit<ExtractionResult, 'method' | 'warnings'>> {
     try {
       // Dynamic import to handle optional dependency
-      const pdfParse = await import('pdf-parse/lib/pdf-parse.js');
+      const pdfParse = await import('pdf-parse');
       const data = await pdfParse.default(this.buffer);
 
       const confidence = this.calculateConfidence(data.text, data.numpages);
@@ -168,7 +167,7 @@ export class ImprovedPDFExtractor {
     texts.push(...parenMatches.map(match => match.slice(1, -1)));
 
     // Method 2: Extract text between BT and ET markers (PDF text objects)
-    const btEtMatches = str.match(/BT\s*(.*?)\s*ET/gs) || [];
+    const btEtMatches = str.match(/BT\s*([\s\S]*?)\s*ET/g) || [];
     btEtMatches.forEach(match => {
       const tjMatches = match.match(/\((.*?)\)\s*Tj/g) || [];
       texts.push(...tjMatches.map(m => m.match(/\((.*?)\)/)?.[1] || ''));
@@ -340,7 +339,10 @@ export async function extractTextFromMultiplePDFs(
   const results = new Map<string, ExtractionResult>();
 
   for (let i = 0; i < buffers.length; i++) {
-    const { buffer, filename } = buffers[i];
+    const item = buffers[i];
+    if (!item) continue;
+    
+    const { buffer, filename } = item;
     if (onProgress) {
       onProgress(filename, i + 1, buffers.length);
     }

@@ -3,7 +3,7 @@
  * Ensures partial success when some components fail
  */
 
-import { DocumentProcessingError, ErrorType } from './error-handler';
+import { DocumentProcessingError } from './error-handler';
 
 export interface DegradationOptions {
   allowPartialSuccess: boolean;
@@ -61,6 +61,13 @@ export class GracefulDegradation {
     this.errors.push(error);
     
     console.warn(`Capability '${capability}' failed, degrading gracefully:`, error.message);
+  }
+
+  /**
+   * Get current capabilities status
+   */
+  getCapabilities(): ProcessingCapabilities {
+    return { ...this.capabilities };
   }
 
   /**
@@ -287,6 +294,8 @@ export class ProgressiveEnhancement {
   getAvailableLevel(capabilities: ProcessingCapabilities): string {
     for (let i = this.stages.length - 1; i >= 0; i--) {
       const stage = this.stages[i];
+      if (!stage) continue;
+      
       const meetsRequirements = stage.requirements.every(
         req => capabilities[req as keyof ProcessingCapabilities]
       );

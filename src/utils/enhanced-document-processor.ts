@@ -6,7 +6,7 @@
 import { prisma } from '@/lib/database-safe';
 import { DocumentChunker, type DocumentChunk } from './document-chunker';
 import { DocumentProcessor } from './document-processor';
-import { ImprovedPDFExtractor, type ExtractionResult } from './pdf-extractor-improved';
+import { ImprovedPDFExtractor } from './pdf-extractor-improved';
 import type { ProcessingStatus } from '@prisma/client';
 
 export interface ProcessingOptions {
@@ -196,15 +196,15 @@ export class EnhancedDocumentProcessor {
   private async storeChunks(documentId: string, chunks: DocumentChunk[]): Promise<void> {
     if (!prisma) return;
     
-    const chunkData = chunks.map(chunk => ({
+    const chunkData = chunks.map((chunk, idx) => ({
       documentId,
-      chunkIndex: chunk.index,
-      startPage: chunk.startPage,
-      endPage: chunk.endPage,
+      chunkIndex: chunk.index ?? idx,
+      startPage: chunk.startPage ?? 0,
+      endPage: chunk.endPage ?? 0,
       startChar: chunk.startChar,
       endChar: chunk.endChar,
       text: chunk.text,
-      wordCount: chunk.wordCount,
+      wordCount: chunk.wordCount ?? chunk.text.split(/\s+/).length,
       topics: chunk.metadata ? JSON.stringify(chunk.metadata) : undefined
     }));
 
