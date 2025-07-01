@@ -89,7 +89,16 @@ export async function POST(request: NextRequest) {
     console.log(`[bulk-upload] Processing ${documents.length} documents (AI disabled for speed)...`);
     
     // Process documents with timeout and better error handling
-    const results = [];
+    const results: Array<{
+      documentId: string;
+      status: 'COMPLETED' | 'FAILED' | 'PENDING';
+      chunks: number;
+      themes: number;
+      quotes: number;
+      insights: number;
+      keywords: number;
+      errorMessage?: string;
+    }> = [];
     const processingTimeout = 240000; // 4 minutes total (under Vercel's 5 min limit)
     const startTime = Date.now();
     
@@ -132,7 +141,7 @@ export async function POST(request: NextRequest) {
           setTimeout(() => reject(new Error('Document processing timeout')), 30000)
         );
         
-        const result = await Promise.race([documentPromise, timeoutPromise]);
+        const result = await Promise.race([documentPromise, timeoutPromise]) as any;
         results.push(result);
         console.log(`[bulk-upload] Document ${i + 1} processed successfully`);
       } catch (docError) {
