@@ -3,6 +3,8 @@
  * Supports various chunking strategies for different processing needs
  */
 
+import { AdaptiveChunker, ChunkingStrategies, type AdaptiveChunk, type AdaptiveChunkingOptions } from './adaptive-chunker';
+
 export interface ChunkOptions {
   maxChunkSize?: number;      // Maximum characters per chunk
   overlapSize?: number;       // Characters to overlap between chunks
@@ -12,23 +14,29 @@ export interface ChunkOptions {
 }
 
 export interface DocumentChunk {
-  index: number;
+  index?: number;
   text: string;
   startChar: number;
   endChar: number;
   startPage?: number;
   endPage?: number;
-  wordCount: number;
+  wordCount?: number;
+  chunkNumber?: number;
+  totalChunks?: number;
   metadata?: {
     hasHeaders?: boolean;
     hasBulletPoints?: boolean;
     hasQuotes?: boolean;
     contentType?: 'narrative' | 'list' | 'table' | 'mixed';
+    headerText?: string;
+    semanticDensity?: number;
+    contextualImportance?: number;
   };
 }
 
 export class DocumentChunker {
   private options: Required<ChunkOptions>;
+  private adaptiveChunker: AdaptiveChunker;
 
   constructor(options: ChunkOptions = {}) {
     this.options = {
@@ -36,9 +44,19 @@ export class DocumentChunker {
       overlapSize: 150,        // ~30-40 words overlap
       preserveSentences: true,
       preserveParagraphs: true,
-      minChunkSize: 200,       // ~40-50 words minimum
+      minChunkSize: 50,        // ~10-15 words minimum
       ...options
     };
+    
+    // Initialize adaptive chunker with matching options
+    this.adaptiveChunker = new AdaptiveChunker({
+      minChunkSize: this.options.minChunkSize,
+      maxChunkSize: this.options.maxChunkSize,
+      targetChunkSize: Math.floor((this.options.minChunkSize + this.options.maxChunkSize) / 2),
+      overlapTokens: Math.floor(this.options.overlapSize / 5), // Rough conversion
+      preserveSentences: this.options.preserveSentences,
+      preserveParagraphs: this.options.preserveParagraphs
+    });
   }
 
   /**
@@ -284,5 +302,205 @@ export class DocumentChunker {
     }
 
     return chunks;
+  }
+
+  /**
+   * Use adaptive chunking for intelligent document segmentation
+   */
+  async chunkDocumentAdaptive(text: string, documentType?: 'academic' | 'conversational' | 'technical' | 'general'): Promise<DocumentChunk[]> {
+    // Select appropriate chunking strategy based on document type
+    let chunker: AdaptiveChunker;
+    
+    switch (documentType) {
+      case 'academic':
+        chunker = ChunkingStrategies.forAcademicPapers();
+        break;
+      case 'conversational':
+        chunker = ChunkingStrategies.forConversationalData();
+        break;
+      case 'technical':
+        chunker = ChunkingStrategies.forTechnicalDocuments();
+        break;
+      default:
+        chunker = this.adaptiveChunker;
+    }
+    
+    // Get adaptive chunks
+    const adaptiveChunks = await chunker.chunkDocument(text);
+    
+    // Convert to DocumentChunk format
+    return adaptiveChunks.map((chunk, index) => ({
+      index,
+      text: chunk.text,
+      startChar: chunk.metadata.startChar,
+      endChar: chunk.metadata.endChar,
+      wordCount: chunk.metadata.wordCount,
+      chunkNumber: chunk.metadata.chunkNumber,
+      totalChunks: chunk.metadata.totalChunks,
+      metadata: {
+        hasHeaders: chunk.metadata.hasHeader,
+        headerText: chunk.metadata.headerText,
+        contentType: chunk.metadata.contentType === 'text' ? 'narrative' : 
+                    chunk.metadata.contentType === 'list' ? 'list' : 'mixed',
+        semanticDensity: chunk.metadata.semanticDensity,
+        contextualImportance: chunk.metadata.contextualImportance
+      }
+    }));
+  }
+
+  /**
+   * Create chunks optimized for embedding generation
+   */
+  async createEmbeddingOptimizedChunks(text: string): Promise<DocumentChunk[]> {
+    // Use smaller chunks with more overlap for better embedding quality
+    const embeddingChunker = new AdaptiveChunker({
+      minChunkSize: 50,
+      maxChunkSize: 500,
+      targetChunkSize: 250,
+      overlapPercentage: 20,
+      preserveSentences: true,
+      strategy: 'sliding'
+    });
+    
+    const chunks = await embeddingChunker.chunkDocument(text);
+    
+    return chunks.map((chunk, index) => ({
+      index,
+      text: chunk.text,
+      startChar: chunk.metadata.startChar,
+      endChar: chunk.metadata.endChar,
+      wordCount: chunk.metadata.wordCount,
+      chunkNumber: chunk.metadata.chunkNumber,
+      totalChunks: chunk.metadata.totalChunks,
+      metadata: {
+        contextualImportance: chunk.metadata.contextualImportance,
+        semanticDensity: chunk.metadata.semanticDensity
+      }
+    }));
+  }
+
+  /**
+   * Create hierarchical chunks for multi-level analysis
+   */
+  async createHierarchicalChunks(text: string): Promise<{
+    coarse: DocumentChunk[];
+    fine: DocumentChunk[];
+    sentences: DocumentChunk[];
+  }> {
+    // Coarse chunks for high-level understanding
+    const coarseChunker = new AdaptiveChunker({
+      minChunkSize: 500,
+      maxChunkSize: 2000,
+      targetChunkSize: 1000,
+      preserveSections: true,
+      strategy: 'structural'
+    });
+    
+    // Fine chunks for detailed analysis
+    const fineChunker = new AdaptiveChunker({
+      minChunkSize: 100,
+      maxChunkSize: 500,
+      targetChunkSize: 300,
+      overlapPercentage: 15,
+      strategy: 'hybrid'
+    });
+    
+    // Sentence-level chunks for precise extraction
+    const sentenceChunker = new AdaptiveChunker({
+      minChunkSize: 10,
+      maxChunkSize: 100,
+      preserveSentences: true,
+      strategy: 'semantic'
+    });
+    
+    const [coarseChunks, fineChunks, sentenceChunks] = await Promise.all([
+      coarseChunker.chunkDocument(text),
+      fineChunker.chunkDocument(text),
+      sentenceChunker.chunkDocument(text)
+    ]);
+    
+    return {
+      coarse: this.convertAdaptiveChunks(coarseChunks),
+      fine: this.convertAdaptiveChunks(fineChunks),
+      sentences: this.convertAdaptiveChunks(sentenceChunks)
+    };
+  }
+
+  /**
+   * Analyze document and recommend best chunking strategy
+   */
+  async analyzeAndChunk(text: string): Promise<{
+    recommendedStrategy: string;
+    chunks: DocumentChunk[];
+    analysis: {
+      documentType: string;
+      averageSentenceLength: number;
+      hasStructure: boolean;
+      contentDensity: number;
+    };
+  }> {
+    // Analyze document characteristics
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
+    const avgSentenceLength = sentences.reduce((sum, s) => sum + s.split(/\s+/).length, 0) / Math.max(1, sentences.length);
+    const hasHeaders = /^#{1,6}\s+.+$/m.test(text) || /^[A-Z][A-Z\s]+$/m.test(text);
+    const hasLists = /^[\s]*[-*•]\s+/m.test(text) || /^[\s]*\d+\.\s+/m.test(text);
+    const hasQuotes = /"[^"]{20,}"/g.test(text);
+    
+    // Determine document type
+    let documentType: 'academic' | 'conversational' | 'technical' | 'general' = 'general';
+    let recommendedStrategy = 'hybrid';
+    
+    if (hasHeaders && avgSentenceLength > 15) {
+      documentType = 'academic';
+      recommendedStrategy = 'structural';
+    } else if (hasQuotes && avgSentenceLength < 15) {
+      documentType = 'conversational';
+      recommendedStrategy = 'semantic';
+    } else if (hasLists || text.includes('function') || text.includes('class')) {
+      documentType = 'technical';
+      recommendedStrategy = 'hybrid';
+    }
+    
+    // Calculate content density
+    const uniqueWords = new Set(text.toLowerCase().split(/\s+/));
+    const totalWords = text.split(/\s+/).length;
+    const contentDensity = uniqueWords.size / Math.max(1, totalWords);
+    
+    // Perform chunking
+    const chunks = await this.chunkDocumentAdaptive(text, documentType);
+    
+    return {
+      recommendedStrategy,
+      chunks,
+      analysis: {
+        documentType,
+        averageSentenceLength: avgSentenceLength,
+        hasStructure: hasHeaders || hasLists,
+        contentDensity
+      }
+    };
+  }
+
+  /**
+   * Convert adaptive chunks to DocumentChunk format
+   */
+  private convertAdaptiveChunks(adaptiveChunks: AdaptiveChunk[]): DocumentChunk[] {
+    return adaptiveChunks.map((chunk, index) => ({
+      index,
+      text: chunk.text,
+      startChar: chunk.metadata.startChar,
+      endChar: chunk.metadata.endChar,
+      wordCount: chunk.metadata.wordCount,
+      chunkNumber: chunk.metadata.chunkNumber,
+      totalChunks: chunk.metadata.totalChunks,
+      metadata: {
+        hasHeaders: chunk.metadata.hasHeader,
+        headerText: chunk.metadata.headerText,
+        contentType: chunk.metadata.contentType === 'text' ? 'narrative' : 
+                    chunk.metadata.contentType === 'list' ? 'list' : 'mixed',
+        semanticDensity: chunk.metadata.semanticDensity,
+        contextualImportance: chunk.metadata.contextualImportance
+      }
+    }));
   }
 }

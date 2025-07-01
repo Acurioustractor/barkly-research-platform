@@ -18,11 +18,11 @@ export interface VectorSearchResult {
 
 export class EmbeddingsService {
   private embeddingModel: string;
-  private embeddingDimension: number;
+  // private embeddingDimension: number; // Not currently used
 
   constructor() {
     this.embeddingModel = process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-small';
-    this.embeddingDimension = this.embeddingModel === 'text-embedding-3-large' ? 3072 : 1536;
+    // this.embeddingDimension = this.embeddingModel === 'text-embedding-3-large' ? 3072 : 1536;
   }
 
   /**
@@ -101,8 +101,8 @@ export class EmbeddingsService {
         await Promise.all(
           batch.map(async (chunk, index) => {
             await prisma!.$executeRaw`
-              UPDATE "DocumentChunk" 
-              SET embedding = ${embeddings[index]}::vector(${this.embeddingDimension})
+              UPDATE document_chunks 
+              SET embedding = ${embeddings[index]}::vector(1536)
               WHERE id = ${chunk.id}
             `;
           })
@@ -137,11 +137,11 @@ export class EmbeddingsService {
           dc."documentId",
           dc.text,
           dc.metadata,
-          1 - (dc.embedding <=> ${queryEmbedding}::vector(${this.embeddingDimension})) as similarity
-        FROM "DocumentChunk" dc
+          1 - (dc.embedding <=> ${queryEmbedding}::vector(1536)) as similarity
+        FROM document_chunks dc
         WHERE dc.embedding IS NOT NULL
-          AND 1 - (dc.embedding <=> ${queryEmbedding}::vector(${this.embeddingDimension})) > ${threshold}
-        ORDER BY dc.embedding <=> ${queryEmbedding}::vector(${this.embeddingDimension})
+          AND 1 - (dc.embedding <=> ${queryEmbedding}::vector(1536)) > ${threshold}
+        ORDER BY dc.embedding <=> ${queryEmbedding}::vector(1536)
         LIMIT ${limit}
       ` as VectorSearchResult[];
 
@@ -188,8 +188,8 @@ export class EmbeddingsService {
             d.id as "documentId",
             d."originalName" as title,
             AVG(dc.embedding) as avg_embedding
-          FROM "Document" d
-          JOIN "DocumentChunk" dc ON d.id = dc."documentId"
+          FROM documents d
+          JOIN document_chunks dc ON d.id = dc."documentId"
           WHERE d.id != ${documentId}
             AND dc.embedding IS NOT NULL
           GROUP BY d.id, d."originalName"
@@ -197,9 +197,9 @@ export class EmbeddingsService {
         SELECT 
           "documentId",
           title,
-          1 - (avg_embedding <=> ${docEmbedding}::vector(${this.embeddingDimension})) as similarity
+          1 - (avg_embedding <=> ${docEmbedding}::vector(1536)) as similarity
         FROM doc_embeddings
-        ORDER BY avg_embedding <=> ${docEmbedding}::vector(${this.embeddingDimension})
+        ORDER BY avg_embedding <=> ${docEmbedding}::vector(1536)
         LIMIT ${limit}
       ` as Array<{ documentId: string; similarity: number; title: string }>;
 

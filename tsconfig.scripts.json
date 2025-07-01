@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false
+  },
+  "include": [
+    "scripts/**/*",
+    "test-*.ts",
+    "test-*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

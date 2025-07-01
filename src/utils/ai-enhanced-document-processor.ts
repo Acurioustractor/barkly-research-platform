@@ -5,7 +5,7 @@
 
 import { prisma } from '@/lib/database-safe';
 import { DocumentChunker, type DocumentChunk } from './document-chunker';
-import { PDFExtractor } from './pdf-extractor';
+import { ImprovedPDFExtractor, type ExtractionResult } from './pdf-extractor-improved';
 import { 
   analyzeDocumentChunk, 
   generateDocumentSummary,
@@ -44,11 +44,11 @@ export class AIEnhancedDocumentProcessor {
 
   constructor() {
     this.chunker = new DocumentChunker({
-      maxChunkSize: 2000, // Larger chunks for better AI context
-      overlapSize: 200,
+      maxChunkSize: 500,  // Much smaller for granular analysis
+      overlapSize: 150,   // 30% overlap for rich context
       preserveSentences: true,
       preserveParagraphs: true,
-      minChunkSize: 300
+      minChunkSize: 100   // Ensure meaningful chunks
     });
     this.embeddingsService = new EmbeddingsService();
   }
@@ -62,6 +62,13 @@ export class AIEnhancedDocumentProcessor {
     originalName: string,
     options: AIProcessingOptions = {}
   ): Promise<AIProcessingResult> {
+    console.log('=== Starting document processing ===', {
+      filename,
+      originalName,
+      bufferSize: buffer.length,
+      options
+    });
+    
     let documentId: string | undefined;
 
     try {
@@ -85,24 +92,94 @@ export class AIEnhancedDocumentProcessor {
 
       documentId = document.id;
 
-      // Extract text from PDF
-      const extractor = new PDFExtractor(buffer);
-      const text = await extractor.extractText();
-      const metadata = await extractor.getMetadata();
+      // Extract text from PDF with improved extractor
+      let text: string;
+      let metadata: { pageCount: number; wordCount: number };
+      let extractionResult: ExtractionResult;
+      
+      try {
+        const extractor = new ImprovedPDFExtractor(buffer);
+        extractionResult = await extractor.extractText();
+        const detailedMetadata = await extractor.getDetailedMetadata();
+        
+        // Handle extraction results
+        if (!extractionResult.text || extractionResult.text.length < 50) {
+          if (detailedMetadata.advanced.isScanned) {
+            throw new Error('Document appears to be scanned. OCR is required but not available.');
+          }
+          throw new Error(`Insufficient text extracted. Method: ${extractionResult.method}, Warnings: ${extractionResult.warnings.join(', ')}`);
+        }
+        
+        text = extractionResult.text;
+        metadata = {
+          pageCount: extractionResult.pageCount,
+          wordCount: text.split(/\s+/).filter(w => w.length > 0).length
+        };
+        
+        console.log('Text extraction result:', {
+          method: extractionResult.method,
+          confidence: extractionResult.confidence,
+          textLength: text.length,
+          textPreview: text.substring(0, 100),
+          metadata,
+          warnings: extractionResult.warnings,
+          isScanned: detailedMetadata.advanced.isScanned
+        });
+        
+        // Log warning for low confidence
+        if (extractionResult.confidence < 0.3) {
+          console.warn('Low confidence extraction:', extractionResult.confidence);
+        }
+      } catch (pdfError) {
+        console.error('PDF extraction failed:', pdfError);
+        throw new Error(`PDF extraction failed: ${pdfError instanceof Error ? pdfError.message : 'Unknown error'}`);
+      }
 
-      // Create chunks
-      const chunks = this.chunker.chunkDocument(text);
+      // Create chunks with multiple strategies for comprehensive analysis
+      const standardChunks = this.chunker.chunkDocument(text);
+      const slidingChunks = this.chunker.createSlidingWindowChunks(text, 400, 200); // 50% overlap
+      
+      // Combine chunks for maximum coverage
+      const allChunks = [...standardChunks];
+      const chunkTexts = new Set(standardChunks.map(c => c.text));
+      
+      // Add unique sliding chunks
+      for (const chunk of slidingChunks) {
+        if (!chunkTexts.has(chunk.text)) {
+          allChunks.push(chunk);
+          chunkTexts.add(chunk.text);
+        }
+      }
+      
+      // Sort by position
+      const chunks = allChunks.sort((a, b) => a.startChar - b.startChar);
+      
+      console.log('Chunking result:', {
+        standardChunksCount: standardChunks.length,
+        slidingChunksCount: slidingChunks.length,
+        totalUniqueChunks: chunks.length,
+        averageChunkSize: Math.round(chunks.reduce((sum, c) => sum + c.text.length, 0) / chunks.length),
+        firstChunk: chunks[0]
+      });
 
       // Store chunks in database
       const storedChunks = await this.storeChunks(documentId, chunks);
 
       // Analyze chunks with AI
       const analysisResults: AIAnalysisResult[] = [];
-      const useAI = options.useAI !== false && process.env.OPENAI_API_KEY;
+      const useAI = options.useAI !== false && (process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY);
+      
+      console.log('AI Processing Debug:', {
+        useAI,
+        optionsUseAI: options.useAI,
+        hasOpenAI: !!process.env.OPENAI_API_KEY,
+        hasAnthropic: !!process.env.ANTHROPIC_API_KEY,
+        chunksCount: chunks.length
+      });
 
       if (useAI) {
         // Process chunks in parallel (with rate limiting)
-        const chunkBatches = this.batchArray(chunks, 3); // Process 3 at a time
+        const chunkBatches = this.batchArray(chunks, 2); // Process 2 at a time for better quality
         
         for (const batch of chunkBatches) {
           const batchResults = await Promise.all(
@@ -133,7 +210,9 @@ export class AIEnhancedDocumentProcessor {
       }
 
       // Aggregate results
-      const aggregatedResults = this.aggregateAnalysisResults(analysisResults);
+      const aggregatedResults = useAI 
+        ? this.aggregateAnalysisResults(analysisResults)
+        : { themes: [], quotes: [], insights: [], keywords: [], summaries: [] };
 
       // Generate document summary if requested
       let summary: string | undefined;
@@ -167,6 +246,31 @@ export class AIEnhancedDocumentProcessor {
           status: 'COMPLETED',
           processedAt: new Date()
         }
+      });
+
+      console.log('=== WORLD-CLASS PROCESSING COMPLETE ===', {
+        documentId,
+        metrics: {
+          chunks: {
+            total: chunks.length,
+            averageSize: Math.round(chunks.reduce((sum, c) => sum + c.text.length, 0) / chunks.length),
+            processed: analysisResults.length
+          },
+          extraction: {
+            themes: aggregatedResults.themes.length,
+            quotes: aggregatedResults.quotes.length,
+            insights: aggregatedResults.insights.length,
+            keywords: aggregatedResults.keywords.length,
+            averageThemesPerChunk: (aggregatedResults.themes.length / chunks.length).toFixed(1),
+            averageQuotesPerChunk: (aggregatedResults.quotes.length / chunks.length).toFixed(1)
+          },
+          quality: {
+            highConfidenceThemes: aggregatedResults.themes.filter(t => t.confidence > 0.8).length,
+            actionableInsights: aggregatedResults.insights.filter(i => i.importance >= 8).length,
+            uniqueKeywords: new Set(aggregatedResults.keywords.map(k => k.term)).size
+          }
+        },
+        useAI
       });
 
       return {
@@ -329,7 +433,7 @@ export class AIEnhancedDocumentProcessor {
       documentId,
       theme: theme.name,
       confidence: theme.confidence,
-      evidence: theme.evidence.substring(0, 500) // Limit evidence length
+      context: theme.evidence.substring(0, 500) // Limit evidence length
     }));
 
     await prisma.documentTheme.createMany({

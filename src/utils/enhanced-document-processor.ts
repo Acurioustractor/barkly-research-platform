@@ -6,6 +6,7 @@
 import { prisma } from '@/lib/database-safe';
 import { DocumentChunker, type DocumentChunk } from './document-chunker';
 import { DocumentProcessor } from './document-processor';
+import { ImprovedPDFExtractor, type ExtractionResult } from './pdf-extractor-improved';
 import type { ProcessingStatus } from '@prisma/client';
 
 export interface ProcessingOptions {
@@ -73,8 +74,36 @@ export class EnhancedDocumentProcessor {
 
       documentId = document.id;
 
-      // Extract content using existing processor
+      // Extract content using improved PDF extractor first
+      const extractor = new ImprovedPDFExtractor(buffer);
+      const extractionResult = await extractor.extractText();
+      const detailedMetadata = await extractor.getDetailedMetadata();
+      
+      // Handle extraction failures
+      if (!extractionResult.text || extractionResult.text.length < 50) {
+        if (detailedMetadata.advanced.isScanned) {
+          throw new Error('Document appears to be scanned. OCR is required but not available.');
+        }
+        throw new Error(`Insufficient text extracted. Method: ${extractionResult.method}, Warnings: ${extractionResult.warnings.join(', ')}`);
+      }
+      
+      // Log extraction details
+      console.log('PDF extraction details:', {
+        method: extractionResult.method,
+        confidence: extractionResult.confidence,
+        warnings: extractionResult.warnings,
+        isScanned: detailedMetadata.advanced.isScanned
+      });
+      
+      // Fall back to basic processor for analysis (themes, quotes, etc)
       const extractedContent = await DocumentProcessor.extractTextFromPDF(buffer, filename);
+      
+      // Use improved extracted text if better
+      if (extractionResult.text.length > extractedContent.text.length) {
+        extractedContent.text = extractionResult.text;
+        extractedContent.metadata.pageCount = extractionResult.pageCount;
+        extractedContent.metadata.wordCount = extractionResult.text.split(/\s+/).filter(w => w.length > 0).length;
+      }
 
       // Create chunks
       const chunks = this.chunker.chunkDocument(extractedContent.text);

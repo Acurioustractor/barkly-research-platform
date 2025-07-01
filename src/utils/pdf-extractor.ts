@@ -39,11 +39,7 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<{
 }> {
   try {
     // Convert Buffer to Uint8Array
-    const uint8Array = new Uint8Array(
-      buffer.buffer,
-      buffer.byteOffset,
-      buffer.byteLength
-    );
+    const uint8Array = new Uint8Array(buffer);
     
     // Extract text from PDF - this also gives us totalPages
     const result = await extractText(uint8Array, {

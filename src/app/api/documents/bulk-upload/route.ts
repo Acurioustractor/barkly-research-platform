@@ -90,6 +90,11 @@ export async function POST(request: NextRequest) {
         results.push(...batchResults);
       } catch (batchError) {
         console.error(`Batch ${i/batchSize + 1} failed:`, batchError);
+        console.error('Full error details:', {
+          error: batchError,
+          stack: batchError instanceof Error ? batchError.stack : 'No stack trace',
+          options: processingOptions
+        });
         // Add failed results for this batch
         batch.forEach(doc => {
           results.push({

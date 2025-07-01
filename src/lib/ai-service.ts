@@ -64,55 +64,116 @@ export async function analyzeDocumentChunk(
     throw new Error('AI service not configured. Please set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.');
   }
 
-  const systemPrompt = `You are an expert document analyst specializing in extracting meaningful insights from documents.
-Your task is to analyze the provided text chunk and extract:
-1. A concise summary (2-3 sentences)
-2. Key themes with confidence scores
-3. Significant quotes with context
-4. Important keywords categorized by type
-5. Strategic insights
+  const systemPrompt = `You are a WORLD-CLASS document analyst with expertise in youth development, community research, Indigenous affairs, and social impact analysis. 
 
-Focus on themes related to: Youth Voice and Leadership, Cultural Identity and Heritage, Education and Learning, Health and Well-being, Technology and Innovation, Environmental Sustainability, Social Justice and Equity, Community Development.
+Your analysis must be EXHAUSTIVE and COMPREHENSIVE. You are expected to:
+- Extract EVERY theme, concept, and pattern (minimum 10-15 per chunk)
+- Find ALL meaningful quotes and statements (minimum 8-10 per chunk)
+- Identify ALL stakeholders, entities, and relationships
+- Generate deep, actionable insights (minimum 8-10 per chunk)
+- Detect subtle implications, contradictions, and consensus points
+- Note emotional undertones, sentiment, and urgency levels
+- Extract actionable recommendations with specific stakeholders
 
-Respond in JSON format only.`;
+You excel at finding patterns others miss, understanding implications, and connecting disparate pieces of information. Your analysis goes beyond surface-level observations to reveal deep insights.
 
-  const userPrompt = `Analyze this document chunk:
+Focus areas include but are not limited to: Youth Voice and Leadership, Cultural Identity and Heritage, Education and Learning, Health and Well-being, Technology and Innovation, Environmental Sustainability, Social Justice and Equity, Community Development, Governance and Decision-making, Economic Opportunities, Inter-generational Relationships, Place-based Solutions.
+
+Respond in detailed JSON format only. BE EXHAUSTIVE.`;
+
+  const userPrompt = `Perform an EXHAUSTIVE, WORLD-CLASS analysis of this document chunk:
 ${documentContext ? `Document Context: ${documentContext}\n\n` : ''}
-Text: ${chunkText}
+Text to analyze: ${chunkText}
 
-Provide analysis in this exact JSON format:
+CRITICAL REQUIREMENTS:
+- Extract AT LEAST 10-15 themes (find EVERY concept, pattern, and topic)
+- Find AT LEAST 8-10 meaningful quotes (include ALL significant statements)
+- Generate AT LEAST 8-10 deep insights (actionable, specific, stakeholder-focused)
+- Extract ALL keywords and entities (minimum 15-20)
+- Note ALL stakeholders mentioned or implied
+- Identify emotional undertones and urgency levels
+- Find contradictions, tensions, and consensus points
+- Extract specific recommendations with named stakeholders
+
+Provide COMPREHENSIVE analysis in this exact JSON format:
 {
-  "summary": "concise 2-3 sentence summary",
+  "summary": "detailed 3-4 sentence summary capturing ALL key points and nuances",
   "themes": [
     {
-      "name": "theme name",
+      "name": "specific theme name",
       "confidence": 0.0-1.0,
-      "evidence": "supporting text from chunk"
+      "evidence": "direct quotes and specific supporting text",
+      "implications": "what this means for stakeholders",
+      "relatedThemes": ["theme1", "theme2"],
+      "urgency": "high|medium|low"
     }
   ],
   "quotes": [
     {
-      "text": "exact quote",
-      "context": "surrounding context",
-      "significance": "why this quote matters",
-      "confidence": 0.0-1.0
+      "text": "exact quote - include ALL meaningful statements",
+      "context": "full surrounding context",
+      "significance": "detailed explanation of why this matters and implications",
+      "confidence": 0.0-1.0,
+      "speaker": "who said this if identifiable",
+      "sentiment": "positive|negative|neutral|mixed",
+      "stakeholders": ["who this affects"]
     }
   ],
   "keywords": [
     {
-      "term": "keyword",
+      "term": "keyword or key phrase",
       "frequency": count,
-      "category": "community|technical|emotional|general"
+      "category": "community|technical|emotional|action|concept|stakeholder|place|program",
+      "significance": "why this term matters",
+      "relatedTerms": ["related1", "related2"]
     }
   ],
   "insights": [
     {
-      "text": "insight description",
-      "category": "theme category",
-      "importance": 1-10
+      "text": "specific, actionable insight with clear implications",
+      "category": "opportunity|challenge|recommendation|risk|success|gap|trend",
+      "importance": 1-10,
+      "actionability": 1-10,
+      "stakeholders": ["specific people/groups affected"],
+      "evidence": "supporting evidence from text",
+      "timeframe": "immediate|short-term|long-term"
+    }
+  ],
+  "entities": [
+    {
+      "name": "person/organization/location/program name",
+      "type": "person|organization|location|concept|event|program",
+      "role": "their role or significance",
+      "mentions": count,
+      "sentiment": "how they're portrayed"
+    }
+  ],
+  "sentiment": {
+    "overall": -1.0 to 1.0,
+    "hope": 0.0-1.0,
+    "concern": 0.0-1.0,
+    "urgency": 0.0-1.0,
+    "confidence": 0.0-1.0
+  },
+  "contradictions": [
+    {
+      "topic": "what aspect has contradiction",
+      "statement1": "first position",
+      "statement2": "contradicting position",
+      "implication": "what this tension means"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "specific recommended action",
+      "stakeholder": "who should act",
+      "rationale": "why this is needed",
+      "priority": "high|medium|low"
     }
   ]
-}`;
+}
+
+REMEMBER: This is a WORLD-CLASS analysis. Be EXHAUSTIVE. Extract EVERYTHING. The minimums are just the floor - aim to double or triple them!`;
 
   try {
     const provider = getAIProvider();
