@@ -50,7 +50,7 @@ jobs:
           DIRECT_URL: postgresql://test:test@localhost:5432/test
       
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage/coverage-final.json
           flags: unittests
