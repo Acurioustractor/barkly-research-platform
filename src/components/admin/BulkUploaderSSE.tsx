@@ -231,7 +231,8 @@ export const BulkUploaderSSE: React.FC<BulkUploadProps> = ({
       error: null,
       progress: 0,
       currentFile: '',
-      statusMessage: ''
+      statusMessage: '',
+      extractSystems: false
     });
   };
 

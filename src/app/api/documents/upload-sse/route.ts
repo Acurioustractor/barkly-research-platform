@@ -159,11 +159,12 @@ export async function POST(request: NextRequest) {
             });
           }
 
+          const lastResult = results[results.length - 1];
           sendSSE(writer, { 
             type: 'file_complete',
             fileIndex: i,
             fileName: file.name,
-            documentId: document.id,
+            documentId: lastResult.documentId,
             progress: ((i + 1) / files.length) * 100
           });
 
