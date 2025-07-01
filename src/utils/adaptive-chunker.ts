@@ -261,7 +261,7 @@ export class AdaptiveChunker {
         chunks.push(this.createChunk(
           currentChunk.join(' '),
           chunks.length,
-          sentence.position
+          sentence?.position || 0
         ));
         
         // Start new chunk with overlap
@@ -270,16 +270,18 @@ export class AdaptiveChunker {
         currentSize = overlapSentences.join(' ').split(/\s+/).length;
       }
       
-      currentChunk.push(sentence.text);
+      if (sentence?.text) {
+        currentChunk.push(sentence.text);
+      }
       currentSize += sentenceSize;
       
       // Check for semantic boundaries
-      if (this.isSemanticBoundary(sentence.text, sentences[i + 1]?.text)) {
+      if (sentence?.text && this.isSemanticBoundary(sentence.text, sentences[i + 1]?.text)) {
         if (currentSize >= this.options.minChunkSize) {
           chunks.push(this.createChunk(
             currentChunk.join(' '),
             chunks.length,
-            sentence.position
+            sentence?.position || 0
           ));
           currentChunk = [];
           currentSize = 0;
@@ -314,13 +316,13 @@ export class AdaptiveChunker {
         const header = structure.headers[i];
         const nextHeader = structure.headers[i + 1];
         
-        const sectionStart = header.position;
+        const sectionStart = header?.position || 0;
         const sectionEnd = nextHeader?.position || text.length;
         const sectionText = text.substring(sectionStart, sectionEnd).trim();
         
         // If section is too large, split it
         if (sectionText.split(/\s+/).length > this.options.maxChunkSize) {
-          const subChunks = this.splitLargeSection(sectionText, header.text);
+          const subChunks = this.splitLargeSection(sectionText, header?.text || '');
           chunks.push(...subChunks.map((chunk, idx) => ({
             ...chunk,
             metadata: {
@@ -333,7 +335,7 @@ export class AdaptiveChunker {
             sectionText,
             chunks.length,
             sectionStart,
-            header.text
+            header?.text || ''
           ));
         }
       }
@@ -435,7 +437,7 @@ export class AdaptiveChunker {
       const previousChunk = chunks[i - 1];
       const nextChunk = chunks[i + 1];
       
-      let chunkText = currentChunk.text;
+      let chunkText = currentChunk?.text || '';
       
       // Add overlap from previous chunk
       if (previousChunk && this.options.overlapTokens > 0) {
@@ -451,10 +453,12 @@ export class AdaptiveChunker {
         chunkText = chunkText + ' ' + overlapWords.join(' ');
       }
       
-      overlappedChunks.push({
-        ...currentChunk,
-        text: chunkText
-      });
+      if (currentChunk) {
+        overlappedChunks.push({
+          ...currentChunk,
+          text: chunkText
+        });
+      }
     }
     
     return overlappedChunks;
@@ -519,7 +523,7 @@ export class AdaptiveChunker {
       for (let i = 0; i < chunks.length; i++) {
         if (i !== index) {
           const otherKeywords = chunkKeywords[i];
-          const overlap = this.calculateKeywordOverlap(myKeywords, otherKeywords);
+          const overlap = myKeywords && otherKeywords ? this.calculateKeywordOverlap(myKeywords, otherKeywords) : 0;
           
           if (overlap > 0.3) { // 30% keyword overlap threshold
             related.push(i);
