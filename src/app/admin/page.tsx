@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BulkUploader } from '@/components/admin/BulkUploader';
+import { BulkUploaderSSE } from '@/components/admin/BulkUploaderSSE';
 import { DatabaseStatus } from '@/components/core/DatabaseStatus';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/core/Card';
 import { Button } from '@/components/core/Button';
@@ -15,6 +16,7 @@ const AIConfigPanel = dynamic(() => import('@/components/admin/AIConfigPanel'), 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'upload' | 'manage' | 'analytics' | 'ai'>('upload');
   const [stats, setStats] = useState<{ totalDocuments: number; totalChunks: number; totalThemes: number; totalQuotes: number } | null>(null);
+  const [useSSEUploader, setUseSSEUploader] = useState(true); // Default to SSE uploader
 
   useEffect(() => {
     fetchStats();
@@ -92,11 +94,42 @@ export default function AdminPage() {
                 </p>
               </div>
               
-              <BulkUploader 
-                onUploadComplete={(results) => {
-                  console.log('Upload completed:', results);
-                }}
-              />
+              {/* Uploader Type Toggle */}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Upload Method</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {useSSEUploader ? 'Real-time progress with Server-Sent Events' : 'Standard upload with progress bar'}
+                      </p>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setUseSSEUploader(!useSSEUploader)}
+                    >
+                      Switch to {useSSEUploader ? 'Standard' : 'Real-time'} Upload
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {useSSEUploader ? (
+                <BulkUploaderSSE 
+                  onUploadComplete={(results) => {
+                    console.log('SSE Upload completed:', results);
+                    fetchStats(); // Refresh stats
+                  }}
+                />
+              ) : (
+                <BulkUploader 
+                  onUploadComplete={(results) => {
+                    console.log('Upload completed:', results);
+                    fetchStats(); // Refresh stats
+                  }}
+                />
+              )}
 
               {/* Upload Guidelines */}
               <Card>
@@ -112,8 +145,8 @@ export default function AdminPage() {
                       <h4 className="font-medium mb-2">File Requirements</h4>
                       <ul className="text-sm text-muted-foreground space-y-1">
                         <li>• PDF format only</li>
-                        <li>• Maximum 50MB per file</li>
-                        <li>• Up to 100 files per batch</li>
+                        <li>• Maximum 10MB per file</li>
+                        <li>• Up to 20 files per batch</li>
                         <li>• Text-based PDFs (not scanned images)</li>
                       </ul>
                     </div>
