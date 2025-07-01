@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
+import { PageLayout, Container } from '@/components/core';
 
 const ResearchInsights = dynamic(() => import('@/components/visualization/ResearchInsights'), {
   ssr: false,
@@ -17,15 +18,16 @@ export default function InsightsPage() {
   const [activeView, setActiveView] = useState<'insights' | 'network'>('insights');
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
-      <div className="space-y-8">
-        {/* Page Header */}
-        <div className="space-y-4">
-          <h1 className="text-4xl font-bold">Research Insights</h1>
-          <p className="text-xl text-gray-600 max-w-3xl">
-            Explore AI-generated insights, themes, and connections across your document repository.
-          </p>
-        </div>
+    <PageLayout>
+      <section className="py-12 lg:py-16">
+        <Container>
+          {/* Page Header */}
+          <div className="space-y-4 mb-8">
+            <h1 className="text-4xl font-bold">Research Insights</h1>
+            <p className="text-xl text-gray-600 max-w-3xl">
+              Explore AI-generated insights, themes, and connections across your document repository.
+            </p>
+          </div>
 
         {/* View Toggle */}
         <div className="flex gap-4 border-b">
@@ -57,7 +59,8 @@ export default function InsightsPage() {
         ) : (
           <DocumentNetwork />
         )}
-      </div>
-    </div>
+        </Container>
+      </section>
+    </PageLayout>
   );
 }

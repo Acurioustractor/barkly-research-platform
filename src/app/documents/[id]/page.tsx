@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { PageLayout, Container } from '@/components/core';
 import Link from 'next/link';
 
 interface Document {
@@ -44,27 +45,37 @@ export default function DocumentViewPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8 px-4">
-        <div className="animate-pulse">Loading document...</div>
-      </div>
+      <PageLayout>
+        <section className="py-12 lg:py-16">
+          <Container>
+            <div className="animate-pulse">Loading document...</div>
+          </Container>
+        </section>
+      </PageLayout>
     );
   }
 
   if (error || !document) {
     return (
-      <div className="container mx-auto py-8 px-4">
-        <div className="bg-red-50 text-red-800 p-4 rounded">
-          {error || 'Document not found'}
-        </div>
-        <Link href="/documents" className="mt-4 inline-block text-blue-600 hover:underline">
-          ← Back to documents
-        </Link>
-      </div>
+      <PageLayout>
+        <section className="py-12 lg:py-16">
+          <Container>
+            <div className="bg-red-50 text-red-800 p-4 rounded">
+              {error || 'Document not found'}
+            </div>
+            <Link href="/documents" className="mt-4 inline-block text-blue-600 hover:underline">
+              ← Back to documents
+            </Link>
+          </Container>
+        </section>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
+    <PageLayout>
+      <section className="py-12 lg:py-16">
+        <Container>
       <Link href="/documents" className="text-blue-600 hover:underline mb-4 inline-block">
         ← Back to documents
       </Link>
@@ -112,6 +123,8 @@ export default function DocumentViewPage() {
           <p className="text-gray-500">No text extracted from this document.</p>
         )}
       </div>
-    </div>
+        </Container>
+      </section>
+    </PageLayout>
   );
 }

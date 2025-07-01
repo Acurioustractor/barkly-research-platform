@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { PageLayout, Container } from '@/components/core';
 import { DocumentUpload } from '@/components/core/DocumentUpload';
 import { DocumentResults } from '@/components/core/DocumentResults';
 import { DatabaseStatus } from '@/components/core/DatabaseStatus';
@@ -15,18 +16,19 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl">
-      <div className="space-y-8">
-        {/* Page Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-foreground">
-            Document Analysis
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Upload PDF documents to extract insights, themes, and youth voices using AI-powered analysis. 
-            This tool helps identify key patterns and quotes from community research documents.
-          </p>
-        </div>
+    <PageLayout>
+      <section className="py-12 lg:py-16">
+        <Container>
+          {/* Page Header */}
+          <div className="text-center space-y-4 mb-8">
+            <h1 className="text-4xl font-bold text-foreground">
+              Document Analysis
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Upload PDF documents to extract insights, themes, and youth voices using AI-powered analysis. 
+              This tool helps identify key patterns and quotes from community research documents.
+            </p>
+          </div>
 
         {/* Database Status */}
         <DatabaseStatus />
@@ -92,7 +94,8 @@ export default function DocumentsPage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+        </Container>
+      </section>
+    </PageLayout>
   );
 }

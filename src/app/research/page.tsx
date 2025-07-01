@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
+import { PageLayout, Container } from '@/components/core';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/core/Card';
 import { Button } from '@/components/core/Button';
 
@@ -25,9 +26,10 @@ export default function ResearchPage() {
   ];
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
-      <div className="space-y-8">
-        {/* Page Header */}
+    <PageLayout>
+      <section className="py-12 lg:py-16">
+        <Container>
+          {/* Page Header */}
         <div className="space-y-4">
           <h1 className="text-4xl font-bold text-foreground">
             Research Analysis
@@ -143,7 +145,8 @@ export default function ResearchPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </div>
+        </Container>
+      </section>
+    </PageLayout>
   );
 }
