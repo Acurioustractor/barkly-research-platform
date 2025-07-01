@@ -19,7 +19,7 @@
     "worker:dev": "tsx watch src/lib/worker.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.55.0",
+    "@anthropic-ai/sdk": "^0.55.1",
     "@prisma/client": "^6.10.1",
     "@types/d3": "^7.4.3",
     "@vercel/postgres": "^0.10.0",
