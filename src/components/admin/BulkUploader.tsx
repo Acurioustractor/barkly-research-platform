@@ -40,6 +40,8 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
     currentFile: ''
   });
 
+  const [uploadStatus, setUploadStatus] = useState<string>('Preparing upload...');
+
   const [options, setOptions] = useState({
     source: 'bulk_upload',
     category: 'community_research',
@@ -122,10 +124,13 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
     if (state.files.length === 0) return;
 
     setState(prev => ({ ...prev, uploading: true, error: null, progress: 0 }));
+    setUploadStatus('Preparing files for upload...');
 
     // Start progress animation
     let progressInterval: NodeJS.Timeout | null = null;
+    let timeoutTimer: NodeJS.Timeout | null = null;
     let currentProgress = 0;
+    const startTime = Date.now();
     
     // Simulate progress based on expected processing time
     const estimatedTimePerFile = 3000; // 3 seconds per file
@@ -136,8 +141,32 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
       currentProgress += progressStep;
       if (currentProgress < 90) { // Stop at 90% until actual completion
         setState(prev => ({ ...prev, progress: currentProgress }));
+        
+        // Update status message based on progress
+        if (currentProgress < 20) {
+          setUploadStatus('Uploading files to server...');
+        } else if (currentProgress < 40) {
+          setUploadStatus('Extracting text from PDFs...');
+        } else if (currentProgress < 60) {
+          setUploadStatus('Analyzing document content with AI...');
+        } else if (currentProgress < 80) {
+          setUploadStatus('Extracting themes and insights...');
+        } else {
+          setUploadStatus('Finalizing processing...');
+        }
       }
     }, 100);
+
+    // Add timeout handling (5 minutes max)
+    timeoutTimer = setTimeout(() => {
+      if (progressInterval) clearInterval(progressInterval);
+      setState(prev => ({
+        ...prev,
+        error: 'Upload timed out. Please try again with fewer files or check your connection.',
+        uploading: false,
+        progress: 0
+      }));
+    }, 300000); // 5 minutes
 
     try {
       const formData = new FormData();
@@ -155,10 +184,15 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
       formData.append('generateSummary', 'true');
       formData.append('generateEmbeddings', 'true');
 
+      console.log(`Starting upload of ${state.files.length} files...`);
+      setUploadStatus('Sending files to server...');
+
       const response = await fetch('/api/documents/bulk-upload', {
         method: 'POST',
         body: formData,
       });
+
+      console.log('Server response received:', response.status);
 
       // Check if response is JSON
       const contentType = response.headers.get('content-type');
@@ -176,10 +210,17 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
         throw new Error(result.error || `Upload failed with status ${response.status}`);
       }
 
-      // Clear progress interval and set to 100%
+      // Clear progress interval and timeout, set to 100%
       if (progressInterval) {
         clearInterval(progressInterval);
       }
+      if (timeoutTimer) {
+        clearTimeout(timeoutTimer);
+      }
+
+      // Log processing time
+      const processingTime = (Date.now() - startTime) / 1000;
+      console.log(`Upload completed in ${processingTime.toFixed(1)}s`);
 
       setState(prev => ({
         ...prev,
@@ -191,9 +232,12 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
       onUploadComplete?.(result);
 
     } catch (error) {
-      // Clear progress interval on error
+      // Clear progress interval and timeout on error
       if (progressInterval) {
         clearInterval(progressInterval);
+      }
+      if (timeoutTimer) {
+        clearTimeout(timeoutTimer);
       }
 
       setState(prev => ({
@@ -411,9 +455,12 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  This may take a few minutes depending on document size and complexity
-                </p>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-center">{uploadStatus}</p>
+                  <p className="text-xs text-muted-foreground text-center">
+                    This may take a few minutes depending on document size and complexity
+                  </p>
+                </div>
               </div>
             )}
 
