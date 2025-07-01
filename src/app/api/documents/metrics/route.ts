@@ -20,19 +20,16 @@ export async function GET(request: NextRequest) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Get daily processing metrics
-    const dailyMetrics = await prisma.document.groupBy({
-      by: ['uploadedAt'],
-      where: {
-        uploadedAt: {
-          gte: startDate,
-          lte: endDate
-        }
-      },
-      _count: {
-        id: true
-      }
-    });
+    // Get daily processing metrics using raw SQL since groupBy doesn't support DateTime grouping
+    const dailyMetrics = await prisma.$queryRaw`
+      SELECT 
+        DATE(uploaded_at) as date,
+        COUNT(*)::integer as count
+      FROM documents 
+      WHERE uploaded_at >= ${startDate} AND uploaded_at <= ${endDate}
+      GROUP BY DATE(uploaded_at)
+      ORDER BY DATE(uploaded_at)
+    ` as Array<{ date: Date; count: number }>;
 
     // Get processing status distribution
     const statusDistribution = await prisma.document.groupBy({
@@ -115,13 +112,13 @@ export async function GET(request: NextRequest) {
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       
-      const dayMetrics = dailyMetrics.filter(m => 
-        m.uploadedAt.toISOString().split('T')[0] === dateStr
+      const dayMetrics = dailyMetrics.find(m => 
+        m.date.toISOString().split('T')[0] === dateStr
       );
       
       dailyData.unshift({
         date: dateStr,
-        documents: dayMetrics.reduce((sum, m) => sum + m._count.id, 0)
+        documents: dayMetrics?.count || 0
       });
     }
 
