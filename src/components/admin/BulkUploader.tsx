@@ -187,26 +187,57 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
       console.log(`Starting upload of ${state.files.length} files...`);
       setUploadStatus('Sending files to server...');
 
-      const response = await fetch('/api/documents/bulk-upload', {
-        method: 'POST',
-        body: formData,
-      });
+      // Create abort controller for fetch timeout
+      const controller = new AbortController();
+      const fetchTimeout = setTimeout(() => {
+        controller.abort();
+        console.error('Fetch request timed out after 4 minutes');
+      }, 240000); // 4 minutes (less than Vercel's 5 min limit)
 
-      console.log('Server response received:', response.status);
+      let response;
+      try {
+        response = await fetch('/api/documents/bulk-upload', {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal
+        });
+        clearTimeout(fetchTimeout);
+        console.log('Server response received:', response.status);
+      } catch (fetchError) {
+        clearTimeout(fetchTimeout);
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          throw new Error('Upload timed out. The server took too long to process your files. Try uploading fewer files at once.');
+        }
+        console.error('Fetch error:', fetchError);
+        throw new Error('Network error: Unable to reach the server. Please check your connection and try again.');
+      }
 
       // Check if response is JSON
       const contentType = response.headers.get('content-type');
       let result;
       
-      if (contentType && contentType.includes('application/json')) {
-        result = await response.json();
-      } else {
-        // Handle non-JSON responses (like HTML error pages)
-        const text = await response.text();
-        result = { error: `Server error: ${response.status} ${response.statusText}`, details: text.substring(0, 200) + '...' };
+      console.log('Response content-type:', contentType);
+      
+      try {
+        if (contentType && contentType.includes('application/json')) {
+          result = await response.json();
+          console.log('JSON response received:', result);
+        } else {
+          // Handle non-JSON responses (like HTML error pages)
+          const text = await response.text();
+          console.error('Non-JSON response:', text.substring(0, 500));
+          result = { 
+            error: `Server error: ${response.status} ${response.statusText}`, 
+            details: text.substring(0, 200) + '...' 
+          };
+        }
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError);
+        throw new Error('Server returned an invalid response. Please try again.');
       }
 
       if (!response.ok) {
+        console.error('Response not OK:', response.status, result);
         throw new Error(result.error || `Upload failed with status ${response.status}`);
       }
 

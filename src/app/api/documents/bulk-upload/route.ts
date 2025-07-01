@@ -7,6 +7,8 @@ export const dynamic = 'force-dynamic';
 
 // Increase body size limit to 50MB
 export async function POST(request: NextRequest) {
+  console.log('[bulk-upload] Request received at:', new Date().toISOString());
+  
   try {
     // Check if database is available
     const dbAvailable = isDatabaseAvailable();
@@ -79,34 +81,42 @@ export async function POST(request: NextRequest) {
       generateEmbeddings
     };
 
-    // Process in smaller batches to avoid memory issues
-    const batchSize = 5;
+    // Process documents one by one
     const results = [];
+    console.log(`[bulk-upload] Processing ${documents.length} documents...`);
     
-    for (let i = 0; i < documents.length; i += batchSize) {
-      const batch = documents.slice(i, i + batchSize);
+    for (let i = 0; i < documents.length; i++) {
+      const doc = documents[i];
+      console.log(`[bulk-upload] Processing document ${i + 1}/${documents.length}: ${doc.originalName}`);
+      
       try {
-        const batchResults = await processor.processBatchDocuments(batch, processingOptions);
-        results.push(...batchResults);
-      } catch (batchError) {
-        console.error(`Batch ${i/batchSize + 1} failed:`, batchError);
+        // Process each document individually
+        const result = await processor.processAndStoreDocument(
+          doc.buffer,
+          doc.filename,
+          doc.originalName,
+          processingOptions
+        );
+        results.push(result);
+        console.log(`[bulk-upload] Document ${i + 1} processed successfully`);
+      } catch (docError) {
+        console.error(`[bulk-upload] Document ${i + 1} failed:`, docError);
         console.error('Full error details:', {
-          error: batchError,
-          stack: batchError instanceof Error ? batchError.stack : 'No stack trace',
-          options: processingOptions
+          error: docError,
+          stack: docError instanceof Error ? docError.stack : 'No stack trace',
+          filename: doc.originalName
         });
-        // Add failed results for this batch
-        batch.forEach(doc => {
-          results.push({
-            documentId: doc.filename,
-            status: 'FAILED' as const,
-            chunks: 0,
-            themes: 0,
-            quotes: 0,
-            insights: 0,
-            keywords: 0,
-            errorMessage: batchError instanceof Error ? batchError.message : 'Batch processing failed'
-          });
+        
+        // Add failed result for this document
+        results.push({
+          documentId: doc.filename,
+          status: 'FAILED' as const,
+          chunks: 0,
+          themes: 0,
+          quotes: 0,
+          insights: 0,
+          keywords: 0,
+          errorMessage: docError instanceof Error ? docError.message : 'Document processing failed'
         });
       }
     }
@@ -123,12 +133,17 @@ export async function POST(request: NextRequest) {
       totalKeywords: results.reduce((sum, r) => sum + r.keywords, 0)
     };
 
-    return NextResponse.json({
+    const response = {
       success: true,
       summary,
       results,
       message: `Successfully processed ${summary.successful} of ${summary.totalFiles} documents`
-    });
+    };
+    
+    console.log(`[bulk-upload] Request completed successfully at:`, new Date().toISOString());
+    console.log(`[bulk-upload] Summary:`, summary);
+    
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('Bulk upload error:', error);

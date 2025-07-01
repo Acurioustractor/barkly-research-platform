@@ -30,6 +30,9 @@ export async function GET(request: NextRequest) {
       },
       select: {
         uploadedAt: true
+      },
+      orderBy: {
+        uploadedAt: 'desc'
       }
     });
     
