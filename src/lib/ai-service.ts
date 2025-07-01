@@ -31,6 +31,33 @@ function getAIProvider() {
   return null;
 }
 
+// Helper function to extract JSON from AI response
+function extractJSON(text: string): any {
+  // First try direct parsing
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Try to extract JSON from markdown code blocks
+    const jsonMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[1]);
+      } catch {}
+    }
+    
+    // Try to find JSON object in the text
+    const firstBrace = text.indexOf('{');
+    const lastBrace = text.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      try {
+        return JSON.parse(text.substring(firstBrace, lastBrace + 1));
+      } catch {}
+    }
+    
+    throw new Error('No valid JSON found in response');
+  }
+}
+
 export interface AIAnalysisResult {
   summary: string;
   themes: Array<{
@@ -193,7 +220,12 @@ REMEMBER: This is a WORLD-CLASS analysis. Be EXHAUSTIVE. Extract EVERYTHING. The
         throw new Error('Unexpected response type from Anthropic');
       }
       
-      return JSON.parse(content.text) as AIAnalysisResult;
+      try {
+        return extractJSON(content.text) as AIAnalysisResult;
+      } catch (parseError) {
+        console.error('Failed to parse Anthropic response:', content.text);
+        throw new Error(`Invalid JSON response from Anthropic: ${parseError}`);
+      }
     }
 
     const completion = await openai!.chat.completions.create({
@@ -215,7 +247,12 @@ REMEMBER: This is a WORLD-CLASS analysis. Be EXHAUSTIVE. Extract EVERYTHING. The
       throw new Error('No response from AI service');
     }
 
-    return JSON.parse(response) as AIAnalysisResult;
+    try {
+      return extractJSON(response) as AIAnalysisResult;
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response:', response);
+      throw new Error(`Invalid JSON response from OpenAI: ${parseError}`);
+    }
   } catch (error) {
     console.error('AI analysis error:', error);
     // Fallback to basic analysis if AI fails

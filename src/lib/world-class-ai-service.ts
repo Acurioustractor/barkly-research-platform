@@ -16,6 +16,33 @@ const anthropic = process.env.ANTHROPIC_API_KEY
   ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   : null;
 
+// Helper function to extract JSON from AI response
+function extractJSON(text: string): any {
+  // First try direct parsing
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Try to extract JSON from markdown code blocks
+    const jsonMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[1]);
+      } catch {}
+    }
+    
+    // Try to find JSON object in the text
+    const firstBrace = text.indexOf('{');
+    const lastBrace = text.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      try {
+        return JSON.parse(text.substring(firstBrace, lastBrace + 1));
+      } catch {}
+    }
+    
+    throw new Error('No valid JSON found in response');
+  }
+}
+
 // Enhanced analysis result types
 export interface DeepAnalysisResult {
   summary: string;
@@ -263,7 +290,7 @@ IMPORTANT:
         throw new Error('Unexpected response type from Anthropic');
       }
       
-      return JSON.parse(content.text) as DeepAnalysisResult;
+      return extractJSON(content.text) as DeepAnalysisResult;
     }
 
     const completion = await openai!.chat.completions.create({
@@ -282,7 +309,7 @@ IMPORTANT:
       throw new Error('No response from AI service');
     }
 
-    return JSON.parse(response) as DeepAnalysisResult;
+    return extractJSON(response) as DeepAnalysisResult;
   } catch (error) {
     console.error('First pass analysis error:', error);
     throw error;
@@ -582,7 +609,7 @@ async function callAI(systemPrompt: string, userPrompt: string): Promise<any> {
       throw new Error('Unexpected response type');
     }
     
-    return JSON.parse(content.text);
+    return extractJSON(content.text);
   }
 
   const completion = await openai!.chat.completions.create({
@@ -601,7 +628,7 @@ async function callAI(systemPrompt: string, userPrompt: string): Promise<any> {
     throw new Error('No response from AI service');
   }
 
-  return JSON.parse(response);
+  return extractJSON(response);
 }
 
 /**
