@@ -21,14 +21,15 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - days);
 
     // Get daily processing metrics using raw SQL since groupBy doesn't support DateTime grouping
+    // Use proper PostgreSQL date functions
     const dailyMetrics = await prisma.$queryRaw`
       SELECT 
-        DATE(uploaded_at) as date,
+        DATE(uploaded_at AT TIME ZONE 'UTC') as date,
         COUNT(*)::integer as count
-      FROM documents 
+      FROM "Document"
       WHERE uploaded_at >= ${startDate} AND uploaded_at <= ${endDate}
-      GROUP BY DATE(uploaded_at)
-      ORDER BY DATE(uploaded_at)
+      GROUP BY DATE(uploaded_at AT TIME ZONE 'UTC')
+      ORDER BY DATE(uploaded_at AT TIME ZONE 'UTC')
     ` as Array<{ date: Date; count: number }>;
 
     // Get processing status distribution

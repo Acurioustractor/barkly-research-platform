@@ -123,6 +123,22 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
 
     setState(prev => ({ ...prev, uploading: true, error: null, progress: 0 }));
 
+    // Start progress animation
+    let progressInterval: NodeJS.Timeout | null = null;
+    let currentProgress = 0;
+    
+    // Simulate progress based on expected processing time
+    const estimatedTimePerFile = 3000; // 3 seconds per file
+    const totalEstimatedTime = Math.min(state.files.length * estimatedTimePerFile, 60000); // Cap at 60s
+    const progressStep = 100 / (totalEstimatedTime / 100); // Update every 100ms
+    
+    progressInterval = setInterval(() => {
+      currentProgress += progressStep;
+      if (currentProgress < 90) { // Stop at 90% until actual completion
+        setState(prev => ({ ...prev, progress: currentProgress }));
+      }
+    }, 100);
+
     try {
       const formData = new FormData();
       
@@ -160,6 +176,11 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
         throw new Error(result.error || `Upload failed with status ${response.status}`);
       }
 
+      // Clear progress interval and set to 100%
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+
       setState(prev => ({
         ...prev,
         results: result,
@@ -170,6 +191,11 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
       onUploadComplete?.(result);
 
     } catch (error) {
+      // Clear progress interval on error
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Upload failed',
@@ -371,17 +397,23 @@ export const BulkUploader: React.FC<BulkUploadProps> = ({
 
             {/* Upload Progress */}
             {state.uploading && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span>Processing documents...</span>
+                  <span>Processing {state.files.length} documents...</span>
                   <span>{Math.round(state.progress)}%</span>
                 </div>
-                <div className="w-full bg-muted rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                   <div 
-                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    className="bg-primary h-2 rounded-full transition-all duration-300 relative"
                     style={{ width: `${state.progress}%` }}
-                  />
+                  >
+                    {/* Animated stripe effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                  </div>
                 </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  This may take a few minutes depending on document size and complexity
+                </p>
               </div>
             )}
 
