@@ -7,7 +7,7 @@ export const maxDuration = 300; // 5 minutes
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-function sendSSE(writer: WritableStreamDefaultWriter, data: any) {
+function sendSSE(writer: WritableStreamDefaultWriter, data: unknown) {
   const message = `data: ${JSON.stringify(data)}\n\n`;
   const encoder = new TextEncoder();
   writer.write(encoder.encode(message));
@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
   console.log('[upload-sse] Request received');
   
   // Set up SSE response
-  const encoder = new TextEncoder();
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();
   

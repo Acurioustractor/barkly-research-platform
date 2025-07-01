@@ -222,10 +222,10 @@ export default function AdminPage() {
               <AIConfigPanel />
             </div>
           )}
-        </div>
+          </div>
 
-        {/* Quick Stats */}
-        <Card>
+          {/* Quick Stats */}
+          <Card>
           <CardHeader>
             <CardTitle>Repository Status</CardTitle>
             <CardDescription>Current state of the document repository</CardDescription>
@@ -250,10 +250,10 @@ export default function AdminPage() {
               </div>
             </div>
           </CardContent>
-        </Card>
+          </Card>
 
-        {/* API Information */}
-        <Card>
+          {/* API Information */}
+          <Card>
           <CardHeader>
             <CardTitle>API Endpoints</CardTitle>
             <CardDescription>Available endpoints for document management</CardDescription>
@@ -307,7 +307,6 @@ export default function AdminPage() {
             </div>
           </CardContent>
         </Card>
-          </div>
         </Container>
       </section>
     </PageLayout>
