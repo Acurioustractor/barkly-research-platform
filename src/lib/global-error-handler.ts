@@ -170,5 +170,5 @@ export const errorReporter = {
   },
 };
 
-// Initialize on module load
+// Initialize on module load (but only run appropriate handlers for each environment)
 initializeErrorHandlers();

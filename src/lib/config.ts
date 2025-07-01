@@ -36,8 +36,23 @@ const envSchema = z.object({
   PDF_EXTRACTION_TIMEOUT_MS: z.string().transform(val => parseInt(val)).default('60000'),
 });
 
-// Parse and validate environment variables
+// Parse and validate environment variables (server-side only)
 function parseEnv() {
+  // Skip validation on client side
+  if (typeof window !== 'undefined') {
+    return {
+      NODE_ENV: 'development',
+      ENABLE_AI_ANALYSIS: true,
+      ENABLE_EMBEDDINGS: true,
+      ENABLE_PARALLEL_PROCESSING: true,
+      MAX_FILE_SIZE: 10485760,
+      MAX_CONCURRENT_UPLOADS: 3,
+      CHUNK_SIZE: 1000,
+      AI_TIMEOUT_MS: 30000,
+      PDF_EXTRACTION_TIMEOUT_MS: 60000,
+    } as any;
+  }
+
   try {
     return envSchema.parse(process.env);
   } catch (error) {
@@ -76,10 +91,10 @@ export const config = parseEnv();
 
 // Feature availability checks
 export const features = {
-  hasOpenAI: () => !!config.OPENAI_API_KEY,
-  hasAnthropic: () => !!config.ANTHROPIC_API_KEY,
+  hasOpenAI: () => typeof window === 'undefined' ? !!config.OPENAI_API_KEY : false,
+  hasAnthropic: () => typeof window === 'undefined' ? !!config.ANTHROPIC_API_KEY : false,
   hasAnyAI: () => features.hasOpenAI() || features.hasAnthropic(),
-  hasRedis: () => !!config.REDIS_URL,
+  hasRedis: () => typeof window === 'undefined' ? !!config.REDIS_URL : false,
   isProduction: () => config.NODE_ENV === 'production',
   isDevelopment: () => config.NODE_ENV === 'development',
   
