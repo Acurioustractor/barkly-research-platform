@@ -20,17 +20,33 @@ export async function GET(request: NextRequest) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Get daily processing metrics using raw SQL since groupBy doesn't support DateTime grouping
-    // Use proper PostgreSQL date functions
-    const dailyMetrics = await prisma.$queryRaw`
-      SELECT 
-        DATE(uploaded_at AT TIME ZONE 'UTC') as date,
-        COUNT(*)::integer as count
-      FROM "Document"
-      WHERE uploaded_at >= ${startDate} AND uploaded_at <= ${endDate}
-      GROUP BY DATE(uploaded_at AT TIME ZONE 'UTC')
-      ORDER BY DATE(uploaded_at AT TIME ZONE 'UTC')
-    ` as Array<{ date: Date; count: number }>;
+    // Get all documents in date range
+    const documentsInRange = await prisma.document.findMany({
+      where: {
+        uploadedAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      select: {
+        uploadedAt: true
+      }
+    });
+    
+    // Group by date manually
+    const dateGroups = new Map<string, number>();
+    documentsInRange.forEach(doc => {
+      const dateStr = doc.uploadedAt.toISOString().split('T')[0];
+      dateGroups.set(dateStr, (dateGroups.get(dateStr) || 0) + 1);
+    });
+    
+    // Convert to array format
+    const dailyMetrics = Array.from(dateGroups.entries())
+      .map(([dateStr, count]) => ({
+        date: new Date(dateStr),
+        count
+      }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
 
     // Get processing status distribution
     const statusDistribution = await prisma.document.groupBy({
@@ -155,10 +171,31 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Metrics API error:', error);
+    
+    // Provide more detailed error information for debugging
+    const errorDetails = error instanceof Error ? {
+      message: error.message,
+      name: error.name,
+      // Include stack trace in development only
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+    } : { message: 'Unknown error' };
+    
+    // Check for specific Prisma errors
+    if (error instanceof Error && error.message.includes('P2010')) {
+      return NextResponse.json(
+        { 
+          error: 'Database query failed',
+          details: 'Raw query error - possibly invalid SQL syntax',
+          debug: errorDetails
+        },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
       { 
         error: 'Failed to fetch metrics',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: errorDetails
       },
       { status: 500 }
     );
