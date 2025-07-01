@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { PageLayout, Container } from '@/components/core';
 import { BulkUploader } from '@/components/admin/BulkUploader';
 import { BulkUploaderSSE } from '@/components/admin/BulkUploaderSSE';
 import { DatabaseStatus } from '@/components/core/DatabaseStatus';
@@ -47,43 +48,46 @@ export default function AdminPage() {
   ];
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
-      <div className="space-y-8">
-        {/* Page Header */}
-        <div className="space-y-4">
-          <h1 className="text-4xl font-bold text-foreground">
-            Document Administration
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl">
-            Manage the document repository that powers the Barkly Research Platform. Upload documents in bulk, 
-            organize collections, and monitor processing analytics.
-          </p>
-        </div>
+    <PageLayout>
+      <section className="py-12 lg:py-16">
+        <Container>
+          {/* Page Header */}
+          <div className="space-y-4 mb-8">
+            <h1 className="text-4xl font-bold text-foreground">
+              Document Administration
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-3xl">
+              Manage the document repository that powers the Barkly Research Platform. Upload documents in bulk, 
+              organize collections, and monitor processing analytics.
+            </p>
+          </div>
 
-        {/* Tab Navigation */}
-        <div className="border-b">
-          <nav className="flex space-x-8">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as 'upload' | 'manage' | 'analytics' | 'ai')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
+          {/* Tab Navigation */}
+          <div className="border-b mb-8">
+            <nav className="flex space-x-8">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as 'upload' | 'manage' | 'analytics' | 'ai')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === tab.id
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
 
-        {/* Database Status */}
-        <DatabaseStatus />
+          {/* Database Status */}
+          <div className="mb-8">
+            <DatabaseStatus />
+          </div>
 
-        {/* Tab Content */}
-        <div className="space-y-6">
+          {/* Tab Content */}
+          <div className="space-y-6">
           {activeTab === 'upload' && (
             <div className="space-y-6">
               <div>
@@ -303,7 +307,9 @@ export default function AdminPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </div>
+          </div>
+        </Container>
+      </section>
+    </PageLayout>
   );
 }
