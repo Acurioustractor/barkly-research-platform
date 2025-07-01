@@ -1,10 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { PageLayout } from '@/components/core';
 import { Container } from '@/components/core';
 import { SystemsMap, DataRiver, ThemeRelationships } from '@/components/visualization';
+import { DocumentSystemsMap } from '@/components/visualization/DocumentSystemsMap';
 import { barklyYouthProject } from '@/data/projects/barkly-youth';
 import { ProjectTransformer } from '@/data/transformers';
+import { useSystemsMap } from '@/hooks/useSystemsMap';
+import { Button } from '@/components/core/Button';
+import { Card, CardContent } from '@/components/core/Card';
 
 // Transform project data for visualizations
 const systemNodes = [
@@ -77,6 +82,10 @@ const themeData = barklyYouthProject.themes.map(theme => ({
 
 export default function SystemsPage() {
   const summaryStats = ProjectTransformer.generateSummaryStats(barklyYouthProject);
+  const [mapView, setMapView] = useState<'demo' | 'documents'>('demo');
+  const { data: systemsData, loading, error } = useSystemsMap({
+    minConfidence: 0.5
+  });
 
   return (
     <PageLayout>
@@ -112,14 +121,110 @@ export default function SystemsPage() {
             </div>
           </div>
 
+          {/* Map View Toggle */}
+          <div className="mb-8">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium">Systems Map Data Source</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {mapView === 'demo' 
+                        ? 'Viewing example data to demonstrate system relationships'
+                        : 'Viewing AI-extracted entities and relationships from uploaded documents'}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={mapView === 'demo' ? 'primary' : 'secondary'}
+                      onClick={() => setMapView('demo')}
+                    >
+                      Demo Data
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={mapView === 'documents' ? 'primary' : 'secondary'}
+                      onClick={() => setMapView('documents')}
+                    >
+                      Document Data
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Visualizations */}
           <div className="space-y-8">
             {/* Systems Map */}
-            <SystemsMap
-              nodes={systemNodes}
-              connections={systemConnections}
-              height={600}
-            />
+            {mapView === 'demo' ? (
+              <SystemsMap
+                nodes={systemNodes}
+                connections={systemConnections}
+                height={600}
+              />
+            ) : (
+              <>
+                {loading && (
+                  <Card>
+                    <CardContent className="p-12">
+                      <div className="text-center">
+                        <div className="animate-pulse">
+                          <div className="h-8 bg-muted rounded w-1/3 mx-auto mb-4"></div>
+                          <div className="h-4 bg-muted rounded w-2/3 mx-auto"></div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                {error && (
+                  <Card>
+                    <CardContent className="p-12">
+                      <div className="text-center">
+                        <p className="text-destructive mb-4">Failed to load systems data: {error}</p>
+                        <Button
+                          variant="secondary"
+                          onClick={() => window.location.href = '/admin#upload'}
+                        >
+                          Upload Documents
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                {!loading && !error && systemsData && (
+                  <>
+                    {systemsData.nodes.length === 0 ? (
+                      <Card>
+                        <CardContent className="p-12">
+                          <div className="text-center">
+                            <h3 className="text-lg font-medium mb-2">No Systems Data Available</h3>
+                            <p className="text-muted-foreground mb-4">
+                              Upload documents with systems extraction enabled to generate a data-driven systems map.
+                            </p>
+                            <Button
+                              onClick={() => window.location.href = '/admin#upload'}
+                            >
+                              Upload Documents
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <DocumentSystemsMap
+                        nodes={systemsData.nodes}
+                        connections={systemsData.connections}
+                        documents={systemsData.documents}
+                        height={600}
+                        showConfidence={true}
+                        showDocumentSources={true}
+                      />
+                    )}
+                  </>
+                )}
+              </>
+            )}
 
             {/* Data River */}
             <DataRiver

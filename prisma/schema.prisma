@@ -42,6 +42,8 @@ model Document {
   quotes      DocumentQuote[]
   insights    DocumentInsight[]
   keywords    DocumentKeyword[]
+  systemEntities SystemEntity[]
+  systemRelationships SystemRelationship[]
   
   @@map("documents")
 }
@@ -175,6 +177,105 @@ model DocumentInCollection {
   @@map("documents_in_collections")
   @@unique([documentId, collectionId])
   @@index([collectionId])
+}
+
+// Systems mapping entities extracted from documents
+model SystemEntity {
+  id          String   @id @default(cuid())
+  documentId  String
+  
+  // Entity details
+  name        String   // e.g., "Youth Hub", "Cultural Identity"
+  type        SystemEntityType // service, theme, outcome, factor
+  category    String?  // Sub-category for more detail
+  description String?  // Extracted description
+  
+  // Extraction metadata
+  confidence  Float    // 0-1 confidence score
+  evidence    String   // Supporting text from document
+  chunkId     String?  // Reference to specific chunk
+  
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  fromConnections SystemRelationship[] @relation("FromEntity")
+  toConnections   SystemRelationship[] @relation("ToEntity")
+  
+  @@map("system_entities")
+  @@index([documentId])
+  @@index([type])
+  @@index([name])
+}
+
+// Relationships between system entities
+model SystemRelationship {
+  id          String   @id @default(cuid())
+  documentId  String
+  
+  // Relationship details
+  fromId      String   // Source entity
+  toId        String   // Target entity
+  type        RelationshipType // supports, blocks, enables, influences, requires
+  strength    RelationshipStrength // strong, medium, weak
+  description String   // Explanation of relationship
+  
+  // Extraction metadata
+  confidence  Float    // 0-1 confidence score
+  evidence    String   // Supporting text
+  chunkId     String?  // Reference to specific chunk
+  
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  fromEntity  SystemEntity @relation("FromEntity", fields: [fromId], references: [id], onDelete: Cascade)
+  toEntity    SystemEntity @relation("ToEntity", fields: [toId], references: [id], onDelete: Cascade)
+  
+  @@map("system_relationships")
+  @@index([documentId])
+  @@index([fromId, toId])
+  @@index([type])
+}
+
+// Aggregated system map data across documents
+model SystemMap {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  
+  // Map configuration
+  documentIds Json     // Array of document IDs included
+  filters     Json?    // Applied filters (entity types, themes, etc.)
+  layout      Json?    // Saved layout positions
+  
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isPublic    Boolean  @default(false)
+  
+  @@map("system_maps")
+}
+
+enum SystemEntityType {
+  SERVICE    // Youth programs, support services
+  THEME      // Key themes and issues
+  OUTCOME    // Desired outcomes and impacts
+  FACTOR     // Environmental factors, barriers, enablers
+}
+
+enum RelationshipType {
+  SUPPORTS   // A supports/strengthens B
+  BLOCKS     // A blocks/hinders B
+  ENABLES    // A enables/facilitates B
+  INFLUENCES // A influences B
+  REQUIRES   // A requires B
+}
+
+enum RelationshipStrength {
+  STRONG
+  MEDIUM
+  WEAK
 }
 
 enum ProcessingStatus {

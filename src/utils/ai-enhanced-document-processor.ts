@@ -12,6 +12,7 @@ import {
   type AIAnalysisResult 
 } from '@/lib/ai-service';
 import { EmbeddingsService } from '@/lib/embeddings-service';
+import { extractSystemsFromDocument, storeSystemsData } from '@/lib/systems-extraction-service';
 import type { ProcessingStatus } from '@prisma/client';
 
 export interface AIProcessingOptions {
@@ -24,6 +25,7 @@ export interface AIProcessingOptions {
   useAI?: boolean; // Allow fallback to pattern matching
   generateSummary?: boolean;
   generateEmbeddings?: boolean; // Generate vector embeddings for semantic search
+  extractSystems?: boolean; // Extract system entities and relationships
 }
 
 export interface AIProcessingResult {
@@ -206,6 +208,27 @@ export class AIEnhancedDocumentProcessor {
         } catch (err) {
           console.error('Failed to generate embeddings:', err);
           // Don't fail the entire process if embeddings fail
+        }
+      }
+
+      // Extract system entities and relationships if requested
+      if (options.extractSystems && useAI) {
+        try {
+          console.log('Extracting system entities and relationships...');
+          const { entities, relationships } = await extractSystemsFromDocument(
+            documentId,
+            storedChunks
+          );
+          
+          await storeSystemsData(documentId, entities, relationships);
+          
+          console.log('Systems extraction complete:', {
+            entitiesFound: entities.size,
+            relationshipsFound: relationships.length
+          });
+        } catch (err) {
+          console.error('Failed to extract systems:', err);
+          // Don't fail the entire process if systems extraction fails
         }
       }
 

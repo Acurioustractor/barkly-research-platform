@@ -59,6 +59,9 @@ jobs:
     name: Deploy Production
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      deployments: write
     environment:
       name: production
       url: https://barkly-research.vercel.app

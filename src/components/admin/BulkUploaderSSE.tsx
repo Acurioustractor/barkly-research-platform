@@ -25,6 +25,7 @@ interface UploadState {
   progress: number;
   currentFile: string;
   statusMessage: string;
+  extractSystems: boolean;
 }
 
 export const BulkUploaderSSE: React.FC<BulkUploadProps> = ({
@@ -39,7 +40,8 @@ export const BulkUploaderSSE: React.FC<BulkUploadProps> = ({
     error: null,
     progress: 0,
     currentFile: '',
-    statusMessage: ''
+    statusMessage: '',
+    extractSystems: false
   });
 
   const handleFiles = useCallback((newFiles: FileList | File[]) => {
@@ -95,6 +97,9 @@ export const BulkUploaderSSE: React.FC<BulkUploadProps> = ({
       state.files.forEach(file => {
         formData.append('files', file);
       });
+      
+      // Add processing options
+      formData.append('extractSystems', state.extractSystems.toString());
 
       // Create an EventSource connection for SSE
       const response = await fetch('/api/documents/upload-sse', {
@@ -348,6 +353,30 @@ export const BulkUploaderSSE: React.FC<BulkUploadProps> = ({
                       </Button>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Processing Options */}
+            {state.files.length > 0 && (
+              <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+                <h4 className="font-medium text-sm">Processing Options</h4>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={state.extractSystems}
+                      onChange={(e) => setState(prev => ({ ...prev, extractSystems: e.target.checked }))}
+                      disabled={state.uploading}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">Extract Systems Map Data</p>
+                      <p className="text-xs text-muted-foreground">
+                        Identify entities and relationships for systems mapping (requires AI)
+                      </p>
+                    </div>
+                  </label>
                 </div>
               </div>
             )}
