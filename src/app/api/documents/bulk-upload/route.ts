@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file types and sizes
-    const maxSize = 4.5 * 1024 * 1024; // 4.5MB per file (Vercel limit)
-    const maxFiles = 10; // Reduce to 10 files to stay under limits
+    const maxSize = 10 * 1024 * 1024; // 10MB per file (safe for Vercel)
+    const maxFiles = 20; // Allow up to 20 files
 
     if (files.length > maxFiles) {
       return NextResponse.json(
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     if (invalidFiles.length > 0) {
       return NextResponse.json(
         { 
-          error: `${invalidFiles.length} files rejected. Only PDF files under 50MB are allowed.`,
+          error: `${invalidFiles.length} files rejected. Only PDF files under 10MB are allowed.`,
           rejectedFiles: invalidFiles.map(f => ({ name: f.name, size: f.size, type: f.type }))
         },
         { status: 400 }
@@ -88,21 +88,51 @@ export async function POST(request: NextRequest) {
     
     console.log(`[bulk-upload] Processing ${documents.length} documents (AI disabled for speed)...`);
     
-    // Process documents one by one
+    // Process documents with timeout and better error handling
     const results = [];
+    const processingTimeout = 240000; // 4 minutes total (under Vercel's 5 min limit)
+    const startTime = Date.now();
     
     for (let i = 0; i < documents.length; i++) {
       const doc = documents[i];
+      const elapsed = Date.now() - startTime;
+      
+      // Check if we're running out of time
+      if (elapsed > processingTimeout) {
+        console.log(`[bulk-upload] Timeout approaching, stopping at document ${i}/${documents.length}`);
+        // Add pending status for remaining documents
+        for (let j = i; j < documents.length; j++) {
+          results.push({
+            documentId: documents[j].filename,
+            status: 'PENDING' as const,
+            chunks: 0,
+            themes: 0,
+            quotes: 0,
+            insights: 0,
+            keywords: 0,
+            errorMessage: 'Processing timed out - please retry this document'
+          });
+        }
+        break;
+      }
+      
       console.log(`[bulk-upload] Processing document ${i + 1}/${documents.length}: ${doc.originalName}`);
       
       try {
-        // Process each document WITHOUT AI for now
-        const result = await processor.processAndStoreDocument(
+        // Set a timeout for individual document processing
+        const documentPromise = processor.processAndStoreDocument(
           doc.buffer,
           doc.filename,
           doc.originalName,
           processingOptions
         );
+        
+        // Timeout after 30 seconds per document
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Document processing timeout')), 30000)
+        );
+        
+        const result = await Promise.race([documentPromise, timeoutPromise]);
         results.push(result);
         console.log(`[bulk-upload] Document ${i + 1} processed successfully`);
       } catch (docError) {

@@ -3,8 +3,9 @@ import { prisma } from '@/lib/database-safe';
 import { ImprovedPDFExtractor } from '@/utils/pdf-extractor-improved';
 import { DocumentChunker } from '@/utils/document-chunker';
 
-export const maxDuration = 60; // 1 minute max
+export const maxDuration = 30; // 30 seconds max for quick upload
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   console.log('[quick-upload] Request received');

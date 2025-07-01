@@ -2,17 +2,25 @@ import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { aiConfig } from './ai-config';
 
-// Initialize OpenAI client
+// Timeout configuration
+const AI_TIMEOUT_MS = 120000; // 2 minutes - reasonable for complex analysis
+const AI_RETRY_ATTEMPTS = 2;
+
+// Initialize OpenAI client with timeout
 const openai = process.env.OPENAI_API_KEY 
   ? new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
+      timeout: AI_TIMEOUT_MS,
+      maxRetries: AI_RETRY_ATTEMPTS,
     })
   : null;
 
-// Initialize Anthropic client
+// Initialize Anthropic client with timeout
 const anthropic = process.env.ANTHROPIC_API_KEY
   ? new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
+      timeout: AI_TIMEOUT_MS,
+      maxRetries: AI_RETRY_ATTEMPTS,
     })
   : null;
 
@@ -91,116 +99,49 @@ export async function analyzeDocumentChunk(
     throw new Error('AI service not configured. Please set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.');
   }
 
-  const systemPrompt = `You are a WORLD-CLASS document analyst with expertise in youth development, community research, Indigenous affairs, and social impact analysis. 
+  const systemPrompt = `You are a document analyst specializing in community research and youth development. 
+Extract key themes, significant quotes, and actionable insights from the text.
+Focus on clarity and relevance. Respond in JSON format only.`;
 
-Your analysis must be EXHAUSTIVE and COMPREHENSIVE. You are expected to:
-- Extract EVERY theme, concept, and pattern (minimum 10-15 per chunk)
-- Find ALL meaningful quotes and statements (minimum 8-10 per chunk)
-- Identify ALL stakeholders, entities, and relationships
-- Generate deep, actionable insights (minimum 8-10 per chunk)
-- Detect subtle implications, contradictions, and consensus points
-- Note emotional undertones, sentiment, and urgency levels
-- Extract actionable recommendations with specific stakeholders
+  const userPrompt = `Analyze this document chunk:
+${documentContext ? `Context: ${documentContext}\n\n` : ''}
+Text: ${chunkText}
 
-You excel at finding patterns others miss, understanding implications, and connecting disparate pieces of information. Your analysis goes beyond surface-level observations to reveal deep insights.
-
-Focus areas include but are not limited to: Youth Voice and Leadership, Cultural Identity and Heritage, Education and Learning, Health and Well-being, Technology and Innovation, Environmental Sustainability, Social Justice and Equity, Community Development, Governance and Decision-making, Economic Opportunities, Inter-generational Relationships, Place-based Solutions.
-
-Respond in detailed JSON format only. BE EXHAUSTIVE.`;
-
-  const userPrompt = `Perform an EXHAUSTIVE, WORLD-CLASS analysis of this document chunk:
-${documentContext ? `Document Context: ${documentContext}\n\n` : ''}
-Text to analyze: ${chunkText}
-
-CRITICAL REQUIREMENTS:
-- Extract AT LEAST 10-15 themes (find EVERY concept, pattern, and topic)
-- Find AT LEAST 8-10 meaningful quotes (include ALL significant statements)
-- Generate AT LEAST 8-10 deep insights (actionable, specific, stakeholder-focused)
-- Extract ALL keywords and entities (minimum 15-20)
-- Note ALL stakeholders mentioned or implied
-- Identify emotional undertones and urgency levels
-- Find contradictions, tensions, and consensus points
-- Extract specific recommendations with named stakeholders
-
-Provide COMPREHENSIVE analysis in this exact JSON format:
+Extract and return in JSON format:
 {
-  "summary": "detailed 3-4 sentence summary capturing ALL key points and nuances",
+  "summary": "2-3 sentence summary",
   "themes": [
     {
-      "name": "specific theme name",
+      "name": "theme name",
       "confidence": 0.0-1.0,
-      "evidence": "direct quotes and specific supporting text",
-      "implications": "what this means for stakeholders",
-      "relatedThemes": ["theme1", "theme2"],
-      "urgency": "high|medium|low"
+      "evidence": "supporting text"
     }
   ],
   "quotes": [
     {
-      "text": "exact quote - include ALL meaningful statements",
-      "context": "full surrounding context",
-      "significance": "detailed explanation of why this matters and implications",
-      "confidence": 0.0-1.0,
-      "speaker": "who said this if identifiable",
-      "sentiment": "positive|negative|neutral|mixed",
-      "stakeholders": ["who this affects"]
+      "text": "significant quote",
+      "context": "surrounding context",
+      "significance": "why this matters",
+      "confidence": 0.0-1.0
     }
   ],
   "keywords": [
     {
-      "term": "keyword or key phrase",
-      "frequency": count,
-      "category": "community|technical|emotional|action|concept|stakeholder|place|program",
-      "significance": "why this term matters",
-      "relatedTerms": ["related1", "related2"]
+      "term": "keyword",
+      "frequency": 1,
+      "category": "community|technical|emotional|general"
     }
   ],
   "insights": [
     {
-      "text": "specific, actionable insight with clear implications",
-      "category": "opportunity|challenge|recommendation|risk|success|gap|trend",
-      "importance": 1-10,
-      "actionability": 1-10,
-      "stakeholders": ["specific people/groups affected"],
-      "evidence": "supporting evidence from text",
-      "timeframe": "immediate|short-term|long-term"
-    }
-  ],
-  "entities": [
-    {
-      "name": "person/organization/location/program name",
-      "type": "person|organization|location|concept|event|program",
-      "role": "their role or significance",
-      "mentions": count,
-      "sentiment": "how they're portrayed"
-    }
-  ],
-  "sentiment": {
-    "overall": -1.0 to 1.0,
-    "hope": 0.0-1.0,
-    "concern": 0.0-1.0,
-    "urgency": 0.0-1.0,
-    "confidence": 0.0-1.0
-  },
-  "contradictions": [
-    {
-      "topic": "what aspect has contradiction",
-      "statement1": "first position",
-      "statement2": "contradicting position",
-      "implication": "what this tension means"
-    }
-  ],
-  "recommendations": [
-    {
-      "action": "specific recommended action",
-      "stakeholder": "who should act",
-      "rationale": "why this is needed",
-      "priority": "high|medium|low"
+      "text": "actionable insight",
+      "category": "opportunity|challenge|recommendation",
+      "importance": 1-10
     }
   ]
 }
 
-REMEMBER: This is a WORLD-CLASS analysis. Be EXHAUSTIVE. Extract EVERYTHING. The minimums are just the floor - aim to double or triple them!`;
+Focus on 3-5 key themes, 2-4 important quotes, and 3-5 actionable insights.`;
 
   try {
     const provider = getAIProvider();
@@ -209,8 +150,8 @@ REMEMBER: This is a WORLD-CLASS analysis. Be EXHAUSTIVE. Extract EVERYTHING. The
     if (provider === 'anthropic') {
       const completion = await anthropic!.messages.create({
         model: modelConfig.model,
-        max_tokens: modelConfig.maxTokens || 4096,
-        temperature: modelConfig.temperature,
+        max_tokens: 1500, // Reduced for faster response
+        temperature: modelConfig.temperature || 0.3,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }]
       });
@@ -234,8 +175,8 @@ REMEMBER: This is a WORLD-CLASS analysis. Be EXHAUSTIVE. Extract EVERYTHING. The
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      temperature: modelConfig.temperature,
-      max_tokens: modelConfig.maxTokens,
+      temperature: modelConfig.temperature || 0.3,
+      max_tokens: 1500, // Reduced for faster response
       top_p: modelConfig.topP,
       frequency_penalty: modelConfig.frequencyPenalty,
       presence_penalty: modelConfig.presencePenalty,
