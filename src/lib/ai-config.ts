@@ -244,8 +244,19 @@ export class AIConfiguration {
   };
 
   private constructor() {
+    // Determine the best available model based on API keys
+    let defaultModel: keyof typeof AI_MODELS = 'gpt-4-turbo';
+    if (process.env.AI_DEFAULT_MODEL && process.env.AI_DEFAULT_MODEL in AI_MODELS) {
+      defaultModel = process.env.AI_DEFAULT_MODEL as keyof typeof AI_MODELS;
+    } else if (process.env.ANTHROPIC_API_KEY && !process.env.OPENAI_API_KEY) {
+      defaultModel = 'claude-3.5-sonnet';
+    } else if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+      // No API keys available, use fallback
+      defaultModel = 'gpt-3.5-turbo';
+    }
+
     this.config = {
-      defaultModel: (process.env.AI_DEFAULT_MODEL as keyof typeof AI_MODELS) || 'gpt-4-turbo',
+      defaultModel,
       defaultEmbeddingModel: (process.env.AI_DEFAULT_EMBEDDING_MODEL as keyof typeof EMBEDDING_MODELS) || 'text-embedding-3-small',
       defaultProfile: (process.env.AI_DEFAULT_PROFILE as keyof typeof PROCESSING_PROFILES) || 'standard-analysis',
       customPrompts: {}

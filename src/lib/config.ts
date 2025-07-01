@@ -21,6 +21,11 @@ const envSchema = z.object({
   // Environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   
+  // AI Configuration
+  AI_DEFAULT_MODEL: z.string().optional().describe('Default AI model to use'),
+  AI_DEFAULT_PROFILE: z.string().optional().describe('Default processing profile'),
+  AI_DEFAULT_EMBEDDING_MODEL: z.string().optional().describe('Default embedding model'),
+  
   // Feature Flags
   ENABLE_AI_ANALYSIS: z.string().transform(val => val === 'true').default('true'),
   ENABLE_EMBEDDINGS: z.string().transform(val => val === 'true').default('true'),
@@ -42,6 +47,9 @@ function parseEnv() {
   if (typeof window !== 'undefined') {
     return {
       NODE_ENV: 'development',
+      AI_DEFAULT_MODEL: undefined,
+      AI_DEFAULT_PROFILE: undefined,
+      AI_DEFAULT_EMBEDDING_MODEL: undefined,
       ENABLE_AI_ANALYSIS: true,
       ENABLE_EMBEDDINGS: true,
       ENABLE_PARALLEL_PROCESSING: true,
