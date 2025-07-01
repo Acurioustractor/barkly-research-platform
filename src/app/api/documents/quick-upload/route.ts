@@ -68,13 +68,26 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      documentId: document.id,
-      message: 'Document uploaded successfully',
-      stats: {
-        pages: extraction.pageCount,
-        words: wordCount,
-        chunks: chunks.length
-      }
+      summary: {
+        totalFiles: 1,
+        successful: 1,
+        failed: 0,
+        totalChunks: chunks.length,
+        totalThemes: 0,
+        totalQuotes: 0,
+        totalInsights: 0,
+        totalKeywords: 0
+      },
+      results: [{
+        documentId: document.id,
+        status: 'COMPLETED',
+        chunks: chunks.length,
+        themes: 0,
+        quotes: 0,
+        insights: 0,
+        keywords: 0
+      }],
+      message: 'Document uploaded successfully'
     });
 
   } catch (error) {
