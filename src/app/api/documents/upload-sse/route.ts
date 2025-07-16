@@ -43,10 +43,18 @@ export async function POST(request: NextRequest) {
 
       const formData = await request.formData();
       const files = formData.getAll('files') as File[];
-      const extractSystems = formData.get('extractSystems') === 'true';
-      const useAI = formData.get('useAI') === 'true' || extractSystems;
+      
+      // Get AI analysis options from form data
+      const aiEnabled = formData.get('aiEnabled') === 'true';
       const processingType = formData.get('processingType') as 'quick' | 'standard' | 'deep' | 'world-class' || 'standard';
-      const priority = formData.get('priority') as 'low' | 'medium' | 'high' | 'critical' || 'medium';
+      const priority = formData.get('priority') as 'low' | 'medium' | 'high' || 'medium';
+      const extractSystems = formData.get('extractSystems') === 'true';
+      const extractQuotes = formData.get('extractQuotes') === 'true';
+      const extractThemes = formData.get('extractThemes') === 'true';
+      const extractInsights = formData.get('extractInsights') === 'true';
+      
+      // Legacy support for useAI parameter
+      const useAI = aiEnabled || formData.get('useAI') === 'true' || extractSystems;
       
       if (!files || files.length === 0) {
         sendSSE(writer, { type: 'error', message: 'No files provided' });
@@ -55,18 +63,31 @@ export async function POST(request: NextRequest) {
       }
       
       console.log('[upload-sse] Processing options:', { 
-        extractSystems, 
+        aiEnabled,
         useAI, 
         processingType, 
         priority,
+        extractSystems,
+        extractQuotes,
+        extractThemes,
+        extractInsights,
         fileCount: files.length 
       });
 
       sendSSE(writer, { 
         type: 'init', 
         totalFiles: files.length,
-        message: `Queuing ${files.length} file(s) for processing...`,
-        options: { extractSystems, useAI, processingType, priority }
+        message: aiEnabled ? `Queuing ${files.length} file(s) for AI analysis...` : `Processing ${files.length} file(s)...`,
+        options: { 
+          aiEnabled,
+          useAI, 
+          processingType, 
+          priority, 
+          extractSystems,
+          extractQuotes,
+          extractThemes,
+          extractInsights
+        }
       });
 
       const jobIds = [];
@@ -109,15 +130,19 @@ export async function POST(request: NextRequest) {
               file.name,
               {
                 useAI,
-                generateSummary: useAI,
+                generateSummary: useAI && extractInsights,
                 generateEmbeddings: useAI,
                 extractEntities: extractSystems,
-                generateInsights: useAI,
+                generateInsights: useAI && extractInsights,
+                extractThemes: useAI && extractThemes,
+                extractQuotes: useAI && extractQuotes,
+                processingType,
+                priority
               },
               {
                 type: processingType,
                 priority,
-                maxRetries: 3,
+                maxRetries: processingType === 'world-class' ? 5 : 3,
               }
             );
             
@@ -131,12 +156,22 @@ export async function POST(request: NextRequest) {
               estimatedDuration: globalDocumentProcessor.getJob(jobId)?.estimatedDuration,
             });
             
+            const job = globalDocumentProcessor.getJob(jobId);
+            const estimatedDuration = job?.estimatedDuration || 0;
+            const processingMessage = {
+              'quick': 'Basic text extraction',
+              'standard': 'Theme and quote extraction',
+              'deep': 'Advanced analysis with insights',
+              'world-class': 'Full systems mapping'
+            }[processingType] || 'AI analysis';
+            
             sendSSE(writer, { 
               type: 'file_queued',
               fileIndex: i,
               fileName: file.name,
               jobId,
-              estimatedDuration: globalDocumentProcessor.getJob(jobId)?.estimatedDuration,
+              estimatedDuration,
+              processingMessage,
               progress: ((i + 1) / files.length) * 100
             });
           } else {
@@ -234,17 +269,38 @@ export async function POST(request: NextRequest) {
         totalChunks: results.reduce((sum, r) => sum + (r.chunks || 0), 0),
         jobIds: jobIds,
         queueStats: globalDocumentProcessor.getStats(),
+        processingOptions: {
+          aiEnabled,
+          processingType,
+          priority,
+          extractSystems,
+          extractQuotes,
+          extractThemes,
+          extractInsights
+        }
       };
 
       let message = '';
       if (summary.completed > 0 && summary.queued > 0) {
-        message = `${summary.completed} files processed immediately, ${summary.queued} queued for background processing`;
+        message = `${summary.completed} files processed immediately, ${summary.queued} queued for ${processingType} AI analysis`;
       } else if (summary.completed > 0) {
         message = `Successfully processed ${summary.completed} of ${summary.totalFiles} files`;
       } else if (summary.queued > 0) {
-        message = `${summary.queued} files queued for background processing`;
+        message = `${summary.queued} files queued for ${processingType} AI analysis`;
       } else {
         message = 'Upload completed';
+      }
+      
+      if (aiEnabled && summary.queued > 0) {
+        const features = [];
+        if (extractSystems) features.push('systems mapping');
+        if (extractThemes) features.push('theme extraction');
+        if (extractQuotes) features.push('quote extraction');
+        if (extractInsights) features.push('insight generation');
+        
+        if (features.length > 0) {
+          message += ` with ${features.join(', ')}`;
+        }
       }
 
       sendSSE(writer, { 
@@ -253,6 +309,9 @@ export async function POST(request: NextRequest) {
         results,
         message,
         jobStreamUrl: jobIds.length > 0 ? '/api/jobs/stream' : null,
+        nextSteps: aiEnabled && summary.queued > 0 ? 
+          'Documents are being analyzed in the background. You can monitor progress in the Job Queue or check back later for results.' :
+          'Documents have been processed and are ready for analysis.'
       });
 
     } catch (error) {

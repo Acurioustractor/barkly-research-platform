@@ -323,7 +323,7 @@ export class EnhancedAIService {
     try {
       return JSON.parse(response.content);
     } catch (error) {
-      throw new Error(`Failed to parse JSON response: ${error.message}`);
+      throw new Error(`Failed to parse JSON response: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -346,12 +346,12 @@ export class EnhancedAIService {
     for (let i = 0; i < requests.length; i += maxConcurrent) {
       const batch = requests.slice(i, i + maxConcurrent);
       
-      const batchPromises = batch.map(async (request) => {
+      const batchPromises = batch.map(async (request): Promise<AIResponse | Error> => {
         try {
           return await this.generateCompletion(request);
         } catch (error) {
           if (continueOnError) {
-            return error;
+            return error instanceof Error ? error : new Error(String(error));
           }
           throw error;
         }

@@ -6,6 +6,7 @@ import { DocumentUpload } from '@/components/core/DocumentUpload';
 import { DocumentResults } from '@/components/core/DocumentResults';
 import { DatabaseStatus } from '@/components/core/DatabaseStatus';
 import { DocumentList } from '@/components/core/DocumentList';
+import { JobQueueMonitor } from '@/components/core/JobQueueMonitor';
 import type { ExtractedContent } from '@/utils/document-processor';
 
 export default function DocumentsPage() {
@@ -32,6 +33,9 @@ export default function DocumentsPage() {
 
         {/* Database Status */}
         <DatabaseStatus />
+
+        {/* Job Queue Monitor */}
+        <JobQueueMonitor className="mb-8" />
 
         {/* Document List */}
         <DocumentList />

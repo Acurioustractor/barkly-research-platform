@@ -1,6 +1,8 @@
 import { EventEmitter } from 'events';
 import { AIEnhancedDocumentProcessor } from '@/utils/ai-enhanced-document-processor';
 import { WorldClassDocumentProcessor } from '@/utils/world-class-document-processor';
+import { AIAnalysisValidator } from '@/lib/ai-analysis-validator';
+import { OptimizedChunkingService } from '@/lib/optimized-chunking-service';
 import { prisma } from '@/lib/database-safe';
 
 export interface DocumentJob {
@@ -19,6 +21,12 @@ export interface DocumentJob {
     generateEmbeddings?: boolean;
     extractEntities?: boolean;
     generateInsights?: boolean;
+    extractThemes?: boolean;
+    extractQuotes?: boolean;
+    processingType?: string;
+    priority?: string;
+    enableValidation?: boolean;
+    optimizeChunking?: boolean;
   };
   priority: 'low' | 'medium' | 'high' | 'critical';
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'retrying';
@@ -32,6 +40,8 @@ export interface DocumentJob {
   maxRetries: number;
   estimatedDuration?: number;
   actualDuration?: number;
+  validationResult?: any;
+  chunkingMetadata?: any;
 }
 
 export class DocumentJobProcessor extends EventEmitter {
@@ -39,10 +49,14 @@ export class DocumentJobProcessor extends EventEmitter {
   private processing: Set<string> = new Set();
   private maxConcurrent: number;
   private processingLoop: NodeJS.Timeout | null = null;
+  private validator: AIAnalysisValidator;
+  private chunkingService: OptimizedChunkingService;
 
   constructor(maxConcurrent: number = 2) {
     super();
     this.maxConcurrent = maxConcurrent;
+    this.validator = new AIAnalysisValidator();
+    this.chunkingService = new OptimizedChunkingService();
     this.startProcessing();
   }
 
@@ -249,6 +263,23 @@ export class DocumentJobProcessor extends EventEmitter {
         progressCallback
       );
 
+      // Validate AI analysis results if enabled
+      if (job.options.enableValidation && job.options.useAI) {
+        progressCallback(90, 'Validating AI analysis results...');
+        const validationResult = await this.validateAnalysisResults(result, job);
+        job.validationResult = validationResult;
+        
+        // Check if reprocessing is needed
+        if (validationResult.shouldReprocess && job.retryCount < job.maxRetries) {
+          progressCallback(95, 'Quality check failed, reprocessing...');
+          job.retryCount++;
+          job.status = 'retrying';
+          this.emit('job:retrying', job);
+          await this.processJob(job);
+          return;
+        }
+      }
+
       job.result = result;
       job.status = 'completed';
       job.completedAt = new Date();
@@ -315,14 +346,19 @@ export class DocumentJobProcessor extends EventEmitter {
     job: DocumentJob,
     progressCallback: (progress: number, message?: string) => void
   ): Promise<any> {
+    // Optimize chunking strategy if enabled
+    if (job.options.optimizeChunking && job.options.useAI) {
+      progressCallback(10, 'Optimizing chunking strategy...');
+      await this.optimizeChunkingForJob(job);
+    }
+    
     if (processor instanceof WorldClassDocumentProcessor) {
       // World-class processor with progress updates
       return await processor.processAndStoreDocument(
         job.buffer,
         job.filename,
         job.originalName,
-        job.options,
-        progressCallback
+        job.options
       );
     } else {
       // Standard AI-enhanced processor
@@ -363,6 +399,79 @@ export class DocumentJobProcessor extends EventEmitter {
     return options.useAI ? 'standard' : 'quick';
   }
 
+  /**
+   * Validate AI analysis results
+   */
+  private async validateAnalysisResults(result: any, job: DocumentJob): Promise<any> {
+    try {
+      const validation = await this.validator.validateCompleteAnalysis({
+        themes: result.themes || [],
+        quotes: result.quotes || [],
+        insights: result.insights || [],
+        entities: result.entities || [],
+        documentId: job.documentId
+      });
+      
+      return validation;
+    } catch (error) {
+      console.error('Validation error:', error);
+      return {
+        overallScore: 0.5,
+        componentScores: { themes: 0.5, quotes: 0.5, insights: 0.5, entities: 0.5 },
+        issues: ['Validation failed'],
+        recommendations: ['Manual review recommended'],
+        shouldReprocess: false
+      };
+    }
+  }
+  
+  /**
+   * Optimize chunking strategy for job
+   */
+  private async optimizeChunkingForJob(job: DocumentJob): Promise<void> {
+    try {
+      const text = job.buffer.toString('utf-8');
+      const recommendation = await this.chunkingService.recommendStrategy(text);
+      
+      // Store chunking metadata
+      job.chunkingMetadata = {
+        recommendedStrategy: recommendation.strategy,
+        reasoning: recommendation.reasoning,
+        expectedPerformance: recommendation.expectedPerformance
+      };
+      
+      // Update job options with optimized chunking parameters
+      if (recommendation.strategy === 'embedding-optimized') {
+        job.options.generateEmbeddings = true;
+      }
+      
+    } catch (error) {
+      console.error('Chunking optimization error:', error);
+      // Continue with default chunking
+    }
+  }
+  
+  /**
+   * Get chunking performance statistics
+   */
+  getChunkingStats(): any {
+    return this.chunkingService.getPerformanceStats();
+  }
+  
+  /**
+   * Get validation configuration
+   */
+  getValidationConfig(): any {
+    return this.validator.getValidationConfig();
+  }
+  
+  /**
+   * Update validation configuration
+   */
+  updateValidationConfig(config: any): void {
+    this.validator.updateValidationConfig(config);
+  }
+  
   /**
    * Estimate processing time based on document and options
    */
@@ -421,7 +530,7 @@ export class DocumentJobProcessor extends EventEmitter {
         size,
         source: options.source,
         category: options.category,
-        tags: options.tags ? JSON.stringify(options.tags) : null,
+        tags: options.tags ? JSON.stringify(options.tags) : undefined,
         status: 'PROCESSING',
       },
     });

@@ -27,7 +27,7 @@ jest.mock('next/navigation', () => ({
   },
 }))
 
-// Mock fetch for tests
+// Mock fetch for tests (will be overridden by setupMockFetch in integration tests)
 global.fetch = jest.fn()
 
 // Mock Request/Response for Next.js server components

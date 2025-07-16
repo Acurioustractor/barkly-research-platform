@@ -1,0 +1,9 @@
+{
+  "timestamp": "2025-07-16T21:15:02.753Z",
+  "environment": {
+    "nodeVersion": "v24.1.0",
+    "apiBaseUrl": "http://localhost:3000",
+    "testTimeout": "120000"
+  },
+  "results": "See Jest output above"
+}

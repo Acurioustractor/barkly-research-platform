@@ -1,7 +1,53 @@
 {
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
   "functions": {
-    "app/api/**/*.ts": {
+    "src/app/api/**/*.ts": {
       "maxDuration": 300
+    },
+    "src/app/api/documents/**/*.ts": {
+      "maxDuration": 300,
+      "memory": 1024
+    },
+    "src/app/api/ai/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 512
+    },
+    "src/app/api/jobs/**/*.ts": {
+      "maxDuration": 300,
+      "memory": 1024
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/jobs/stream",
+      "destination": "/api/jobs/stream"
+    },
+    {
+      "source": "/api/documents/upload-sse",
+      "destination": "/api/documents/upload-sse"
+    }
+  ],
+  "regions": ["iad1"],
+  "framework": "nextjs"
 }

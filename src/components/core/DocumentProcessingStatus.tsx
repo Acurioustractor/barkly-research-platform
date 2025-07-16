@@ -16,6 +16,7 @@ interface ProcessingJob {
   estimatedDuration?: number;
   actualDuration?: number;
   error?: string;
+  message?: string;
   createdAt: string;
   startedAt?: string;
   completedAt?: string;
@@ -279,7 +280,7 @@ export const DocumentProcessingStatus: React.FC<DocumentProcessingStatusProps> =
                     )}
                     {(job.status === 'pending' || job.status === 'processing') && (
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => cancelJob(job.id)}
                         className="text-red-600 hover:text-red-700"

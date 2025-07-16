@@ -21,6 +21,17 @@ interface UploadState {
   error: string | null;
   progress: number;
   stage: string;
+  aiEnabled: boolean;
+  processingType: 'quick' | 'standard' | 'deep' | 'world-class';
+  priority: 'low' | 'medium' | 'high';
+  extractSystems: boolean;
+  extractQuotes: boolean;
+  extractThemes: boolean;
+  extractInsights: boolean;
+  jobIds: string[];
+  queuedFiles: number;
+  completedFiles: number;
+  processingMessage: string;
 }
 
 export const DocumentUpload: React.FC<DocumentUploadProps> = ({
@@ -35,7 +46,18 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     results: null,
     error: null,
     progress: 0,
-    stage: ''
+    stage: '',
+    aiEnabled: true,
+    processingType: 'standard',
+    priority: 'medium',
+    extractSystems: true,
+    extractQuotes: true,
+    extractThemes: true,
+    extractInsights: true,
+    jobIds: [],
+    queuedFiles: 0,
+    completedFiles: 0,
+    processingMessage: ''
   });
 
   const handleFiles = useCallback((newFiles: FileList | File[]) => {
@@ -126,6 +148,15 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
         formData.append('files', file);
       });
 
+      // Add AI analysis options
+      formData.append('aiEnabled', state.aiEnabled.toString());
+      formData.append('processingType', state.processingType);
+      formData.append('priority', state.priority);
+      formData.append('extractSystems', state.extractSystems.toString());
+      formData.append('extractQuotes', state.extractQuotes.toString());
+      formData.append('extractThemes', state.extractThemes.toString());
+      formData.append('extractInsights', state.extractInsights.toString());
+
       // Use Server-Sent Events for real-time progress updates
       const response = await fetch('/api/documents/upload-sse', {
         method: 'POST',
@@ -159,20 +190,41 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             try {
               const data = JSON.parse(line.slice(6));
               
-              if (data.type === 'progress') {
+              if (data.type === 'init') {
+                setState(prev => ({
+                  ...prev,
+                  stage: data.message || 'Initializing...',
+                  processingMessage: data.options?.processingType || 'standard'
+                }));
+              } else if (data.type === 'file_queued') {
+                setState(prev => ({
+                  ...prev,
+                  progress: data.progress || 0,
+                  stage: `Queued: ${data.fileName} (${data.processingMessage || 'processing'})`,
+                  jobIds: data.jobId ? [...prev.jobIds, data.jobId] : prev.jobIds,
+                  queuedFiles: prev.queuedFiles + 1
+                }));
+              } else if (data.type === 'file_complete') {
+                setState(prev => ({
+                  ...prev,
+                  progress: data.progress || 0,
+                  stage: `Completed: ${data.fileName}`,
+                  completedFiles: prev.completedFiles + 1
+                }));
+              } else if (data.type === 'progress') {
                 setState(prev => ({
                   ...prev,
                   progress: data.progress || 0,
                   stage: data.stage || 'Processing...'
                 }));
               } else if (data.type === 'complete') {
-                result = data.results;
+                result = data.summary;
                 setState(prev => ({
                   ...prev,
                   results: result,
                   uploading: false,
                   progress: 100,
-                  stage: 'Complete!'
+                  stage: data.message || 'Complete!'
                 }));
               } else if (data.type === 'error') {
                 throw new Error(data.message || 'Upload failed');
@@ -207,7 +259,18 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       results: null,
       error: null,
       progress: 0,
-      stage: ''
+      stage: '',
+      aiEnabled: true,
+      processingType: 'standard',
+      priority: 'medium',
+      extractSystems: true,
+      extractQuotes: true,
+      extractThemes: true,
+      extractInsights: true,
+      jobIds: [],
+      queuedFiles: 0,
+      completedFiles: 0,
+      processingMessage: ''
     });
   };
 
@@ -287,6 +350,124 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
                   <HelpTooltip content="Accepted: Research reports, interview transcripts, survey results, and other youth-focused documents" />
                 </div>
               </div>
+            </div>
+
+            {/* AI Analysis Options */}
+            <div className="space-y-6 p-4 bg-muted/30 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-medium">AI Analysis Settings</h4>
+                  <HelpTooltip content="Configure how documents will be analyzed using AI-powered extraction" />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={state.aiEnabled}
+                    onChange={(e) => setState(prev => ({ ...prev, aiEnabled: e.target.checked }))}
+                    className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
+                    disabled={state.uploading}
+                  />
+                  <span className="text-sm font-medium">Enable AI Analysis</span>
+                </label>
+              </div>
+
+              {state.aiEnabled && (
+                <div className="space-y-4">
+                  {/* Processing Type */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">Processing Type</label>
+                    <select
+                      value={state.processingType}
+                      onChange={(e) => setState(prev => ({ ...prev, processingType: e.target.value as any }))}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+                      disabled={state.uploading}
+                    >
+                      <option value="quick">Quick - Basic text extraction (fastest)</option>
+                      <option value="standard">Standard - Themes + quotes + insights</option>
+                      <option value="deep">Deep - Advanced analysis with context</option>
+                      <option value="world-class">World-class - Full systems extraction</option>
+                    </select>
+                  </div>
+
+                  {/* Priority */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">Processing Priority</label>
+                    <select
+                      value={state.priority}
+                      onChange={(e) => setState(prev => ({ ...prev, priority: e.target.value as any }))}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+                      disabled={state.uploading}
+                    >
+                      <option value="low">Low - Process when resources available</option>
+                      <option value="medium">Medium - Standard processing queue</option>
+                      <option value="high">High - Priority processing</option>
+                    </select>
+                  </div>
+
+                  {/* Extraction Options */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">Analysis Features</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={state.extractSystems}
+                          onChange={(e) => setState(prev => ({ ...prev, extractSystems: e.target.checked }))}
+                          className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
+                          disabled={state.uploading}
+                        />
+                        <span className="text-sm">Extract Systems</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={state.extractQuotes}
+                          onChange={(e) => setState(prev => ({ ...prev, extractQuotes: e.target.checked }))}
+                          className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
+                          disabled={state.uploading}
+                        />
+                        <span className="text-sm">Extract Quotes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={state.extractThemes}
+                          onChange={(e) => setState(prev => ({ ...prev, extractThemes: e.target.checked }))}
+                          className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
+                          disabled={state.uploading}
+                        />
+                        <span className="text-sm">Extract Themes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={state.extractInsights}
+                          onChange={(e) => setState(prev => ({ ...prev, extractInsights: e.target.checked }))}
+                          className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
+                          disabled={state.uploading}
+                        />
+                        <span className="text-sm">Generate Insights</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Processing Time Estimate */}
+                  <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-md">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="font-medium">Estimated Processing Time:</span>
+                    </div>
+                    <div className="mt-1">
+                      {state.processingType === 'quick' && 'Under 1 minute per document'}
+                      {state.processingType === 'standard' && '2-5 minutes per document'}
+                      {state.processingType === 'deep' && '5-10 minutes per document'}
+                      {state.processingType === 'world-class' && '10-30 minutes per document'}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* File List */}
@@ -378,7 +559,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
                   loading={state.uploading}
                   className="flex-1"
                 >
-                  {state.uploading ? 'Processing...' : 'Analyze Documents'}
+                  {state.uploading ? 'Processing...' : state.aiEnabled ? 'Analyze Documents with AI' : 'Upload Documents'}
                 </Button>
                 <Button
                   variant="secondary"
@@ -401,10 +582,46 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             </div>
             
             {/* Processing results will be displayed here */}
-            <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
-              <p className="text-sm text-success">
-                ✓ Successfully processed {state.files.length} document(s)
-              </p>
+            <div className="space-y-4">
+              <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
+                <p className="text-sm text-success font-medium">
+                  ✓ Upload Complete
+                </p>
+                <p className="text-xs text-success/80 mt-1">
+                  {state.stage}
+                </p>
+              </div>
+              
+              {state.results && (
+                <div className="p-4 bg-blue/10 border border-blue/20 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-sm font-medium text-blue-600">Processing Summary</span>
+                  </div>
+                  <div className="text-xs text-blue-600/80 space-y-1">
+                    {state.results.completed > 0 && (
+                      <div>• {state.results.completed} files processed immediately</div>
+                    )}
+                    {state.results.queued > 0 && (
+                      <div>• {state.results.queued} files queued for AI analysis</div>
+                    )}
+                    {state.results.failed > 0 && (
+                      <div>• {state.results.failed} files failed to process</div>
+                    )}
+                    {state.results.jobIds && state.results.jobIds.length > 0 && (
+                      <div>• Background jobs: {state.results.jobIds.length}</div>
+                    )}
+                  </div>
+                  
+                  {state.results.nextSteps && (
+                    <div className="mt-2 p-2 bg-blue/5 rounded text-xs text-blue-600">
+                      {state.results.nextSteps}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

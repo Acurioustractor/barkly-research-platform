@@ -23,6 +23,16 @@ const customJestConfig = {
     '!src/app/layout.tsx',
     '!src/app/page.tsx',
   ],
+  // Handle ES modules
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  transform: {
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      useESM: true
+    }]
+  },
+  transformIgnorePatterns: [
+    'node_modules/(?!(node-fetch|form-data)/)'
+  ],
   // Disable coverage thresholds for now to allow deployment
   // coverageThreshold: {
   //   global: {

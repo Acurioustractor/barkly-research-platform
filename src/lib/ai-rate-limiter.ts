@@ -27,6 +27,17 @@ interface RequestRecord {
   tokens?: number;
 }
 
+interface ProviderStats {
+  requestsLastMinute: number;
+  requestsLastHour: number;
+  requestsLastDay: number;
+  tokensLastMinute: number;
+  tokensLastHour: number;
+  activeRequests: number;
+  isHealthy: boolean;
+  failureCount: number;
+}
+
 export class AIRateLimiter extends EventEmitter {
   private providers: Map<string, ProviderConfig> = new Map();
   private requestHistory: Map<string, RequestRecord[]> = new Map();
@@ -193,16 +204,7 @@ export class AIRateLimiter extends EventEmitter {
   /**
    * Get rate limiting statistics for a provider
    */
-  getProviderStats(providerName: string): {
-    requestsLastMinute: number;
-    requestsLastHour: number;
-    requestsLastDay: number;
-    tokensLastMinute: number;
-    tokensLastHour: number;
-    activeRequests: number;
-    isHealthy: boolean;
-    failureCount: number;
-  } | null {
+  getProviderStats(providerName: string): ProviderStats | null {
     const provider = this.providers.get(providerName);
     if (!provider) return null;
 
@@ -220,7 +222,7 @@ export class AIRateLimiter extends EventEmitter {
       tokensLastMinute: lastMinute.reduce((sum, r) => sum + (r.tokens || 0), 0),
       tokensLastHour: lastHour.reduce((sum, r) => sum + (r.tokens || 0), 0),
       activeRequests: this.activeRequests.get(providerName)?.size || 0,
-      isHealthy: provider.isHealthy,
+      isHealthy: provider.isHealthy ?? false,
       failureCount: provider.failureCount,
     };
   }
@@ -232,15 +234,17 @@ export class AIRateLimiter extends EventEmitter {
     totalProviders: number;
     healthyProviders: number;
     totalActiveRequests: number;
-    providers: Record<string, ReturnType<typeof this.getProviderStats>>;
+    providers: Record<string, ProviderStats>;
   } {
-    const providers: Record<string, ReturnType<typeof this.getProviderStats>> = {};
+    const providers: Record<string, ProviderStats> = {};
     let healthyCount = 0;
     let totalActive = 0;
 
     for (const [name, provider] of this.providers) {
       const stats = this.getProviderStats(name);
-      providers[name] = stats;
+      if (stats) {
+        providers[name] = stats;
+      }
       
       if (provider.isHealthy) healthyCount++;
       if (stats) totalActive += stats.activeRequests;

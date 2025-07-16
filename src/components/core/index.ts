@@ -9,3 +9,4 @@ export * from './ErrorMessage';
 export * from './LoadingSpinner';
 export * from './StatusBadge';
 export * from './Tooltip';
+export * from './JobQueueMonitor';
