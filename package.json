@@ -30,7 +30,7 @@
     "@vercel/postgres": "^0.10.0",
     "autoprefixer": "^10.4.21",
     "bull": "^4.16.5",
-    "bullmq": "^5.56.0",
+    "bullmq": "^5.56.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "d3": "^7.9.0",
@@ -54,7 +54,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^3.4.17",
     "unpdf": "^1.0.6",
-    "zod": "^3.25.67"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
