@@ -7,6 +7,7 @@
 
 const FormData = require('form-data');
 const fs = require('fs');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 const API_BASE = 'http://localhost:3000';
 
