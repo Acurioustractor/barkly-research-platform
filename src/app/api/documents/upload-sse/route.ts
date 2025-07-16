@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/database-safe';
 import { ImprovedPDFExtractor } from '@/utils/pdf-extractor-improved';
 import { DocumentChunker } from '@/utils/document-chunker';
-import { AIEnhancedDocumentProcessor } from '@/utils/ai-enhanced-document-processor';
+import { globalDocumentProcessor } from '@/lib/document-job-processor';
 
 export const maxDuration = 300; // 5 minutes
 export const dynamic = 'force-dynamic';
@@ -44,6 +44,9 @@ export async function POST(request: NextRequest) {
       const formData = await request.formData();
       const files = formData.getAll('files') as File[];
       const extractSystems = formData.get('extractSystems') === 'true';
+      const useAI = formData.get('useAI') === 'true' || extractSystems;
+      const processingType = formData.get('processingType') as 'quick' | 'standard' | 'deep' | 'world-class' || 'standard';
+      const priority = formData.get('priority') as 'low' | 'medium' | 'high' | 'critical' || 'medium';
       
       if (!files || files.length === 0) {
         sendSSE(writer, { type: 'error', message: 'No files provided' });
@@ -51,17 +54,25 @@ export async function POST(request: NextRequest) {
         return;
       }
       
-      console.log('[upload-sse] Processing options:', { extractSystems });
+      console.log('[upload-sse] Processing options:', { 
+        extractSystems, 
+        useAI, 
+        processingType, 
+        priority,
+        fileCount: files.length 
+      });
 
       sendSSE(writer, { 
         type: 'init', 
         totalFiles: files.length,
-        message: `Processing ${files.length} file(s)...`
+        message: `Queuing ${files.length} file(s) for processing...`,
+        options: { extractSystems, useAI, processingType, priority }
       });
 
+      const jobIds = [];
       const results = [];
-      const aiProcessor = extractSystems ? new AIEnhancedDocumentProcessor() : null;
       
+      // Process files - either queue for background processing or process immediately
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         
@@ -78,37 +89,60 @@ export async function POST(request: NextRequest) {
             throw new Error('Only PDF files are supported');
           }
           
-          if (file.size > 10 * 1024 * 1024) {
-            throw new Error('File size exceeds 10MB limit');
+          if (file.size > 50 * 1024 * 1024) { // Increased limit to 50MB
+            throw new Error('File size exceeds 50MB limit');
           }
 
           sendSSE(writer, { type: 'status', message: 'Reading file...' });
           const buffer = Buffer.from(await file.arrayBuffer());
           
-          // Use AI processor if systems extraction is enabled, otherwise simple processing
-          if (aiProcessor && extractSystems) {
-            sendSSE(writer, { type: 'status', message: 'Processing with AI (extracting systems)...' });
+          // For complex processing or large files, use background job queue
+          if (useAI || buffer.length > 5 * 1024 * 1024 || processingType === 'world-class') {
+            sendSSE(writer, { 
+              type: 'status', 
+              message: 'Queuing for background processing...' 
+            });
             
-            const result = await aiProcessor.processAndStoreDocument(
+            const jobId = await globalDocumentProcessor.addJob(
               buffer,
               file.name,
               file.name,
               {
-                useAI: true,
-                generateSummary: true,
-                extractSystems: true
+                useAI,
+                generateSummary: useAI,
+                generateEmbeddings: useAI,
+                extractEntities: extractSystems,
+                generateInsights: useAI,
+              },
+              {
+                type: processingType,
+                priority,
+                maxRetries: 3,
               }
             );
             
-            results.push(result);
+            jobIds.push(jobId);
+            
+            results.push({
+              jobId,
+              fileName: file.name,
+              status: 'QUEUED',
+              message: 'Queued for background processing',
+              estimatedDuration: globalDocumentProcessor.getJob(jobId)?.estimatedDuration,
+            });
             
             sendSSE(writer, { 
-              type: 'status', 
-              message: `Found ${result.themes} themes, ${result.insights} insights` 
+              type: 'file_queued',
+              fileIndex: i,
+              fileName: file.name,
+              jobId,
+              estimatedDuration: globalDocumentProcessor.getJob(jobId)?.estimatedDuration,
+              progress: ((i + 1) / files.length) * 100
             });
           } else {
-            // Simple processing without AI
-            sendSSE(writer, { type: 'status', message: 'Extracting text from PDF...' });
+            // Simple processing for small files without AI
+            sendSSE(writer, { type: 'status', message: 'Processing immediately...' });
+            
             const extractor = new ImprovedPDFExtractor(buffer);
             const extraction = await extractor.extractText();
             
@@ -150,6 +184,7 @@ export async function POST(request: NextRequest) {
 
             results.push({
               documentId: document.id,
+              fileName: file.name,
               status: 'COMPLETED',
               chunks: chunks.length,
               themes: 0,
@@ -157,22 +192,20 @@ export async function POST(request: NextRequest) {
               insights: 0,
               keywords: 0
             });
+            
+            sendSSE(writer, { 
+              type: 'file_complete',
+              fileIndex: i,
+              fileName: file.name,
+              documentId: document.id,
+              progress: ((i + 1) / files.length) * 100
+            });
           }
-
-          const lastResult = results[results.length - 1];
-          sendSSE(writer, { 
-            type: 'file_complete',
-            fileIndex: i,
-            fileName: file.name,
-            documentId: lastResult.documentId,
-            progress: ((i + 1) / files.length) * 100
-          });
 
         } catch (error) {
           console.error(`[upload-sse] Error processing ${file.name}:`, error);
           
           results.push({
-            documentId: null,
             fileName: file.name,
             status: 'FAILED',
             chunks: 0,
@@ -192,23 +225,34 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Send completion
+      // Send completion with job tracking information
       const summary = {
         totalFiles: files.length,
-        successful: results.filter(r => r.status === 'COMPLETED').length,
+        completed: results.filter(r => r.status === 'COMPLETED').length,
+        queued: results.filter(r => r.status === 'QUEUED').length,
         failed: results.filter(r => r.status === 'FAILED').length,
-        totalChunks: results.reduce((sum, r) => sum + r.chunks, 0),
-        totalThemes: 0,
-        totalQuotes: 0,
-        totalInsights: 0,
-        totalKeywords: 0
+        totalChunks: results.reduce((sum, r) => sum + (r.chunks || 0), 0),
+        jobIds: jobIds,
+        queueStats: globalDocumentProcessor.getStats(),
       };
+
+      let message = '';
+      if (summary.completed > 0 && summary.queued > 0) {
+        message = `${summary.completed} files processed immediately, ${summary.queued} queued for background processing`;
+      } else if (summary.completed > 0) {
+        message = `Successfully processed ${summary.completed} of ${summary.totalFiles} files`;
+      } else if (summary.queued > 0) {
+        message = `${summary.queued} files queued for background processing`;
+      } else {
+        message = 'Upload completed';
+      }
 
       sendSSE(writer, { 
         type: 'complete',
         summary,
         results,
-        message: `Successfully processed ${summary.successful} of ${summary.totalFiles} documents`
+        message,
+        jobStreamUrl: jobIds.length > 0 ? '/api/jobs/stream' : null,
       });
 
     } catch (error) {

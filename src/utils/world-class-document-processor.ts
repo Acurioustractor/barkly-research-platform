@@ -7,6 +7,7 @@ import { prisma } from '@/lib/database-safe';
 import { DocumentChunker, type DocumentChunk } from './document-chunker';
 import { AdaptiveChunker } from './adaptive-chunker';
 import { ImprovedPDFExtractor } from './pdf-extractor-improved';
+import { enhancedAIService } from '@/lib/ai-service-enhanced';
 import { 
   performDeepAnalysis,
   performCrossChunkAnalysis,
