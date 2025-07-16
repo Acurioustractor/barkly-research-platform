@@ -83,19 +83,19 @@ export const DocumentResults: React.FC<DocumentResultsProps> = ({
           <div className="grid gap-4 sm:grid-cols-3">
             <Card>
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold">{multiDoc.individual.length}</div>
+                <div className="text-2xl font-bold">{multiDoc.individual?.length || 0}</div>
                 <p className="text-xs text-muted-foreground">Documents Processed</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold">{multiDoc.comparative.commonThemes.length}</div>
+                <div className="text-2xl font-bold">{multiDoc.comparative?.commonThemes?.length || 0}</div>
                 <p className="text-xs text-muted-foreground">Common Themes</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold">{Math.round(multiDoc.comparative.documentSimilarity * 100)}%</div>
+                <div className="text-2xl font-bold">{Math.round((multiDoc.comparative?.documentSimilarity || 0) * 100)}%</div>
                 <p className="text-xs text-muted-foreground">Similarity Score</p>
               </CardContent>
             </Card>
@@ -104,7 +104,7 @@ export const DocumentResults: React.FC<DocumentResultsProps> = ({
           <div>
             <h4 className="font-medium mb-3">Common Themes Across Documents</h4>
             <div className="flex flex-wrap gap-2">
-              {multiDoc.comparative.commonThemes.map((theme: string) => (
+              {(multiDoc.comparative?.commonThemes || []).map((theme: string) => (
                 <span
                   key={theme}
                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary"
@@ -118,7 +118,7 @@ export const DocumentResults: React.FC<DocumentResultsProps> = ({
           <div>
             <h4 className="font-medium mb-3">Document Summary</h4>
             <div className="space-y-3">
-              {multiDoc.individual.map((doc: ExtractedContent, index: number) => (
+              {(multiDoc.individual || []).map((doc: ExtractedContent, index: number) => (
                 <div key={index} className="p-4 bg-muted/50 rounded-lg">
                   <div className="flex justify-between items-start mb-2">
                     <h5 className="font-medium">{doc.metadata.filename}</h5>
@@ -141,8 +141,8 @@ export const DocumentResults: React.FC<DocumentResultsProps> = ({
   );
 
   const renderThemes = () => {
-    const themes = isSingleDocument && singleDoc ? singleDoc.themes : 
-                  multiDoc ? multiDoc.comparative.commonThemes : [];
+    const themes = isSingleDocument && singleDoc ? (singleDoc.themes || []) : 
+                  multiDoc ? (multiDoc.comparative?.commonThemes || []) : [];
 
     return (
       <div className="space-y-4">
@@ -170,9 +170,9 @@ export const DocumentResults: React.FC<DocumentResultsProps> = ({
   };
 
   const renderQuotes = () => {
-    const quotes = isSingleDocument && singleDoc ? singleDoc.quotes : 
-                  multiDoc ? multiDoc.individual.flatMap((doc: ExtractedContent) => 
-                    doc.quotes.map(quote => ({ ...quote, source: doc.metadata.filename }))
+    const quotes = isSingleDocument && singleDoc ? (singleDoc.quotes || []) : 
+                  multiDoc ? (multiDoc.individual || []).flatMap((doc: ExtractedContent) => 
+                    (doc.quotes || []).map(quote => ({ ...quote, source: doc.metadata?.filename || 'Unknown' }))
                   ) : [];
 
     return (
@@ -215,9 +215,9 @@ export const DocumentResults: React.FC<DocumentResultsProps> = ({
   };
 
   const renderInsights = () => {
-    const insights = isSingleDocument && singleDoc ? singleDoc.insights : 
-                    multiDoc ? multiDoc.individual.flatMap((doc: ExtractedContent) => 
-                      doc.insights.map(insight => ({ text: insight, source: doc.metadata.filename }))
+    const insights = isSingleDocument && singleDoc ? (singleDoc.insights || []) : 
+                    multiDoc ? (multiDoc.individual || []).flatMap((doc: ExtractedContent) => 
+                      (doc.insights || []).map(insight => ({ text: insight, source: doc.metadata?.filename || 'Unknown' }))
                     ) : [];
 
     return (
