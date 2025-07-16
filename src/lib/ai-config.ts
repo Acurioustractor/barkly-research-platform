@@ -4,7 +4,7 @@
  */
 
 export interface AIModelConfig {
-  provider: 'openai' | 'anthropic';
+  provider: 'openai' | 'anthropic' | 'moonshot';
   model: string;
   temperature: number;
   maxTokens?: number;
@@ -71,6 +71,32 @@ export const AI_MODELS = {
     maxTokens: 4096,
     description: 'Fastest Claude model - good for high volume',
     costPer1kTokens: { input: 0.0008, output: 0.004 }
+  },
+  
+  // Moonshot Models (cost-effective Chinese AI)
+  'moonshot-v1-8k': {
+    provider: 'moonshot' as const,
+    model: 'moonshot-v1-8k',
+    temperature: 0.3,
+    maxTokens: 8192,
+    description: 'Moonshot v1 8K context - excellent value',
+    costPer1kTokens: { input: 0.0012, output: 0.0012 }
+  },
+  'moonshot-v1-32k': {
+    provider: 'moonshot' as const,
+    model: 'moonshot-v1-32k',
+    temperature: 0.3,
+    maxTokens: 32768,
+    description: 'Moonshot v1 32K context - long documents',
+    costPer1kTokens: { input: 0.0024, output: 0.0024 }
+  },
+  'moonshot-v1-128k': {
+    provider: 'moonshot' as const,
+    model: 'moonshot-v1-128k',
+    temperature: 0.3,
+    maxTokens: 131072,
+    description: 'Moonshot v1 128K context - massive documents',
+    costPer1kTokens: { input: 0.0060, output: 0.0060 }
   }
 } as const;
 
@@ -230,6 +256,54 @@ export const PROCESSING_PROFILES = {
     maxThemes: 5,
     maxQuotes: 10,
     maxInsights: 5
+  },
+  'moonshot-quick': {
+    aiModel: 'moonshot-v1-8k',
+    embeddingModel: 'text-embedding-3-small',
+    chunkSize: 2000,
+    overlapSize: 200,
+    generateSummary: false,
+    generateEmbeddings: true,
+    maxThemes: 5,
+    maxQuotes: 10,
+    maxInsights: 5
+  },
+  'moonshot-standard': {
+    aiModel: 'moonshot-v1-32k',
+    embeddingModel: 'text-embedding-3-small',
+    chunkSize: 2500,
+    overlapSize: 250,
+    generateSummary: true,
+    generateEmbeddings: true,
+    maxThemes: 8,
+    maxQuotes: 20,
+    maxInsights: 15
+  },
+  'moonshot-deep': {
+    aiModel: 'moonshot-v1-128k',
+    embeddingModel: 'text-embedding-3-large',
+    chunkSize: 3000,
+    overlapSize: 300,
+    generateSummary: true,
+    generateEmbeddings: true,
+    maxThemes: 12,
+    maxQuotes: 30,
+    maxInsights: 20
+  },
+  'moonshot-world-class': {
+    aiModel: 'moonshot-v1-128k',
+    embeddingModel: 'text-embedding-3-large',
+    chunkSize: 400,
+    overlapSize: 100,
+    generateSummary: true,
+    generateEmbeddings: true,
+    maxThemes: 25,
+    maxQuotes: 40,
+    maxInsights: 30,
+    multiPass: true,
+    crossChunkAnalysis: true,
+    extractEntities: true,
+    detectSentiment: true
   }
 } as const;
 
@@ -248,9 +322,11 @@ export class AIConfiguration {
     let defaultModel: keyof typeof AI_MODELS = 'gpt-4-turbo';
     if (process.env.AI_DEFAULT_MODEL && process.env.AI_DEFAULT_MODEL in AI_MODELS) {
       defaultModel = process.env.AI_DEFAULT_MODEL as keyof typeof AI_MODELS;
+    } else if (process.env.MOONSHOT_API_KEY && !process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+      defaultModel = 'moonshot-v1-32k';
     } else if (process.env.ANTHROPIC_API_KEY && !process.env.OPENAI_API_KEY) {
       defaultModel = 'claude-3.5-sonnet';
-    } else if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+    } else if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY && !process.env.MOONSHOT_API_KEY) {
       // No API keys available, use fallback
       defaultModel = 'gpt-3.5-turbo';
     }
@@ -326,7 +402,7 @@ export class AIConfiguration {
   }
 
   // Get available models by provider
-  getModelsByProvider(provider: 'openai' | 'anthropic') {
+  getModelsByProvider(provider: 'openai' | 'anthropic' | 'moonshot') {
     return Object.entries(AI_MODELS)
       .filter(([, config]) => config.provider === provider)
       .map(([name, config]) => ({ name, ...config }));
@@ -337,7 +413,7 @@ export class AIConfiguration {
     const errors: string[] = [];
     
     // Check API keys
-    if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+    if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY && !process.env.MOONSHOT_API_KEY) {
       errors.push('No AI provider API key configured');
     }
     
@@ -348,6 +424,9 @@ export class AIConfiguration {
     }
     if (defaultModel.provider === 'anthropic' && !process.env.ANTHROPIC_API_KEY) {
       errors.push('Anthropic API key required for selected model');
+    }
+    if (defaultModel.provider === 'moonshot' && !process.env.MOONSHOT_API_KEY) {
+      errors.push('Moonshot API key required for selected model');
     }
     
     return {

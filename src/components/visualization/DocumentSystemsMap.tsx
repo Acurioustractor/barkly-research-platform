@@ -43,7 +43,21 @@ export const DocumentSystemsMap: React.FC<DocumentSystemsMapProps> = ({
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!svgRef.current || nodes.length === 0) return;
+    if (!svgRef.current) return;
+    
+    // If no nodes, show empty state
+    if (nodes.length === 0) {
+      d3.select(svgRef.current).selectAll('*').remove();
+      const svg = d3.select(svgRef.current);
+      const width = svgRef.current.clientWidth || 800;
+      svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', height / 2)
+        .attr('text-anchor', 'middle')
+        .attr('class', 'text-muted-foreground text-sm')
+        .text('No systems data available. Upload documents with systems extraction enabled.');
+      return;
+    }
 
     const width = svgRef.current.clientWidth;
     if (width === 0) {
@@ -95,9 +109,20 @@ export const DocumentSystemsMap: React.FC<DocumentSystemsMapProps> = ({
         .domain([0, d3.max(nodes, d => d.documents.length) || 1])
         .range([20, 35]);
 
+      // Validate connections and filter out invalid ones
+      const validConnections = (connections || []).filter(conn => {
+        const fromExists = nodes.some(node => node.id === conn.from);
+        const toExists = nodes.some(node => node.id === conn.to);
+        if (!fromExists || !toExists) {
+          console.warn(`Invalid connection: ${conn.from} -> ${conn.to}`, { fromExists, toExists });
+          return false;
+        }
+        return true;
+      });
+
       // Create force simulation with stronger forces for better separation
       const simulation = d3.forceSimulation<any>(nodes)
-        .force('link', d3.forceLink<any, any>(connections)
+        .force('link', d3.forceLink<any, any>(validConnections)
           .id((d: any) => d.id)
           .distance(120))
         .force('charge', d3.forceManyBody().strength(-400))
@@ -125,7 +150,7 @@ export const DocumentSystemsMap: React.FC<DocumentSystemsMapProps> = ({
       // Create links with varying width based on confidence
       const link = g.append('g')
         .selectAll('line')
-        .data(connections)
+        .data(validConnections)
         .enter()
         .append('line')
         .attr('class', 'link')
@@ -153,7 +178,7 @@ export const DocumentSystemsMap: React.FC<DocumentSystemsMapProps> = ({
       // Create link labels
       const linkLabel = g.append('g')
         .selectAll('text')
-        .data(connections)
+        .data(validConnections)
         .enter()
         .append('text')
         .attr('class', 'link-label')

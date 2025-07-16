@@ -33,7 +33,7 @@ export class ApiErrorResponse extends Error {
  */
 export function handleApiError(error: unknown, context?: Record<string, any>): NextResponse {
   // Log the error with context
-  logger.error('API Error', { ...context }, error instanceof Error ? error : new Error(String(error)));
+  logger.error('API Error', error instanceof Error ? error : new Error(String(error)));
 
   // Handle known error types
   if (error instanceof ApiErrorResponse) {

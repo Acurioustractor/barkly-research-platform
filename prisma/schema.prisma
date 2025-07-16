@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
@@ -12,135 +12,138 @@ datasource db {
 }
 
 model Document {
-  id          String   @id @default(cuid())
-  filename    String
+  id           String    @id @default(cuid())
+  filename     String
   originalName String
-  mimeType    String
-  size        Int
-  uploadedAt  DateTime @default(now())
-  processedAt DateTime?
-  
+  mimeType     String
+  size         Int
+  uploadedAt   DateTime  @default(now())
+  processedAt  DateTime?
+
   // Document metadata
-  pageCount   Int?
-  wordCount   Int?
-  language    String?
-  source      String? // e.g., "community_research", "policy_doc", "interview"
-  category    String? // e.g., "youth_voice", "education", "health"
-  tags        Json?   // Array of tags
-  
+  pageCount Int?
+  wordCount Int?
+  language  String?
+  source    String? // e.g., "community_research", "policy_doc", "interview"
+  category  String? // e.g., "youth_voice", "education", "health"
+  tags      Json? // Array of tags
+
   // Processing status
-  status      ProcessingStatus @default(PENDING)
+  status       ProcessingStatus @default(PENDING)
   errorMessage String?
-  
+
   // Content storage
-  fullText    String? // Full extracted text
-  summary     String? // AI-generated summary
-  
+  fullText        String? // Full extracted text
+  summary         String? // AI-generated summary
+  systemsMetadata Json? // Extracted systems data
+
   // Relationships
-  chunks      DocumentChunk[]
-  themes      DocumentTheme[]
-  quotes      DocumentQuote[]
-  insights    DocumentInsight[]
-  keywords    DocumentKeyword[]
-  systemEntities SystemEntity[]
+  chunks              DocumentChunk[]
+  themes              DocumentTheme[]
+  quotes              DocumentQuote[]
+  insights            DocumentInsight[]
+  keywords            DocumentKeyword[]
+  systemEntities      SystemEntity[]
   systemRelationships SystemRelationship[]
-  
+  documentEntities    DocumentEntity[]
+  entityRelationships DocumentEntityRelationship[]
+
   @@map("documents")
 }
 
 model DocumentChunk {
-  id         String   @id @default(cuid())
+  id         String @id @default(cuid())
   documentId String
-  chunkIndex Int      // Order within document
+  chunkIndex Int // Order within document
   startPage  Int?
   endPage    Int?
   startChar  Int?
   endChar    Int?
-  
+
   // Chunk content
-  text       String   // Text content of this chunk
-  wordCount  Int
-  
+  text      String // Text content of this chunk
+  wordCount Int
+
   // Semantic information
-  embedding  Json?    // Vector embedding for semantic search
-  topics     Json?    // Array of topics identified in this chunk
-  
+  embedding Json? // Vector embedding for semantic search
+  topics    Json? // Array of topics identified in this chunk
+
   // Relationships
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  
-  @@map("document_chunks")
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
   @@index([documentId, chunkIndex])
+  @@map("document_chunks")
 }
 
 model DocumentTheme {
-  id         String   @id @default(cuid())
+  id         String @id @default(cuid())
   documentId String
-  
-  theme      String   // Theme name (e.g., "Youth Voice", "Cultural Identity")
-  confidence Float    // Confidence score 0-1
-  context    String?  // Context where theme was identified
-  
+
+  theme      String // Theme name (e.g., "Youth Voice", "Cultural Identity")
+  confidence Float // Confidence score 0-1
+  context    String? // Context where theme was identified
+
   // Relationships
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  
-  @@map("document_themes")
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
   @@index([documentId])
   @@index([theme])
+  @@map("document_themes")
 }
 
 model DocumentQuote {
-  id         String   @id @default(cuid())
+  id         String @id @default(cuid())
   documentId String
-  
-  text       String   // Quote text
-  context    String?  // Surrounding context
-  speaker    String?  // Who said it (if identified)
-  page       Int?     // Page number
-  confidence Float    // Confidence score 0-1
-  
+
+  text       String // Quote text
+  context    String? // Surrounding context
+  speaker    String? // Who said it (if identified)
+  page       Int? // Page number
+  confidence Float // Confidence score 0-1
+
   // Classification
-  category   String?  // e.g., "youth_voice", "community_concern", "success_story"
-  
+  category String? // e.g., "youth_voice", "community_concern", "success_story"
+
   // Relationships
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  
-  @@map("document_quotes")
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
   @@index([documentId])
   @@index([category])
+  @@map("document_quotes")
 }
 
 model DocumentInsight {
-  id         String   @id @default(cuid())
+  id         String @id @default(cuid())
   documentId String
-  
-  insight    String   // AI-generated insight
-  type       String   // e.g., "pattern", "gap", "opportunity", "challenge"
-  confidence Float    // Confidence score 0-1
-  evidence   Json?    // Supporting evidence/references
-  
+
+  insight    String // AI-generated insight
+  type       String // e.g., "pattern", "gap", "opportunity", "challenge"
+  confidence Float // Confidence score 0-1
+  evidence   Json? // Supporting evidence/references
+
   // Relationships
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  
-  @@map("document_insights")
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
   @@index([documentId])
   @@index([type])
+  @@map("document_insights")
 }
 
 model DocumentKeyword {
-  id         String   @id @default(cuid())
+  id         String @id @default(cuid())
   documentId String
-  
-  keyword    String   // Keyword/phrase
-  frequency  Int      // How many times it appears
-  relevance  Float    // Relevance score 0-1
-  category   String?  // e.g., "community_term", "technical_term", "emotional_term"
-  
+
+  keyword   String // Keyword/phrase
+  frequency Int // How many times it appears
+  relevance Float // Relevance score 0-1
+  category  String? // e.g., "community_term", "technical_term", "emotional_term"
+
   // Relationships
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  
-  @@map("document_keywords")
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
   @@index([documentId])
   @@index([keyword])
+  @@map("document_keywords")
 }
 
 // Document collections for organizing related documents
@@ -150,126 +153,126 @@ model DocumentCollection {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   // Collection metadata
-  tags        Json?    // Array of tags
-  isPublic    Boolean  @default(false)
-  
+  tags     Json? // Array of tags
+  isPublic Boolean @default(false)
+
   // Relationships
-  documents   DocumentInCollection[]
-  
+  documents DocumentInCollection[]
+
   @@map("document_collections")
 }
 
 model DocumentInCollection {
-  id           String             @id @default(cuid())
+  id           String   @id @default(cuid())
   documentId   String
   collectionId String
-  addedAt      DateTime           @default(now())
-  order        Int?               // Order within collection
-  
+  addedAt      DateTime @default(now())
+  order        Int? // Order within collection
+
   // Note about why this document is in this collection
-  note         String?
-  
+  note String?
+
   // Relationships
-  collection   DocumentCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  
-  @@map("documents_in_collections")
+  collection DocumentCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
   @@unique([documentId, collectionId])
   @@index([collectionId])
+  @@map("documents_in_collections")
 }
 
 // Systems mapping entities extracted from documents
 model SystemEntity {
-  id          String   @id @default(cuid())
-  documentId  String
-  
+  id         String @id @default(cuid())
+  documentId String
+
   // Entity details
-  name        String   // e.g., "Youth Hub", "Cultural Identity"
+  name        String // e.g., "Youth Hub", "Cultural Identity"
   type        SystemEntityType // service, theme, outcome, factor
-  category    String?  // Sub-category for more detail
-  description String?  // Extracted description
-  
+  category    String? // Sub-category for more detail
+  description String? // Extracted description
+
   // Extraction metadata
-  confidence  Float    // 0-1 confidence score
-  evidence    String   // Supporting text from document
-  chunkId     String?  // Reference to specific chunk
-  
-  createdAt   DateTime @default(now())
-  
+  confidence Float // 0-1 confidence score
+  evidence   String // Supporting text from document
+  chunkId    String? // Reference to specific chunk
+
+  createdAt DateTime @default(now())
+
   // Relationships
-  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document        Document             @relation(fields: [documentId], references: [id], onDelete: Cascade)
   fromConnections SystemRelationship[] @relation("FromEntity")
   toConnections   SystemRelationship[] @relation("ToEntity")
-  
-  @@map("system_entities")
+
   @@index([documentId])
   @@index([type])
   @@index([name])
+  @@map("system_entities")
 }
 
 // Relationships between system entities
 model SystemRelationship {
-  id          String   @id @default(cuid())
-  documentId  String
-  
+  id         String @id @default(cuid())
+  documentId String
+
   // Relationship details
-  fromId      String   // Source entity
-  toId        String   // Target entity
+  fromId      String // Source entity
+  toId        String // Target entity
   type        RelationshipType // supports, blocks, enables, influences, requires
   strength    RelationshipStrength // strong, medium, weak
-  description String   // Explanation of relationship
-  
+  description String // Explanation of relationship
+
   // Extraction metadata
-  confidence  Float    // 0-1 confidence score
-  evidence    String   // Supporting text
-  chunkId     String?  // Reference to specific chunk
-  
-  createdAt   DateTime @default(now())
-  
+  confidence Float // 0-1 confidence score
+  evidence   String // Supporting text
+  chunkId    String? // Reference to specific chunk
+
+  createdAt DateTime @default(now())
+
   // Relationships
-  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  fromEntity  SystemEntity @relation("FromEntity", fields: [fromId], references: [id], onDelete: Cascade)
-  toEntity    SystemEntity @relation("ToEntity", fields: [toId], references: [id], onDelete: Cascade)
-  
-  @@map("system_relationships")
+  document   Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  fromEntity SystemEntity @relation("FromEntity", fields: [fromId], references: [id], onDelete: Cascade)
+  toEntity   SystemEntity @relation("ToEntity", fields: [toId], references: [id], onDelete: Cascade)
+
   @@index([documentId])
   @@index([fromId, toId])
   @@index([type])
+  @@map("system_relationships")
 }
 
 // Aggregated system map data across documents
 model SystemMap {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
   description String?
-  
+
   // Map configuration
-  documentIds Json     // Array of document IDs included
-  filters     Json?    // Applied filters (entity types, themes, etc.)
-  layout      Json?    // Saved layout positions
-  
+  documentIds Json // Array of document IDs included
+  filters     Json? // Applied filters (entity types, themes, etc.)
+  layout      Json? // Saved layout positions
+
   // Metadata
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isPublic    Boolean  @default(false)
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isPublic  Boolean  @default(false)
+
   @@map("system_maps")
 }
 
 enum SystemEntityType {
-  SERVICE    // Youth programs, support services
-  THEME      // Key themes and issues
-  OUTCOME    // Desired outcomes and impacts
-  FACTOR     // Environmental factors, barriers, enablers
+  SERVICE // Youth programs, support services
+  THEME // Key themes and issues
+  OUTCOME // Desired outcomes and impacts
+  FACTOR // Environmental factors, barriers, enablers
 }
 
 enum RelationshipType {
-  SUPPORTS   // A supports/strengthens B
-  BLOCKS     // A blocks/hinders B
-  ENABLES    // A enables/facilitates B
+  SUPPORTS // A supports/strengthens B
+  BLOCKS // A blocks/hinders B
+  ENABLES // A enables/facilitates B
   INFLUENCES // A influences B
-  REQUIRES   // A requires B
+  REQUIRES // A requires B
 }
 
 enum RelationshipStrength {
@@ -284,4 +287,71 @@ enum ProcessingStatus {
   COMPLETED
   FAILED
   ARCHIVED
+}
+
+model DocumentEntity {
+  id         String   @id @default(cuid())
+  documentId String
+  type       String // e.g., "person", "organization", "location", "event"
+  name       String // Entity name
+  category   String? // Optional sub-type or classification
+  confidence Float? // Extraction confidence score (0-1)
+  context    String? // Textual context or evidence
+  createdAt  DateTime @default(now())
+
+  // Validation fields - mapped to snake_case database columns
+  validationStatus   String?   @map("validation_status") // pending, validated, rejected, needs_review, merged
+  validatedBy        String?   @map("validated_by") // User ID who validated
+  validatedAt        DateTime? @map("validated_at") // When validation occurred
+  validationNotes    String?   @map("validation_notes") // Notes from validator
+  mergedWithEntityId String?   @map("merged_with_entity_id") // ID of entity this was merged with
+  suggestedMerges    String?   @map("suggested_merges") // JSON array of suggested merge entity IDs
+  flags              String?   @map("flags") // JSON array of flags/issues
+
+  // Relationships
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  // Entity relationship connections
+  fromRelationships DocumentEntityRelationship[] @relation("FromEntity")
+  toRelationships   DocumentEntityRelationship[] @relation("ToEntity")
+
+  @@index([documentId])
+  @@index([type])
+  @@index([validationStatus])
+  @@map("document_entities")
+}
+
+// Relationships between document entities
+model DocumentEntityRelationship {
+  id         String   @id @default(cuid())
+  documentId String
+  
+  // Relationship details
+  fromEntityId String // Source entity
+  toEntityId   String // Target entity
+  type         String // relationship type: "hierarchical", "associative", "causal", "temporal", "spatial"
+  relationship String // specific relationship: "works_for", "located_in", "causes", "part_of", etc.
+  strength     Float  // relationship strength 0-1
+  description  String? // Human readable description
+  
+  // Extraction metadata
+  confidence Float   // AI confidence in this relationship
+  evidence   String? // Supporting text evidence
+  context    String? // Contextual information
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  document   Document      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  fromEntity DocumentEntity @relation("FromEntity", fields: [fromEntityId], references: [id], onDelete: Cascade)
+  toEntity   DocumentEntity @relation("ToEntity", fields: [toEntityId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([fromEntityId, toEntityId])
+  @@index([type])
+  @@index([relationship])
+  @@unique([fromEntityId, toEntityId, relationship])
+  @@map("document_entity_relationships")
 }

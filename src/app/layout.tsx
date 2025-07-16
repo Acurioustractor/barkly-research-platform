@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter, Fira_Code } from "next/font/google";
 import "./globals.css";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { MonitoringDashboard } from "@/components/monitoring-dashboard";
 import '@/lib/global-error-handler';
 
 const inter = Inter({
@@ -39,7 +38,6 @@ export default function RootLayout({
       <body className="min-h-screen bg-background font-sans antialiased">
         <ErrorBoundary>
           {children}
-          <MonitoringDashboard />
         </ErrorBoundary>
       </body>
     </html>

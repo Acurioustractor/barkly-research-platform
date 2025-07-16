@@ -51,13 +51,71 @@ global.Response = global.Response || class Response {
   }
 }
 
-// Suppress console errors in tests unless explicitly checking for them
-const originalError = console.error
+// Mock NextResponse for API tests
+const mockResponse = {
+  json: jest.fn((data, init) => ({
+    json: () => Promise.resolve(data),
+    status: init?.status || 200,
+    statusText: init?.statusText || 'OK',
+    headers: new Headers(init?.headers),
+    ...init
+  })),
+  redirect: jest.fn((url, status) => ({
+    status: status || 302,
+    headers: new Headers({ Location: url }),
+    url
+  })),
+  next: jest.fn(() => ({
+    status: 200,
+    statusText: 'OK'
+  }))
+};
+
+global.NextResponse = mockResponse;
+
+// Mock Headers
+global.Headers = class MockHeaders {
+  constructor(init) {
+    this.headers = new Map();
+    if (init) {
+      Object.entries(init).forEach(([key, value]) => {
+        this.headers.set(key.toLowerCase(), value);
+      });
+    }
+  }
+  
+  get(name) {
+    return this.headers.get(name.toLowerCase());
+  }
+  
+  set(name, value) {
+    this.headers.set(name.toLowerCase(), value);
+  }
+  
+  has(name) {
+    return this.headers.has(name.toLowerCase());
+  }
+  
+  delete(name) {
+    this.headers.delete(name.toLowerCase());
+  }
+  
+  entries() {
+    return this.headers.entries();
+  }
+};
+
+// Suppress console.error during tests to reduce noise
+const originalError = console.error;
 beforeAll(() => {
   console.error = (...args) => {
     if (
       typeof args[0] === 'string' &&
-      args[0].includes('Warning: ReactDOM.render is no longer supported')
+      (args[0].includes('Warning: ReactDOM.render is deprecated') ||
+       args[0].includes('Warning: componentWillReceiveProps') ||
+       args[0].includes('[2025-') || // Suppress our logger output during tests
+       args[0].includes('Error details:') // Suppress expected error details in tests
+      )
     ) {
       return
     }

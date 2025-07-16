@@ -23,12 +23,21 @@ The AI configuration system allows you to:
 | `gpt-4` | High quality, proven | $0.03/$0.06 | Production use, consistency |
 | `gpt-3.5-turbo` | Fast and cost-effective | $0.0005/$0.0015 | Quick analysis, high volume |
 
-#### Anthropic Models (Coming Soon)
+#### Anthropic Models
 
 | Model | Description | Cost (per 1K tokens) | Best For |
 |-------|-------------|---------------------|----------|
-| `claude-3-opus` | Most capable Claude | $0.015/$0.075 | Deep analysis, nuanced understanding |
-| `claude-3-sonnet` | Balanced performance | $0.003/$0.015 | General use, good value |
+| `claude-3.5-opus` | Most capable Claude | $0.015/$0.075 | Deep analysis, nuanced understanding |
+| `claude-3.5-sonnet` | Balanced performance | $0.003/$0.015 | General use, good value |
+| `claude-3.5-haiku` | Fast and efficient | $0.0008/$0.004 | High volume, quick analysis |
+
+#### Moonshot Models (Cost-Effective)
+
+| Model | Description | Cost (per 1K tokens) | Best For |
+|-------|-------------|---------------------|----------|
+| `moonshot-v1-8k` | 8K context, excellent value | $0.0012/$0.0012 | Budget processing, short documents |
+| `moonshot-v1-32k` | 32K context, balanced | $0.0024/$0.0024 | Standard processing, most documents |
+| `moonshot-v1-128k` | 128K context, large docs | $0.0060/$0.0060 | Long documents, comprehensive analysis |
 
 ### Embedding Models
 
@@ -97,13 +106,14 @@ The AI configuration system allows you to:
 
 ```env
 # Model Selection
-AI_DEFAULT_MODEL=gpt-4-turbo
+AI_DEFAULT_MODEL=gpt-4-turbo               # or moonshot-v1-32k for cost savings
 AI_DEFAULT_EMBEDDING_MODEL=text-embedding-3-small
-AI_DEFAULT_PROFILE=standard-analysis
+AI_DEFAULT_PROFILE=standard-analysis       # or moonshot-standard
 
 # API Keys
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
+MOONSHOT_API_KEY=sk-...                    # Cost-effective option
 ```
 
 ### Per-Request Configuration
@@ -164,9 +174,10 @@ Response:
 ## Cost Optimization Tips
 
 ### 1. Use Appropriate Models
-- Quick screening: `gpt-3.5-turbo`
-- Important documents: `gpt-4-turbo`
-- Cost-sensitive: `cost-optimized` profile
+- **Highest Value**: `moonshot-v1-32k` (70% cost savings vs GPT-4)
+- **Quick screening**: `gpt-3.5-turbo` or `moonshot-v1-8k`
+- **Important documents**: `gpt-4-turbo` or `moonshot-v1-128k`
+- **Budget processing**: `moonshot-standard` profile
 
 ### 2. Batch Processing
 - Process multiple documents together

@@ -109,8 +109,11 @@ export async function DELETE(
     const params = await context.params;
     const { id } = params;
     
-    const processor = new EnhancedDocumentProcessor();
-    const document = await processor.getDocument(id);
+    // Check if document exists without vector columns
+    const document = await prisma.document.findUnique({
+      where: { id },
+      select: { id: true, originalName: true }
+    });
 
     if (!document) {
       return NextResponse.json(
@@ -151,7 +154,7 @@ export async function PATCH(
     const { id } = params;
     const body = await request.json();
     
-    const { category, source, tags, status } = body;
+    const { category, source, tags, status, originalName } = body;
     
     const updatedDocument = await prisma.document.update({
       where: { id },
@@ -159,7 +162,8 @@ export async function PATCH(
         ...(category && { category }),
         ...(source && { source }),
         ...(tags && { tags: JSON.stringify(tags) }),
-        ...(status && { status })
+        ...(status && { status }),
+        ...(originalName && { originalName })
       }
     });
 

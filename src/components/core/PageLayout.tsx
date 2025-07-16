@@ -14,7 +14,8 @@ export interface PageLayoutProps {
 const defaultNavItems: NavigationItem[] = [
   { label: 'Home', href: '/' },
   { label: 'Youth Stories', href: '/stories' },
-  { label: 'Data Insights', href: '/data-insights' },
+  { label: 'Services Map', href: '/map', description: 'Interactive map of youth services in Tennant Creek' },
+  { label: 'Research Insights', href: '/insights' },
   { label: 'Systems Map', href: '/systems' },
   { label: 'Documents', href: '/documents' },
   { label: 'Admin', href: '/admin' },
@@ -25,24 +26,26 @@ const defaultFooterSections: FooterSection[] = [
     title: 'Explore',
     links: [
       { label: 'Youth Voices', href: '/stories' },
-      { label: 'Community Insights', href: '/data-insights' },
-      { label: 'Interactive Map', href: '/systems' },
+      { label: 'Research Insights', href: '/insights' },
+      { label: 'Services Map', href: '/map' },
+      { label: 'Systems Map', href: '/systems' },
     ],
   },
   {
-    title: 'Learn',
+    title: 'Research',
     links: [
-      { label: 'UMEL Framework', href: '/about/umel' },
-      { label: 'Research Methods', href: '/about/methods' },
-      { label: 'Cultural Protocols', href: '/about/protocols' },
+      { label: 'Upload Documents', href: '/admin' },
+      { label: 'Document Library', href: '/documents' },
+      { label: 'Entity Analysis', href: '/entities' },
+      { label: 'Research Methods', href: '/research' },
     ],
   },
   {
-    title: 'Connect',
+    title: 'Platform',
     links: [
-      { label: 'Contact Us', href: '/contact' },
-      { label: 'Partners', href: '/partners' },
-      { label: 'Get Involved', href: '/get-involved' },
+      { label: 'Status', href: '/status' },
+      { label: 'Test Upload', href: '/test' },
+      { label: 'Documentation', href: '/admin' },
     ],
   },
 ];

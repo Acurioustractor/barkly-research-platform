@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './Card';
 import { Button } from './Button';
+import { LoadingSpinner, FileUpload, ErrorMessage, UploadError, HelpTooltip } from './';
 import { cn } from '@/utils/cn';
 import type { ExtractedContent } from '@/utils/document-processor';
 
@@ -18,6 +19,8 @@ interface UploadState {
   files: File[];
   results: ExtractedContent | any | null;
   error: string | null;
+  progress: number;
+  stage: string;
 }
 
 export const DocumentUpload: React.FC<DocumentUploadProps> = ({
@@ -30,7 +33,9 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     dragActive: false,
     files: [],
     results: null,
-    error: null
+    error: null,
+    progress: 0,
+    stage: ''
   });
 
   const handleFiles = useCallback((newFiles: FileList | File[]) => {
@@ -107,7 +112,13 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const uploadFiles = async () => {
     if (state.files.length === 0) return;
 
-    setState(prev => ({ ...prev, uploading: true, error: null }));
+    setState(prev => ({ 
+      ...prev, 
+      uploading: true, 
+      error: null, 
+      progress: 0, 
+      stage: 'Preparing upload...' 
+    }));
 
     try {
       const formData = new FormData();
@@ -115,40 +126,75 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
         formData.append('files', file);
       });
 
-      const response = await fetch('/api/upload-simple', {
+      // Use Server-Sent Events for real-time progress updates
+      const response = await fetch('/api/documents/upload-sse', {
         method: 'POST',
         body: formData,
       });
 
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      let result;
-      
-      if (contentType && contentType.includes('application/json')) {
-        result = await response.json();
-      } else {
-        // Handle non-JSON responses (like HTML error pages)
-        const text = await response.text();
-        result = { error: `Server error: ${response.status} ${response.statusText}`, details: text.substring(0, 200) + '...' };
-      }
-
       if (!response.ok) {
-        throw new Error(result.error || `Upload failed with status ${response.status}`);
+        throw new Error(`Upload failed with status ${response.status}`);
       }
 
-      setState(prev => ({
-        ...prev,
-        results: result.data,
-        uploading: false
-      }));
+      // Handle Server-Sent Events stream
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
 
-      onUploadComplete?.(result.data);
+      if (!reader) {
+        throw new Error('No response stream available');
+      }
+
+      let result: any = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+        
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              if (data.type === 'progress') {
+                setState(prev => ({
+                  ...prev,
+                  progress: data.progress || 0,
+                  stage: data.stage || 'Processing...'
+                }));
+              } else if (data.type === 'complete') {
+                result = data.results;
+                setState(prev => ({
+                  ...prev,
+                  results: result,
+                  uploading: false,
+                  progress: 100,
+                  stage: 'Complete!'
+                }));
+              } else if (data.type === 'error') {
+                throw new Error(data.message || 'Upload failed');
+              }
+            } catch (parseError) {
+              // Ignore invalid JSON lines
+            }
+          }
+        }
+      }
+
+      if (result) {
+        onUploadComplete?.(result);
+      }
 
     } catch (error) {
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Upload failed',
-        uploading: false
+        uploading: false,
+        progress: 0,
+        stage: ''
       }));
     }
   };
@@ -159,7 +205,9 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       dragActive: false,
       files: [],
       results: null,
-      error: null
+      error: null,
+      progress: 0,
+      stage: ''
     });
   };
 
@@ -174,7 +222,10 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Document Upload & Analysis</CardTitle>
+        <div className="flex items-center gap-2">
+          <CardTitle>Document Upload & Analysis</CardTitle>
+          <HelpTooltip content="Upload research documents to automatically extract youth voices, themes, and insights using AI-powered analysis" />
+        </div>
         <CardDescription>
           Upload PDF documents to extract insights, themes, and youth voices using AI analysis
         </CardDescription>
@@ -231,9 +282,10 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
                 >
                   Choose Files
                 </Button>
-                <p className="text-sm text-muted-foreground">
-                  PDF files only, max {maxFiles} files, 10MB each
-                </p>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>PDF files only, max {maxFiles} files, 10MB each</span>
+                  <HelpTooltip content="Accepted: Research reports, interview transcripts, survey results, and other youth-focused documents" />
+                </div>
               </div>
             </div>
 
@@ -289,8 +341,30 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
             {/* Error Display */}
             {state.error && (
-              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className="text-sm text-destructive">{state.error}</p>
+              <UploadError 
+                message={state.error} 
+                onRetry={() => setState(prev => ({ ...prev, error: null }))}
+              />
+            )}
+
+            {/* Upload Progress */}
+            {state.uploading && (
+              <div className="space-y-4">
+                <FileUpload />
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-primary h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${state.progress}%` }}
+                    />
+                  </div>
+                  <span>{Math.round(state.progress)}%</span>
+                </div>
+                {state.stage && (
+                  <p className="text-sm text-muted-foreground text-center">
+                    {state.stage}
+                  </p>
+                )}
               </div>
             )}
 

@@ -14,6 +14,13 @@ import {
   type DeepAnalysisResult,
   type CrossChunkAnalysisResult
 } from '@/lib/world-class-ai-service';
+import { 
+  extractEntitiesFromText, 
+  batchExtractEntities, 
+  type Entity, 
+  type EntityRelationship, 
+  type EntityExtractionResult 
+} from '@/lib/entity-extraction-service';
 import { EmbeddingsService } from '@/lib/embeddings-service';
 import type { ProcessingStatus } from '@prisma/client';
 import { 
@@ -187,6 +194,16 @@ export class WorldClassDocumentProcessor {
         );
       }
 
+      // Perform enhanced entity extraction
+      let enhancedEntityResult: EntityExtractionResult | undefined;
+      if (options.extractEntities !== false) {
+        enhancedEntityResult = await this.performEnhancedEntityExtraction(
+          chunks,
+          originalName,
+          options
+        );
+      }
+
       // Generate comprehensive document summary
       let comprehensiveSummary: {
         summary: string;
@@ -223,15 +240,23 @@ export class WorldClassDocumentProcessor {
       }
 
       // Store all extracted data
-      await Promise.all([
+      const storagePromises = [
         this.storeThemesWithEvidence(documentId, aggregatedResults.themes),
         this.storeQuotesWithContext(documentId, aggregatedResults.quotes),
         this.storeInsights(documentId, aggregatedResults.insights),
         this.storeKeywords(documentId, aggregatedResults.keywords),
-        this.storeEntities(documentId, aggregatedResults.entities),
         this.storeRelationships(documentId, aggregatedResults.relationships),
         this.storeContradictions(documentId, aggregatedResults.contradictions)
-      ]);
+      ];
+
+      // Store enhanced entities if available, otherwise use basic entities
+      if (enhancedEntityResult && enhancedEntityResult.entities.length > 0) {
+        storagePromises.push(this.storeEnhancedEntities(documentId, enhancedEntityResult));
+      } else {
+        storagePromises.push(this.storeEntities(documentId, aggregatedResults.entities));
+      }
+
+      await Promise.all(storagePromises);
 
       // Update document with comprehensive analysis
       await prisma.document.update({
@@ -246,14 +271,18 @@ export class WorldClassDocumentProcessor {
         }
       });
 
+      const entityCount = enhancedEntityResult?.entities.length || aggregatedResults.entities.length;
+      const relationshipCount = enhancedEntityResult?.relationships.length || aggregatedResults.relationships.length;
+
       console.log('World-class processing complete:', {
         documentId,
         chunks: chunks.length,
         themes: aggregatedResults.themes.length,
         quotes: aggregatedResults.quotes.length,
         insights: aggregatedResults.insights.length,
-        entities: aggregatedResults.entities.length,
-        relationships: aggregatedResults.relationships.length
+        entities: entityCount,
+        relationships: relationshipCount,
+        enhancedEntities: enhancedEntityResult ? 'enabled' : 'disabled'
       });
 
       return {
@@ -264,8 +293,8 @@ export class WorldClassDocumentProcessor {
         quotes: aggregatedResults.quotes.length,
         insights: aggregatedResults.insights.length,
         keywords: aggregatedResults.keywords.length,
-        entities: aggregatedResults.entities.length,
-        relationships: aggregatedResults.relationships.length,
+        entities: entityCount,
+        relationships: relationshipCount,
         contradictions: aggregatedResults.contradictions.length,
         sentimentScore: aggregatedResults.sentimentScore,
         summary: comprehensiveSummary?.summary,
@@ -1010,21 +1039,152 @@ export class WorldClassDocumentProcessor {
     await prisma.documentKeyword.createMany({ data: keywordData });
   }
 
-  private async storeEntities(_documentId: string, entities: any[]): Promise<void> {
+  private async storeEntities(documentId: string, entities: any[]): Promise<void> {
     if (!prisma || !entities || entities.length === 0) return;
     
-    // TODO: When documentEntity table is added to schema:
-    // const entityData = entities.map(entity => ({
-    //   documentId: _documentId,
-    //   name: entity.name,
-    //   type: entity.type,
-    //   mentions: entity.mentions,
-    //   metadata: JSON.stringify({
-    //     contexts: entity.contexts,
-    //     attributes: entity.attributes
-    //   })
-    // }));
-    // await prisma.documentEntity.createMany({ data: entityData });
+    // Store entities in the documentEntity table
+    const entityData = entities.map(entity => ({
+      documentId: documentId,
+      name: entity.name,
+      type: entity.type,
+      category: entity.category || null,
+      confidence: entity.confidence || null,
+      context: entity.contexts ? entity.contexts.join(' | ') : (entity.evidence || null),
+    }));
+    
+    await prisma.documentEntity.createMany({ data: entityData });
+  }
+
+  /**
+   * Enhanced entity extraction using the specialized entity extraction service
+   */
+  private async performEnhancedEntityExtraction(
+    chunks: DocumentChunk[],
+    documentName: string,
+    options: WorldClassProcessingOptions
+  ): Promise<EntityExtractionResult> {
+    if (!options.extractEntities) {
+      return { entities: [], relationships: [], entityMap: new Map() };
+    }
+
+    try {
+      console.log('Performing enhanced entity extraction...');
+      
+      // Extract text from chunks
+      const textChunks = chunks.map(chunk => chunk.text);
+      
+      // Use batch extraction for better performance and entity merging
+      const result = await batchExtractEntities(
+        textChunks,
+        documentName,
+        {
+          includeRelationships: options.mapRelationships !== false,
+          minConfidence: 0.4,
+          batchSize: 3 // Process 3 chunks at a time
+        }
+      );
+
+      console.log('Enhanced entity extraction completed:', {
+        entitiesFound: result.entities.length,
+        relationshipsFound: result.relationships.length,
+        topEntities: result.entities.slice(0, 5).map(e => ({ name: e.name, type: e.type, confidence: e.confidence }))
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Enhanced entity extraction failed:', error);
+      // Fallback to basic entity extraction from AI analysis
+      return { entities: [], relationships: [], entityMap: new Map() };
+    }
+  }
+
+  /**
+   * Store enhanced entities with relationships
+   */
+  private async storeEnhancedEntities(
+    documentId: string, 
+    entityResult: EntityExtractionResult
+  ): Promise<void> {
+    if (!prisma || entityResult.entities.length === 0) return;
+    
+    try {
+      // Store entities
+      const entityData = entityResult.entities.map(entity => ({
+        documentId: documentId,
+        name: entity.name,
+        type: entity.type,
+        category: entity.category || null,
+        confidence: entity.confidence,
+        context: entity.contexts.join(' | '),
+      }));
+      
+      await prisma.documentEntity.createMany({ data: entityData });
+      
+      // Store relationships if we have them
+      if (entityResult.relationships.length > 0) {
+        await this.storeEntityRelationships(documentId, entityResult.relationships);
+      }
+      
+      console.log('Enhanced entities stored:', {
+        entities: entityResult.entities.length,
+        relationships: entityResult.relationships.length
+      });
+    } catch (error) {
+      console.error('Failed to store enhanced entities:', error);
+    }
+  }
+
+  /**
+   * Store entity relationships using the new relationships service
+   */
+  private async storeEntityRelationships(
+    documentId: string, 
+    relationships: EntityRelationship[]
+  ): Promise<void> {
+    if (!relationships || relationships.length === 0) return;
+
+    try {
+      // Import the relationships service
+      const { entityRelationshipsService } = await import('../lib/entity-relationships-service');
+      
+      // Get entity name to ID mapping
+      const entities = await prisma?.documentEntity.findMany({
+        where: { documentId },
+        select: { id: true, name: true }
+      });
+
+      if (!entities || entities.length === 0) {
+        console.warn('No entities found for relationship storage');
+        return;
+      }
+
+      const entityNameToIdMap = new Map<string, string>();
+      entities.forEach(entity => {
+        entityNameToIdMap.set(entity.name, entity.id);
+      });
+
+      // Store relationships
+      const storedRelationships = await entityRelationshipsService.storeEntityRelationships(
+        documentId,
+        relationships,
+        entityNameToIdMap
+      );
+
+      console.log('Entity relationships stored successfully:', {
+        documentId,
+        totalExtracted: relationships.length,
+        stored: storedRelationships.length,
+        sampleRelationships: storedRelationships.slice(0, 3).map(r => ({
+          from: r.fromEntity?.name,
+          to: r.toEntity?.name,
+          type: r.relationship,
+          strength: r.strength
+        }))
+      });
+
+    } catch (error) {
+      console.error('Failed to store entity relationships:', error);
+    }
   }
 
   private async storeRelationships(_documentId: string, _relationships: any[]): Promise<void> { // eslint-disable-line @typescript-eslint/no-unused-vars

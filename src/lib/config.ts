@@ -14,9 +14,13 @@ const envSchema = z.object({
   // AI Services
   OPENAI_API_KEY: z.string().min(1).optional().describe('OpenAI API key for GPT models'),
   ANTHROPIC_API_KEY: z.string().min(1).optional().describe('Anthropic API key for Claude models'),
+  MOONSHOT_API_KEY: z.string().min(1).optional().describe('Moonshot API key for cost-effective AI models'),
   
   // Redis (optional)
   REDIS_URL: z.string().url().optional().describe('Redis connection string for job queue'),
+  
+  // Sentry (optional)
+  SENTRY_DSN: z.string().url().optional().describe('Sentry DSN for error monitoring'),
   
   // Environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -101,7 +105,8 @@ export const config = parseEnv();
 export const features = {
   hasOpenAI: () => typeof window === 'undefined' ? !!config.OPENAI_API_KEY : false,
   hasAnthropic: () => typeof window === 'undefined' ? !!config.ANTHROPIC_API_KEY : false,
-  hasAnyAI: () => features.hasOpenAI() || features.hasAnthropic(),
+  hasMoonshot: () => typeof window === 'undefined' ? !!config.MOONSHOT_API_KEY : false,
+  hasAnyAI: () => features.hasOpenAI() || features.hasAnthropic() || features.hasMoonshot(),
   hasRedis: () => typeof window === 'undefined' ? !!config.REDIS_URL : false,
   isProduction: () => config.NODE_ENV === 'production',
   isDevelopment: () => config.NODE_ENV === 'development',

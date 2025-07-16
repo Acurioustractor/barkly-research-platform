@@ -263,3 +263,17 @@ We acknowledge the Traditional Owners of the lands on which we work and pay our 
 
 Special thanks to the Barkly youth and community members who shared their stories and insights.
 # Database connected and ready for deployment
+
+## Error Monitoring with Sentry
+
+This project integrates Sentry for error monitoring in production environments.
+
+### Setup
+1. Create a Sentry project at https://sentry.io/ and obtain your DSN.
+2. Add the following to your environment variables (e.g., in your `.env` file):
+
+```
+SENTRY_DSN=<your-sentry-dsn>
+```
+
+3. Sentry will automatically capture and report errors and warnings from the logger in production.

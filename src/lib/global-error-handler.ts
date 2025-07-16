@@ -24,10 +24,7 @@ export function initializeErrorHandlers() {
 function initializeClientErrorHandlers() {
   // Handle unhandled promise rejections
   window.addEventListener('unhandledrejection', (event) => {
-    logger.error('Unhandled promise rejection', {
-      reason: event.reason,
-      promise: event.promise,
-    });
+    logger.error('Unhandled promise rejection', event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
 
     // Prevent the default browser behavior
     event.preventDefault();
@@ -35,12 +32,7 @@ function initializeClientErrorHandlers() {
 
   // Handle global errors
   window.addEventListener('error', (event) => {
-    logger.error('Global error', {
-      message: event.message,
-      filename: event.filename,
-      lineno: event.lineno,
-      colno: event.colno,
-    }, event.error);
+    logger.error('Global error', event.error || new Error(event.message));
 
     // Let default handler run for development
     if (process.env.NODE_ENV === 'production') {
@@ -68,7 +60,7 @@ function initializeClientErrorHandlers() {
 function initializeServerErrorHandlers() {
   // Handle uncaught exceptions
   process.on('uncaughtException', (error) => {
-    logger.fatal('Uncaught exception', error);
+    logger.error('Uncaught exception', error);
     
     // Give the logger time to flush
     setTimeout(() => {
@@ -78,10 +70,7 @@ function initializeServerErrorHandlers() {
 
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (reason, promise) => {
-    logger.error('Unhandled promise rejection', {
-      reason: reason instanceof Error ? reason.message : reason,
-      promise: String(promise),
-    }, reason instanceof Error ? reason : new Error(String(reason)));
+    logger.error('Unhandled promise rejection', reason instanceof Error ? reason : new Error(String(reason)));
   });
 
   // Handle warnings
@@ -115,22 +104,15 @@ export const errorReporter = {
    * Report an error with context
    */
   report: (error: Error, context?: Record<string, any>, severity: 'warning' | 'error' | 'fatal' = 'error') => {
-    const logContext = {
-      ...context,
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-      platform: typeof window !== 'undefined' ? 'client' : 'server',
-    };
-
     switch (severity) {
       case 'warning':
-        logger.warn(error.message, logContext);
+        logger.warn(error.message);
         break;
       case 'error':
-        logger.error(error.message, logContext, error);
+        logger.error(error.message, error);
         break;
       case 'fatal':
-        logger.fatal(error.message, logContext, error);
+        logger.error(error.message, error);
         break;
     }
   },
@@ -139,7 +121,7 @@ export const errorReporter = {
    * Report a caught error with recovery
    */
   reportAndRecover: (error: Error, recovery: () => void, context?: Record<string, any>) => {
-    errorReporter.report(error, { ...context, recovered: true }, 'warning');
+    errorReporter.report(error, context, 'warning');
     recovery();
   },
 
@@ -156,14 +138,14 @@ export const errorReporter = {
         
         if (result instanceof Promise) {
           return result.catch((error) => {
-            errorReporter.report(error, { ...context, args });
+            errorReporter.report(error, context);
             throw error;
           });
         }
         
         return result;
       } catch (error) {
-        errorReporter.report(error as Error, { ...context, args });
+        errorReporter.report(error as Error, context);
         throw error;
       }
     }) as T;

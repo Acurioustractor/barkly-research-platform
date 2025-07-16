@@ -35,7 +35,21 @@ export const SystemsMap: React.FC<SystemsMapProps> = ({
   const [, setHoveredNode] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!svgRef.current || nodes.length === 0) return;
+    if (!svgRef.current) return;
+    
+    // If no nodes, show empty state
+    if (nodes.length === 0) {
+      d3.select(svgRef.current).selectAll('*').remove();
+      const svg = d3.select(svgRef.current);
+      const width = svgRef.current.clientWidth || 800;
+      svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', height / 2)
+        .attr('text-anchor', 'middle')
+        .attr('class', 'text-muted-foreground text-sm')
+        .text('No systems data available. Upload documents with systems extraction enabled.');
+      return;
+    }
 
     // Wait for element to be properly sized
     const width = svgRef.current.clientWidth;
@@ -76,9 +90,20 @@ export const SystemsMap: React.FC<SystemsMapProps> = ({
       .domain(['service', 'theme', 'outcome', 'factor'])
       .range(['#0c9eeb', '#e85229', '#10b981', '#886859']);
 
+    // Validate connections and filter out invalid ones
+    const validConnections = (connections || []).filter(conn => {
+      const fromExists = nodes.some(node => node.id === conn.from);
+      const toExists = nodes.some(node => node.id === conn.to);
+      if (!fromExists || !toExists) {
+        console.warn(`Invalid connection: ${conn.from} -> ${conn.to}`, { fromExists, toExists });
+        return false;
+      }
+      return true;
+    });
+
     // Create force simulation
     const simulation = d3.forceSimulation<any>(nodes)
-      .force('link', d3.forceLink<any, any>(connections)
+      .force('link', d3.forceLink<any, any>(validConnections)
         .id((d: any) => d.id)
         .distance(100))
       .force('charge', d3.forceManyBody().strength(-300))
@@ -105,7 +130,7 @@ export const SystemsMap: React.FC<SystemsMapProps> = ({
     // Create links
     const link = g.append('g')
       .selectAll('line')
-      .data(connections)
+      .data(validConnections)
       .enter()
       .append('line')
       .attr('class', 'link')
@@ -131,7 +156,7 @@ export const SystemsMap: React.FC<SystemsMapProps> = ({
     // Create link labels
     const linkLabel = g.append('g')
       .selectAll('text')
-      .data(connections)
+      .data(validConnections)
       .enter()
       .append('text')
       .attr('class', 'link-label')

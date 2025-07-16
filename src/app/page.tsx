@@ -1,5 +1,6 @@
 import { PageLayout } from '@/components/core';
 import { Container, Card, CardHeader, CardTitle, CardDescription, CardContent, Button } from '@/components/core';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -15,12 +16,12 @@ export default function Home() {
               Discover the stories, insights, and aspirations of young people from the Barkly region through community-led research and interactive data visualization.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="primary">
-                Explore Youth Stories
-              </Button>
-              <Button size="lg" variant="secondary">
-                View Data Insights
-              </Button>
+              <Link href="/stories">
+                <Button size="lg" variant="primary">Explore Youth Stories</Button>
+              </Link>
+              <Link href="/insights">
+                <Button size="lg" variant="secondary">View Research Insights</Button>
+              </Link>
             </div>
           </div>
         </Container>
@@ -38,9 +39,9 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="ghost" className="w-full">
-                  Read Stories →
-                </Button>
+                <Link href="/stories" className="w-full">
+                  <Button variant="ghost" className="w-full">Read Stories →</Button>
+                </Link>
               </CardContent>
             </Card>
 
@@ -52,9 +53,9 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="ghost" className="w-full">
-                  Explore Map →
-                </Button>
+                <Link href="/systems" className="w-full">
+                  <Button variant="ghost" className="w-full">Explore Systems Map →</Button>
+                </Link>
               </CardContent>
             </Card>
 
@@ -66,9 +67,9 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="ghost" className="w-full">
-                  View Insights →
-                </Button>
+                <Link href="/insights" className="w-full">
+                  <Button variant="ghost" className="w-full">View Insights →</Button>
+                </Link>
               </CardContent>
             </Card>
           </div>
@@ -85,9 +86,9 @@ export default function Home() {
             <p className="text-lg text-muted-foreground mb-8">
               This platform showcases the power of community-led research and youth participation in creating positive change.
             </p>
-            <Button size="lg" variant="accent">
-              Get Involved
-            </Button>
+            <Link href="/admin">
+              <Button size="lg" variant="accent">Start Research</Button>
+            </Link>
           </div>
         </Container>
       </section>

@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
+import { moonshotClient } from './moonshot-client';
 import { aiConfig } from './ai-config';
 
 // Timeout configuration
@@ -27,6 +28,9 @@ const anthropic = process.env.ANTHROPIC_API_KEY
 // Determine which AI provider to use
 function getAIProvider() {
   const modelConfig = aiConfig.getModelConfig();
+  if (modelConfig.provider === 'moonshot' && moonshotClient) {
+    return 'moonshot';
+  }
   if (modelConfig.provider === 'anthropic' && anthropic) {
     return 'anthropic';
   }
@@ -34,6 +38,7 @@ function getAIProvider() {
     return 'openai';
   }
   // Fallback to any available provider
+  if (moonshotClient) return 'moonshot';
   if (anthropic) return 'anthropic';
   if (openai) return 'openai';
   return null;
@@ -95,8 +100,8 @@ export async function analyzeDocumentChunk(
   chunkText: string,
   documentContext?: string
 ): Promise<AIAnalysisResult> {
-  if (!openai && !anthropic) {
-    throw new Error('AI service not configured. Please set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.');
+  if (!openai && !anthropic && !moonshotClient) {
+    throw new Error('AI service not configured. Please set OPENAI_API_KEY, ANTHROPIC_API_KEY, or MOONSHOT_API_KEY environment variable.');
   }
 
   const systemPrompt = `You are a document analyst specializing in community research and youth development. 
@@ -146,6 +151,33 @@ Focus on 3-5 key themes, 2-4 important quotes, and 3-5 actionable insights.`;
   try {
     const provider = getAIProvider();
     const modelConfig = aiConfig.getModelConfig();
+    
+    if (provider === 'moonshot') {
+      const completion = await moonshotClient!.chat.completions.create({
+        model: modelConfig.model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: modelConfig.temperature || 0.3,
+        max_tokens: 1500,
+        top_p: modelConfig.topP,
+        frequency_penalty: modelConfig.frequencyPenalty,
+        presence_penalty: modelConfig.presencePenalty
+      });
+
+      const response = completion.choices[0]?.message?.content;
+      if (!response) {
+        throw new Error('No response from Moonshot API');
+      }
+
+      try {
+        return extractJSON(response) as AIAnalysisResult;
+      } catch (parseError) {
+        console.error('Failed to parse Moonshot response:', response);
+        throw new Error(`Invalid JSON response from Moonshot: ${parseError}`);
+      }
+    }
     
     if (provider === 'anthropic') {
       const completion = await anthropic!.messages.create({
@@ -232,6 +264,20 @@ Document text:
 ${truncatedText}`;
 
   try {
+    if (provider === 'moonshot') {
+      const completion = await moonshotClient!.chat.completions.create({
+        model: modelConfig.model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: modelConfig.temperature,
+        max_tokens: 1000
+      });
+
+      return completion.choices[0]?.message?.content || 'Summary generation failed';
+    }
+    
     if (provider === 'anthropic') {
       const completion = await anthropic!.messages.create({
         model: modelConfig.model,
@@ -302,6 +348,26 @@ Respond in JSON format: [{"name": "theme", "confidence": 0.0-1.0, "evidence": "s
   try {
     const modelConfig = aiConfig.getModelConfig();
     
+    if (provider === 'moonshot') {
+      const completion = await moonshotClient!.chat.completions.create({
+        model: modelConfig.model,
+        messages: [
+          { role: 'system', content: 'You are an expert at identifying themes in documents. Always respond with valid JSON.' },
+          { role: 'user', content: prompt + '\n\nRemember to respond with valid JSON array format.' }
+        ],
+        temperature: 0.2,
+        max_tokens: modelConfig.maxTokens || 2000
+      });
+
+      const response = completion.choices[0]?.message?.content;
+      if (!response) {
+        return [];
+      }
+
+      const parsed = JSON.parse(response);
+      return Array.isArray(parsed) ? parsed : parsed.themes || [];
+    }
+    
     if (provider === 'anthropic') {
       const completion = await anthropic!.messages.create({
         model: modelConfig.model,
@@ -367,6 +433,26 @@ Respond in JSON format: [{"text": "insight", "category": "theme", "importance": 
   try {
     const modelConfig = aiConfig.getModelConfig();
     
+    if (provider === 'moonshot') {
+      const completion = await moonshotClient!.chat.completions.create({
+        model: modelConfig.model,
+        messages: [
+          { role: 'system', content: 'You are a strategic analyst generating actionable insights from documents. Always respond with valid JSON.' },
+          { role: 'user', content: prompt + '\n\nRemember to respond with valid JSON array format.' }
+        ],
+        temperature: 0.4,
+        max_tokens: modelConfig.maxTokens || 2000
+      });
+
+      const response = completion.choices[0]?.message?.content;
+      if (!response) {
+        return [];
+      }
+
+      const parsed = JSON.parse(response);
+      return Array.isArray(parsed) ? parsed : parsed.insights || [];
+    }
+    
     if (provider === 'anthropic') {
       const completion = await anthropic!.messages.create({
         model: modelConfig.model,
@@ -414,7 +500,7 @@ export async function intelligentChunkText(
   maxChunkSize: number = 2000,
   overlapSize: number = 200
 ): Promise<Array<{ text: string; startIndex: number; endIndex: number }>> {
-  if (!openai && !anthropic) {
+  if (!openai && !anthropic && !moonshotClient) {
     // Fallback to basic chunking
     return basicChunkText(text, maxChunkSize, overlapSize);
   }

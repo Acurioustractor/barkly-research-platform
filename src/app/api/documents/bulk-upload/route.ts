@@ -81,12 +81,8 @@ export async function POST(request: NextRequest) {
       generateEmbeddings
     };
 
-    // For now, disable AI processing to ensure uploads work
-    processingOptions.useAI = false;
-    processingOptions.generateSummary = false;
-    processingOptions.generateEmbeddings = false;
-    
-    console.log(`[bulk-upload] Processing ${documents.length} documents (AI disabled for speed)...`);
+    // Enable AI processing based on form parameters
+    console.log(`[bulk-upload] Processing ${documents.length} documents (AI ${processingOptions.useAI ? 'enabled' : 'disabled'})...`);
     
     // Process documents with timeout and better error handling
     const results: Array<{
@@ -136,9 +132,9 @@ export async function POST(request: NextRequest) {
           processingOptions
         );
         
-        // Timeout after 30 seconds per document
+        // Timeout after 5 minutes per document (AI analysis takes time)
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Document processing timeout')), 30000)
+          setTimeout(() => reject(new Error('Document processing timeout')), 300000)
         );
         
         const result = await Promise.race([documentPromise, timeoutPromise]) as any;

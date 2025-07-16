@@ -14,6 +14,35 @@ const nextConfig: NextConfig = {
     // Temporarily allow production builds with ESLint errors
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    // Other experimental features can be added here
+  },
+  webpack: (config, { isServer }) => {
+    // Fix for module resolution issues
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        stream: false,
+        url: false,
+        zlib: false,
+        http: false,
+        https: false,
+        assert: false,
+        os: false,
+        path: false,
+        async_hooks: false,
+        worker_threads: false,
+        child_process: false,
+        diagnostics_channel: false,
+        module: false,
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
