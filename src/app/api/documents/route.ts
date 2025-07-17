@@ -95,10 +95,10 @@ export async function POST(request: NextRequest) {
       const buffer = Buffer.from(await file.arrayBuffer());
       const extractor = new ImprovedPDFExtractor(buffer);
       
-      // Add processing timeout
+      // Add processing timeout (reduced to 3.5 minutes to stay under Vercel 5-minute limit)
       const extractionPromise = extractor.extractText();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('PDF extraction timeout')), 240000) // 4 minutes
+        setTimeout(() => reject(new Error('PDF extraction timeout - document too large or complex')), 210000) // 3.5 minutes
       );
       
       const extractedData = await Promise.race([extractionPromise, timeoutPromise]) as any;
@@ -200,6 +200,7 @@ export async function GET(request: Request) {
           pageCount: true,
           category: true,
           source: true,
+          errorMessage: true,
           _count: {
             select: {
               chunks: true,
