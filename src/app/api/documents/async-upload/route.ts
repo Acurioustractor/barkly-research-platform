@@ -15,16 +15,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Redis is configured
-    if (!process.env.REDIS_HOST && !process.env.REDIS_URL) {
-      return NextResponse.json(
-        { 
-          error: 'Background processing not configured',
-          details: 'Redis connection required for async processing'
-        },
-        { status: 501 }
-      );
-    }
+    // Check if Redis is configured (temporarily disabled for Vercel)
+    // if (!process.env.REDIS_HOST && !process.env.REDIS_URL) {
+    //   return NextResponse.json(
+    //     { 
+    //       error: 'Background processing not configured',
+    //       details: 'Redis connection required for async processing'
+    //     },
+    //     { status: 501 }
+    //   );
+    // }
 
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
