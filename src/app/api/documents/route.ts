@@ -57,12 +57,24 @@ export async function POST(request: NextRequest) {
 
     console.log(`[documents] Processing file: ${file.name}, size: ${file.size}`);
 
-    // Basic file validation (temporarily simplified)
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File too large (max 10MB)' }, { status: 400 });
+    // Enhanced file validation with size-based recommendations
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      return NextResponse.json({ 
+        error: 'File too large (max 10MB)', 
+        recommendation: 'Try compressing the PDF or splitting into smaller sections',
+        currentSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+        maxSize: '10MB'
+      }, { status: 413 });
     }
+    
     if (!file.name.toLowerCase().endsWith('.pdf')) {
       return NextResponse.json({ error: 'Only PDF files are supported' }, { status: 400 });
+    }
+
+    // Warn about large files that might have processing issues
+    if (file.size > 5 * 1024 * 1024) {
+      console.log(`[documents] Large file upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
     }
 
     // Basic form input handling
@@ -95,10 +107,10 @@ export async function POST(request: NextRequest) {
       const buffer = Buffer.from(await file.arrayBuffer());
       const extractor = new ImprovedPDFExtractor(buffer);
       
-      // Add processing timeout (reduced to 3.5 minutes to stay under Vercel 5-minute limit)
+      // Use shorter timeout for large documents to prevent hanging
       const extractionPromise = extractor.extractText();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('PDF extraction timeout - document too large or complex')), 210000) // 3.5 minutes
+        setTimeout(() => reject(new Error('PDF extraction timeout - document too large or complex. Try breaking into smaller sections.')), 45000) // 45 seconds for faster feedback
       );
       
       const extractedData = await Promise.race([extractionPromise, timeoutPromise]) as any;
@@ -122,16 +134,32 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error(`[documents] Processing failed for document ${document.id}:`, error);
       
-      // Update document with error status
+      let errorMessage = 'Unknown processing error';
+      let userFriendlyMessage = 'Document processing failed';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        if (error.message.includes('timeout')) {
+          userFriendlyMessage = 'Document too large or complex for processing. Try splitting into smaller sections or compressing the PDF.';
+        } else if (error.message.includes('memory')) {
+          userFriendlyMessage = 'Document requires too much memory to process. Try reducing file size.';
+        } else if (error.message.includes('extraction')) {
+          userFriendlyMessage = 'Could not extract text from PDF. File may be image-based or corrupted.';
+        }
+      }
+      
+      // Update document with detailed error status
       await prisma.document.update({
         where: { id: document.id },
         data: {
           status: 'FAILED',
-          errorMessage: error instanceof Error ? error.message : 'Unknown processing error',
+          errorMessage: userFriendlyMessage,
           processedAt: new Date(),
         }
       });
       
+      console.log(`[documents] Document ${document.id} marked as FAILED: ${userFriendlyMessage}`);
       // Don't throw error - return partial success with processing status
     }
 

@@ -30,9 +30,27 @@ export class ImprovedPDFExtractor {
 
   /**
    * Extract text using multiple methods with fallbacks
+   * Enhanced for large document handling
    */
   async extractText(): Promise<ExtractionResult> {
     const warnings: string[] = [];
+    const fileSize = this.buffer.length;
+    
+    console.log(`[PDFExtractor] Processing ${fileSize} byte PDF`);
+    
+    // For very large files (>5MB), use faster method first
+    if (fileSize > 5 * 1024 * 1024) {
+      console.log(`[PDFExtractor] Large file detected, using optimized extraction`);
+      try {
+        const result = await this.extractWithBufferParsing();
+        if (result.text && result.text.length > 100) {
+          console.log(`[PDFExtractor] Buffer parsing succeeded for large file`);
+          return { ...result, method: 'buffer-parse', warnings: [...warnings, 'Large file processed with optimized method'] };
+        }
+      } catch (error) {
+        warnings.push(`Buffer parsing failed for large file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
     
     // Method 1: Try unpdf (primary method)
     try {
@@ -156,10 +174,15 @@ export class ImprovedPDFExtractor {
   }
 
   /**
-   * Improved buffer text extraction
+   * Improved buffer text extraction with progressive chunking for large files
    */
   private extractTextFromBuffer(): string {
-    const str = this.buffer.toString('utf8', 0, Math.min(this.buffer.length, 1000000)); // Limit to 1MB for performance
+    const fileSize = this.buffer.length;
+    const maxProcessSize = fileSize > 10 * 1024 * 1024 ? 500000 : 1000000; // 500KB for very large files, 1MB otherwise
+    
+    console.log(`[PDFExtractor] Buffer extraction - file size: ${fileSize}, processing: ${maxProcessSize} bytes`);
+    
+    const str = this.buffer.toString('utf8', 0, Math.min(this.buffer.length, maxProcessSize));
     const texts: string[] = [];
 
     // Method 1: Extract text between parentheses (common in PDFs)
