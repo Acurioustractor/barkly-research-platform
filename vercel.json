@@ -3,10 +3,19 @@
     "src/app/api/**/*.ts": {
       "maxDuration": 60
     },
-    "src/app/api/documents/**/*.ts": {
+    "src/app/api/documents/route.ts": {
       "maxDuration": 300,
       "memory": 1024,
       "maxRequestBodySize": "10mb"
+    },
+    "src/app/api/documents/chunked-upload/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 512,
+      "maxRequestBodySize": "3mb"
+    },
+    "src/app/api/documents/stream-process/**/*.ts": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   },
   "regions": ["iad1"]
