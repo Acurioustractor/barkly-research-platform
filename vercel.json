@@ -5,7 +5,8 @@
     },
     "src/app/api/documents/**/*.ts": {
       "maxDuration": 300,
-      "memory": 1024
+      "memory": 1024,
+      "maxRequestBodySize": "10mb"
     }
   },
   "regions": ["iad1"]

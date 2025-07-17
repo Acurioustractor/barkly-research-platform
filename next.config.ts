@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     // Other experimental features can be added here
+    serverComponentsExternalPackages: ['pdf-parse'],
+  },
+  // Allow larger file uploads
+  serverRuntimeConfig: {
+    maxFileSize: 10 * 1024 * 1024, // 10MB
   },
   webpack: (config, { isServer }) => {
     // Fix for module resolution issues
