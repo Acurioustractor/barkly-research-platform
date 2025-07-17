@@ -5,13 +5,11 @@
     },
     "src/app/api/documents/route.ts": {
       "maxDuration": 300,
-      "memory": 1024,
-      "maxRequestBodySize": "10mb"
+      "memory": 1024
     },
     "src/app/api/documents/chunked-upload/**/*.ts": {
       "maxDuration": 60,
-      "memory": 512,
-      "maxRequestBodySize": "3mb"
+      "memory": 512
     },
     "src/app/api/documents/stream-process/**/*.ts": {
       "maxDuration": 60,
