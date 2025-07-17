@@ -162,42 +162,43 @@ async function runTests() {
     });
   }
 
-  // Test 6: Check Redis connection (if configured)
+  // Test 6: Check Redis connection (disabled for serverless deployment)
   console.log('\n6️⃣  Checking Redis connection...');
-  if (process.env.REDIS_HOST || process.env.REDIS_URL) {
-    try {
-      const Redis = (await import('ioredis')).default;
-      const redis = new Redis({
-        host: process.env.REDIS_HOST,
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD
-      });
-      
-      await redis.ping();
-      results.push({
-        name: 'Redis Connection',
-        passed: true,
-        message: '✅ Redis connection successful',
-        details: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }
-      });
-      
-      await redis.disconnect();
-    } catch (error) {
-      results.push({
-        name: 'Redis Connection',
-        passed: false,
-        message: `⚠️  Redis connection failed (optional): ${error}`,
-        details: { error: String(error) }
-      });
-    }
-  } else {
-    results.push({
-      name: 'Redis Connection',
-      passed: true,
-      message: 'ℹ️  Redis not configured (optional)',
-      details: { configured: false }
-    });
-  }
+  console.log('⚠️  Redis connection disabled for serverless deployment');
+  // if (process.env.REDIS_HOST || process.env.REDIS_URL) {
+  //   try {
+  //     const Redis = (await import('ioredis')).default;
+  //     const redis = new Redis({
+  //       host: process.env.REDIS_HOST,
+  //       port: parseInt(process.env.REDIS_PORT || '6379'),
+  //       password: process.env.REDIS_PASSWORD
+  //     });
+  //     
+  //     await redis.ping();
+  //     results.push({
+  //       name: 'Redis Connection',
+  //       passed: true,
+  //       message: '✅ Redis connection successful',
+  //       details: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }
+  //     });
+  //     
+  //     await redis.disconnect();
+  //   } catch (error) {
+  //     results.push({
+  //       name: 'Redis Connection',
+  //       passed: false,
+  //       message: `⚠️  Redis connection failed (optional): ${error}`,
+  //       details: { error: String(error) }
+  //     });
+  //   }
+  // } else {
+  results.push({
+    name: 'Redis Connection',
+    passed: true,
+    message: 'ℹ️  Redis disabled for serverless deployment',
+    details: { configured: false }
+  });
+  // }
 
   // Summary
   console.log('\n' + '='.repeat(50));
