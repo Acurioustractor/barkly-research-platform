@@ -1,0 +1,405 @@
+
+> barkly-research-platform@0.1.0 build
+> next build
+
+   ▲ Next.js 15.3.4
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 3.0s
+
+./node_modules/@opentelemetry/instrumentation-connect/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation-connect/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-connect/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation-connect/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation-connect/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@opentelemetry/instrumentation-connect/build/src/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-connect/build/src/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/connect.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/sentry-example-page/page.tsx
+
+./node_modules/@opentelemetry/instrumentation-express/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation-express/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-express/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation-express/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation-express/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@opentelemetry/instrumentation-express/build/src/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-express/build/src/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/express.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/sentry-example-page/page.tsx
+
+./node_modules/@opentelemetry/instrumentation-generic-pool/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation-generic-pool/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-generic-pool/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation-generic-pool/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation-generic-pool/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@opentelemetry/instrumentation-generic-pool/build/src/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-generic-pool/build/src/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/genericPool.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/sentry-example-page/page.tsx
+
+./node_modules/@opentelemetry/instrumentation-hapi/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation-hapi/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-hapi/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation-hapi/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation-hapi/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@opentelemetry/instrumentation-hapi/build/src/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-hapi/build/src/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/hapi/index.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/sentry-example-page/page.tsx
+
+./node_modules/@opentelemetry/instrumentation-ioredis/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation-ioredis/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-ioredis/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation-ioredis/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation-ioredis/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@opentelemetry/instrumentation-ioredis/build/src/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-ioredis/build/src/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/redis.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/sentry-example-page/page.tsx
+
+./node_modules/@opentelemetry/instrumentation-knex/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation-knex/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-knex/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation-knex/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation-knex/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@opentelemetry/instrumentation-knex/build/src/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-knex/build/src/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/knex.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/sentry-example-page/page.tsx
+
+./node_modules/@opentelemetry/instrumentation-lru-memoizer/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation-lru-memoizer/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-lru-memoizer/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation-lru-memoizer/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation-lru-memoizer/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@opentelemetry/instrumentation-lru-memoizer/build/src/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-lru-memoizer/build/src/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/lrumemoizer.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/sentry-example-page/page.tsx
+
+./node_modules/@opentelemetry/instrumentation-mongoose/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation-mongoose/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-mongoose/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation-mongoose/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation-mongoose/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@opentelemetry/instrumentation-mongoose/build/src/mongoose.js
+./node_modules/@opentelemetry/instrumentation-mongoose/build/src/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/mongoose.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/sentry-example-page/page.tsx
+
+./node_modules/@opentelemetry/instrumentation-mysql2/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation-mysql2/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-mysql2/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation-mysql2/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation-mysql2/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@opentelemetry/instrumentation-mysql2/build/src/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-mysql2/build/src/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/mysql2.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/sentry-example-page/page.tsx
+
+./node_modules/@opentelemetry/instrumentation-redis-4/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation-redis-4/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-redis-4/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation-redis-4/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation-redis-4/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@opentelemetry/instrumentation-redis-4/build/src/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-redis-4/build/src/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/redis.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/sentry-example-page/page.tsx
+
+./node_modules/@opentelemetry/instrumentation-undici/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@opentelemetry/instrumentation-undici/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@opentelemetry/instrumentation-undici/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@opentelemetry/instrumentation-undici/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@opentelemetry/instrumentation-undici/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@opentelemetry/instrumentation-undici/build/src/undici.js
+./node_modules/@opentelemetry/instrumentation-undici/build/src/index.js
+./node_modules/@sentry/node/build/cjs/integrations/node-fetch/index.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/sentry-example-page/page.tsx
+
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@sentry/node/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/postgresjs.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/sentry-example-page/page.tsx
+
+./node_modules/unpdf/dist/pdfjs.mjs
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/unpdf/dist/pdfjs.mjs
+./node_modules/unpdf/dist/index.mjs
+./src/utils/pdf-extractor-improved.ts
+./src/app/api/documents/upload-sse/route.ts
+
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+   Generating static pages (0/44) ...
+   Generating static pages (11/44) 
+   Generating static pages (22/44) 
+   Generating static pages (33/44) 
+ ✓ Generating static pages (44/44)
+[2025-07-16T23:28:09.638Z] INFO: Received SIGINT, starting graceful shutdown
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[2025-07-16T23:28:10.140Z] INFO: Received SIGTERM, starting graceful shutdown
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+Error: connect ECONNREFUSED 127.0.0.1:6379
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+  errno: -61,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+   Finalizing page optimization ...
+   Collecting build traces ...
+[2025-07-16T23:28:10.883Z] INFO: Received SIGINT, starting graceful shutdown
+[2025-07-16T23:28:10.883Z] INFO: Received SIGINT, starting graceful shutdown
+[2025-07-16T23:28:10.883Z] INFO: Received SIGINT, starting graceful shutdown
+[2025-07-16T23:28:10.883Z] INFO: Received SIGINT, starting graceful shutdown
+[2025-07-16T23:28:10.883Z] INFO: Received SIGINT, starting graceful shutdown
+[2025-07-16T23:28:10.883Z] INFO: Received SIGINT, starting graceful shutdown
+[2025-07-16T23:28:10.884Z] INFO: Received SIGINT, starting graceful shutdown
+[2025-07-16T23:28:10.883Z] INFO: Received SIGINT, starting graceful shutdown
+[2025-07-16T23:28:10.884Z] INFO: Received SIGINT, starting graceful shutdown
+[2025-07-16T23:28:10.884Z] INFO: Received SIGINT, starting graceful shutdown
+[2025-07-16T23:28:10.884Z] INFO: Received SIGINT, starting graceful shutdown
+[2025-07-16T23:28:10.884Z] INFO: Received SIGINT, starting graceful shutdown
+[2025-07-16T23:28:11.383Z] INFO: Received SIGTERM, starting graceful shutdown
+[2025-07-16T23:28:11.383Z] INFO: Received SIGTERM, starting graceful shutdown
+[2025-07-16T23:28:11.383Z] INFO: Received SIGTERM, starting graceful shutdown
+[2025-07-16T23:28:11.383Z] INFO: Received SIGTERM, starting graceful shutdown
+[2025-07-16T23:28:11.383Z] INFO: Received SIGTERM, starting graceful shutdown
+[2025-07-16T23:28:11.383Z] INFO: Received SIGTERM, starting graceful shutdown
+[2025-07-16T23:28:11.383Z] INFO: Received SIGTERM, starting graceful shutdown
+[2025-07-16T23:28:11.383Z] INFO: Received SIGTERM, starting graceful shutdown
+[2025-07-16T23:28:11.384Z] INFO: Received SIGTERM, starting graceful shutdown
+[2025-07-16T23:28:11.384Z] INFO: Received SIGTERM, starting graceful shutdown
+[2025-07-16T23:28:11.384Z] INFO: Received SIGTERM, starting graceful shutdown
+[2025-07-16T23:28:11.384Z] INFO: Received SIGTERM, starting graceful shutdown
+
+Route (app)                                      Size  First Load JS
+┌ ○ /                                           216 B         119 kB
+├ ○ /_not-found                                 992 B         103 kB
+├ ○ /admin                                    7.42 kB         130 kB
+├ ƒ /api/ai/analyze                             250 B         102 kB
+├ ƒ /api/ai/config                              250 B         102 kB
+├ ƒ /api/ai/status                              250 B         102 kB
+├ ƒ /api/check-db                               250 B         102 kB
+├ ƒ /api/documents                              250 B         102 kB
+├ ƒ /api/documents/[id]                         250 B         102 kB
+├ ƒ /api/documents/[id]/chunks                  250 B         102 kB
+├ ƒ /api/documents/[id]/similar                 250 B         102 kB
+├ ƒ /api/documents/async-upload                 250 B         102 kB
+├ ƒ /api/documents/bulk-upload                  250 B         102 kB
+├ ƒ /api/documents/collections                  250 B         102 kB
+├ ƒ /api/documents/count                        250 B         102 kB
+├ ƒ /api/documents/insights                     250 B         102 kB
+├ ƒ /api/documents/metrics                      250 B         102 kB
+├ ƒ /api/documents/network                      250 B         102 kB
+├ ƒ /api/documents/reprocess-systems            250 B         102 kB
+├ ƒ /api/documents/search                       250 B         102 kB
+├ ƒ /api/documents/search-safe                  250 B         102 kB
+├ ƒ /api/documents/search/semantic              250 B         102 kB
+├ ƒ /api/documents/systems-map                  250 B         102 kB
+├ ƒ /api/documents/upload-sse                   250 B         102 kB
+├ ƒ /api/entities                               250 B         102 kB
+├ ƒ /api/entities/[id]                          250 B         102 kB
+├ ƒ /api/entities/analytics                     250 B         102 kB
+├ ƒ /api/entities/insights                      250 B         102 kB
+├ ƒ /api/entities/relationships                 250 B         102 kB
+├ ƒ /api/entities/relationships/analysis        250 B         102 kB
+├ ƒ /api/entities/search                        250 B         102 kB
+├ ƒ /api/entities/validation                    250 B         102 kB
+├ ƒ /api/entities/validation/batch              250 B         102 kB
+├ ƒ /api/entities/validation/duplicates/[id]    250 B         102 kB
+├ ƒ /api/entities/validation/manual             250 B         102 kB
+├ ƒ /api/entities/validation/stats              250 B         102 kB
+├ ƒ /api/jobs                                   250 B         102 kB
+├ ƒ /api/jobs/stream                            250 B         102 kB
+├ ƒ /api/migrate-entity-relationships           250 B         102 kB
+├ ƒ /api/systems/data                           250 B         102 kB
+├ ƒ /api/test                                   250 B         102 kB
+├ ƒ /api/test-db                                250 B         102 kB
+├ ƒ /api/test/ai                                250 B         102 kB
+├ ○ /data-insights                              250 B         102 kB
+├ ○ /documents                                7.48 kB         130 kB
+├ ƒ /documents/[id]                           3.75 kB         122 kB
+├ ○ /entities                                 2.03 kB         126 kB
+├ ○ /entities/relationships                   1.92 kB         126 kB
+├ ○ /entities/validation                        192 B         120 kB
+├ ○ /insights                                 4.45 kB         123 kB
+├ ○ /map                                      20.5 kB         137 kB
+├ ○ /research                                 5.02 kB         124 kB
+├ ○ /sentry-example-page                      10.7 kB         113 kB
+├ ○ /status                                   3.83 kB         122 kB
+├ ○ /stories                                  5.62 kB         133 kB
+├ ○ /systems                                   137 kB         264 kB
+└ ○ /test                                       737 B         119 kB
++ First Load JS shared by all                  102 kB
+  ├ chunks/1684-da8ed2eb743cbab6.js           46.4 kB
+  ├ chunks/4bd1b696-525ee8cc9dbdf46c.js       53.2 kB
+  └ other shared chunks (total)               2.29 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

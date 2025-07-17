@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { aiConfig } from '@/lib/ai-config';
-import { 
-  checkRateLimit, 
-  addSecurityHeaders,
-  validateIndigenousDataProtocols,
-  sanitizeInput,
-  logSecurityEvent
-} from '@/middleware/security';
+// Temporarily disable security middleware for Vercel debugging
+// import { 
+//   checkRateLimit, 
+//   addSecurityHeaders,
+//   validateIndigenousDataProtocols,
+//   sanitizeInput,
+//   logSecurityEvent
+// } from '@/middleware/security';
 
 // Initialize clients
 const openai = process.env.OPENAI_API_KEY 
@@ -29,26 +30,26 @@ const anthropic = process.env.ANTHROPIC_API_KEY
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting check  
-    const rateLimitResult = checkRateLimit(request, {
-      rateLimit: { windowMs: 15 * 60 * 1000, maxRequests: 50 }, // More restrictive for AI calls
-      upload: { maxFileSize: 0, allowedMimeTypes: [] }, // Not used for AI endpoint
-      cors: { allowedOrigins: ['http://localhost:3000', 'https://barkly-research-platform-28raxpxna-benjamin-knights-projects.vercel.app'] }
-    });
+    // Temporarily disable rate limiting for Vercel debugging
+    // const rateLimitResult = checkRateLimit(request, {
+    //   rateLimit: { windowMs: 15 * 60 * 1000, maxRequests: 50 }, // More restrictive for AI calls
+    //   upload: { maxFileSize: 0, allowedMimeTypes: [] }, // Not used for AI endpoint
+    //   cors: { allowedOrigins: ['http://localhost:3000', 'https://barkly-research-platform-28raxpxna-benjamin-knights-projects.vercel.app'] }
+    // });
     
-    if (!rateLimitResult.allowed) {
-      logSecurityEvent('AI_RATE_LIMIT_EXCEEDED', request);
-      return NextResponse.json(
-        { error: 'AI analysis rate limit exceeded. Please try again later.' },
-        { 
-          status: 429,
-          headers: {
-            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
-          }
-        }
-      );
-    }
+    // if (!rateLimitResult.allowed) {
+    //   logSecurityEvent('AI_RATE_LIMIT_EXCEEDED', request);
+    //   return NextResponse.json(
+    //     { error: 'AI analysis rate limit exceeded. Please try again later.' },
+    //     { 
+    //       status: 429,
+    //       headers: {
+    //         'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+    //         'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+    //       }
+    //     }
+    //   );
+    // }
 
     const requestBody = await request.json();
 
