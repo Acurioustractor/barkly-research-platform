@@ -11,25 +11,37 @@ export async function POST(request: NextRequest) {
 
     // Clear all data in the correct order (respecting foreign key constraints)
     const deletionResults = await prisma.$transaction(async (tx) => {
-      // Delete chunks first (they reference documents)
-      const chunksDeleted = await tx.chunk.deleteMany({});
-      console.log(`[ADMIN] Deleted ${chunksDeleted.count} chunks`);
+      // Delete all child records first (they reference documents)
+      const chunksDeleted = await tx.documentChunk.deleteMany({});
+      console.log(`[ADMIN] Deleted ${chunksDeleted.count} document chunks`);
 
-      // Delete themes (they reference documents)
-      const themesDeleted = await tx.theme.deleteMany({});
-      console.log(`[ADMIN] Deleted ${themesDeleted.count} themes`);
+      const themesDeleted = await tx.documentTheme.deleteMany({});
+      console.log(`[ADMIN] Deleted ${themesDeleted.count} document themes`);
 
-      // Delete insights (they reference documents) 
-      const insightsDeleted = await tx.insight.deleteMany({});
-      console.log(`[ADMIN] Deleted ${insightsDeleted.count} insights`);
+      const quotesDeleted = await tx.documentQuote.deleteMany({});
+      console.log(`[ADMIN] Deleted ${quotesDeleted.count} document quotes`);
 
-      // Delete entity relationships
-      const relationshipsDeleted = await tx.entityRelationship.deleteMany({});
-      console.log(`[ADMIN] Deleted ${relationshipsDeleted.count} entity relationships`);
+      const insightsDeleted = await tx.documentInsight.deleteMany({});
+      console.log(`[ADMIN] Deleted ${insightsDeleted.count} document insights`);
 
-      // Delete entities
-      const entitiesDeleted = await tx.entity.deleteMany({});
-      console.log(`[ADMIN] Deleted ${entitiesDeleted.count} entities`);
+      const keywordsDeleted = await tx.documentKeyword.deleteMany({});
+      console.log(`[ADMIN] Deleted ${keywordsDeleted.count} document keywords`);
+
+      // Delete system relationships
+      const systemRelationshipsDeleted = await tx.systemRelationship.deleteMany({});
+      console.log(`[ADMIN] Deleted ${systemRelationshipsDeleted.count} system relationships`);
+
+      // Delete system entities  
+      const systemEntitiesDeleted = await tx.systemEntity.deleteMany({});
+      console.log(`[ADMIN] Deleted ${systemEntitiesDeleted.count} system entities`);
+
+      // Delete document entity relationships
+      const docEntityRelationshipsDeleted = await tx.documentEntityRelationship.deleteMany({});
+      console.log(`[ADMIN] Deleted ${docEntityRelationshipsDeleted.count} document entity relationships`);
+
+      // Delete document entities
+      const docEntitiesDeleted = await tx.documentEntity.deleteMany({});
+      console.log(`[ADMIN] Deleted ${docEntitiesDeleted.count} document entities`);
 
       // Delete documents last
       const documentsDeleted = await tx.document.deleteMany({});
@@ -38,9 +50,13 @@ export async function POST(request: NextRequest) {
       return {
         chunks: chunksDeleted.count,
         themes: themesDeleted.count,
+        quotes: quotesDeleted.count,
         insights: insightsDeleted.count,
-        relationships: relationshipsDeleted.count,
-        entities: entitiesDeleted.count,
+        keywords: keywordsDeleted.count,
+        systemRelationships: systemRelationshipsDeleted.count,
+        systemEntities: systemEntitiesDeleted.count,
+        docEntityRelationships: docEntityRelationshipsDeleted.count,
+        docEntities: docEntitiesDeleted.count,
         documents: documentsDeleted.count
       };
     });
@@ -75,11 +91,15 @@ export async function GET(request: NextRequest) {
 
     const counts = await Promise.all([
       prisma.document.count(),
-      prisma.chunk.count(),
-      prisma.theme.count(),
-      prisma.insight.count(),
-      prisma.entity.count(),
-      prisma.entityRelationship.count()
+      prisma.documentChunk.count(),
+      prisma.documentTheme.count(),
+      prisma.documentQuote.count(),
+      prisma.documentInsight.count(),
+      prisma.documentKeyword.count(),
+      prisma.systemEntity.count(),
+      prisma.systemRelationship.count(),
+      prisma.documentEntity.count(),
+      prisma.documentEntityRelationship.count()
     ]);
 
     return NextResponse.json({
@@ -87,9 +107,13 @@ export async function GET(request: NextRequest) {
         documents: counts[0],
         chunks: counts[1],
         themes: counts[2],
-        insights: counts[3],
-        entities: counts[4],
-        relationships: counts[5]
+        quotes: counts[3],
+        insights: counts[4],
+        keywords: counts[5],
+        systemEntities: counts[6],
+        systemRelationships: counts[7],
+        docEntities: counts[8],
+        docEntityRelationships: counts[9]
       },
       total_records: counts.reduce((sum, count) => sum + count, 0)
     });
