@@ -2,6 +2,10 @@
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/documents/**/*.ts": {
+      "maxDuration": 300,
+      "memory": 1024
     }
   },
   "regions": ["iad1"]

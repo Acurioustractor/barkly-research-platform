@@ -65,61 +65,101 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Only PDF files are supported' }, { status: 400 });
     }
 
-    // Extract text content
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const extractor = new ImprovedPDFExtractor(buffer);
-    const extractedData = await extractor.extractText();
-
-    // Temporarily disable Indigenous data validation for Vercel debugging
-    // const protocolValidation = validateIndigenousDataProtocols(extractedData.text);
-    // if (protocolValidation.warnings.length > 0) {
-    //   logSecurityEvent('INDIGENOUS_DATA_WARNING', request, {
-    //     fileName: file.name,
-    //     warnings: protocolValidation.warnings
-    //   });
-    //   console.warn('[INDIGENOUS_DATA]', protocolValidation.warnings);
-    // }
-
-    // Basic form input handling (temporarily simplified)
+    // Basic form input handling
     const category = (formData.get('category') as string || 'general').trim();
     const source = (formData.get('source') as string || 'upload').trim();
     const tags = (formData.get('tags') as string || '').trim();
 
-    // Create document record
+    // Create document record first with PROCESSING status
     const document = await prisma.document.create({
       data: {
         filename: `${Date.now()}-${file.name}`,
         originalName: file.name,
         mimeType: 'application/pdf',
         size: file.size,
-        wordCount: extractedData.text.split(/\s+/).length,
-        pageCount: extractedData.pageCount || 1,
-        fullText: extractedData.text,
-        status: 'COMPLETED',
+        wordCount: 0, // Will be updated after processing
+        pageCount: 0, // Will be updated after processing
+        fullText: '', // Will be updated after processing
+        status: 'PROCESSING',
         category,
         source,
         tags,
         uploadedAt: new Date(),
-        processedAt: new Date(),
       }
+    });
+
+    try {
+      console.log(`[documents] Starting PDF extraction for document ${document.id}`);
+      
+      // Extract text content with timeout protection
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const extractor = new ImprovedPDFExtractor(buffer);
+      
+      // Add processing timeout
+      const extractionPromise = extractor.extractText();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('PDF extraction timeout')), 240000) // 4 minutes
+      );
+      
+      const extractedData = await Promise.race([extractionPromise, timeoutPromise]) as any;
+      
+      console.log(`[documents] PDF extraction completed for document ${document.id}, pages: ${extractedData.pageCount}`);
+
+      // Update document with extracted data
+      await prisma.document.update({
+        where: { id: document.id },
+        data: {
+          wordCount: extractedData.text.split(/\s+/).length,
+          pageCount: extractedData.pageCount || 1,
+          fullText: extractedData.text,
+          status: 'COMPLETED',
+          processedAt: new Date(),
+        }
+      });
+
+      console.log(`[documents] Document ${document.id} processing completed successfully`);
+
+    } catch (error) {
+      console.error(`[documents] Processing failed for document ${document.id}:`, error);
+      
+      // Update document with error status
+      await prisma.document.update({
+        where: { id: document.id },
+        data: {
+          status: 'FAILED',
+          errorMessage: error instanceof Error ? error.message : 'Unknown processing error',
+          processedAt: new Date(),
+        }
+      });
+      
+      // Don't throw error - return partial success with processing status
+    }
+
+    // Get updated document for response
+    const updatedDocument = await prisma.document.findUnique({
+      where: { id: document.id }
     });
 
     console.log(`[documents] Document created with ID: ${document.id}`);
 
-    // Temporarily simplified response for Vercel debugging
+    // Return response with current status
     return NextResponse.json({
       success: true,
       document: {
-        id: document.id,
-        filename: document.filename,
-        originalName: document.originalName,
-        size: document.size,
-        wordCount: document.wordCount,
-        pageCount: document.pageCount,
-        status: document.status,
-        uploadedAt: document.uploadedAt,
+        id: updatedDocument?.id || document.id,
+        filename: updatedDocument?.filename || document.filename,
+        originalName: updatedDocument?.originalName || document.originalName,
+        size: updatedDocument?.size || document.size,
+        wordCount: updatedDocument?.wordCount || document.wordCount,
+        pageCount: updatedDocument?.pageCount || document.pageCount,
+        status: updatedDocument?.status || document.status,
+        uploadedAt: updatedDocument?.uploadedAt || document.uploadedAt,
+        processedAt: updatedDocument?.processedAt,
+        errorMessage: updatedDocument?.errorMessage,
       },
-      // indigenousDataWarnings: protocolValidation.warnings,
+      message: updatedDocument?.status === 'COMPLETED' ? 'Document processed successfully' :
+               updatedDocument?.status === 'FAILED' ? 'Document upload succeeded but processing failed' :
+               'Document uploaded and processing...'
     });
 
   } catch (error) {
