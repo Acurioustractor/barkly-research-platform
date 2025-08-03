@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design System Variables - LOCKED */
+@layer base {
+  :root {
+    /* Core Colors - DO NOT MODIFY */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    
+    /* Brand Colors - LOCKED */
+    --primary: 346 72% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --accent: 197 92% 48%;
+    --accent-foreground: 240 5.9% 10%;
+    
+    /* Semantic Colors - LOCKED */
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+    
+    /* UI Elements - LOCKED */
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 346 72% 52%;
+    --radius: 0.5rem;
+    
+    /* Cultural Colors - LOCKED */
+    --cultural-respect: 25 76% 31%;
+    --cultural-knowledge: 43 74% 49%;
+    --cultural-community: 142 69% 58%;
+    --cultural-ceremony: 271 91% 65%;
+  }
+
+  /* Dark mode support */
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 346 72% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --accent: 197 92% 48%;
+    --accent-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 346 72% 52%;
+  }
+}
+
+/* Global styles - LOCKED */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Component base styles - LOCKED */
+@layer components {
+  /* Remove default link underlines */
+  a {
+    @apply no-underline;
+  }
+  
+  /* Button reset */
+  button {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+  
+  /* Form element consistency */
+  input, select, textarea {
+    @apply border-input bg-background;
+  }
+}
+
+/* Utility overrides - LOCKED */
+@layer utilities {
+  /* Hide scrollbars but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Glass effect */
+  .glass {
+    @apply bg-background/80 backdrop-blur-md;
+  }
+  
+  /* Text gradients */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+}

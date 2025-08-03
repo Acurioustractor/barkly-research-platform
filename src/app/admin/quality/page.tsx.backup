@@ -1,0 +1,493 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { PageLayout, Container } from '@/components/core';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/core/Card';
+import { Button } from '@/components/core/Button';
+import { Badge } from '@/components/core/Badge';
+import Link from 'next/link';
+
+interface ExtractionDashboard {
+  overview: {
+    total_themes: number;
+    average_confidence: number;
+    high_confidence: number;
+    needs_review: number;
+    ai_models_used: number;
+    extraction_period: {
+      first: string;
+      last: string;
+    };
+    quality_score: number;
+  };
+  by_model: Array<{
+    model: string;
+    count: number;
+    avg_confidence: number;
+  }>;
+  recent_bulk_extractions: Array<{
+    document_id: string;
+    title: string;
+    themes_extracted: number;
+    ai_model: string;
+    processed_at: string;
+  }>;
+  potential_duplicates: Array<{
+    theme_name: string;
+    occurrences: number;
+    avg_confidence: number;
+    models_used: string[];
+  }>;
+  category_distribution: Array<{
+    category: string;
+    count: number;
+    avg_confidence: number;
+  }>;
+  recommendations: string[];
+}
+
+export default function QualityDashboardPage() {
+  const [dashboard, setDashboard] = useState<ExtractionDashboard | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
+  const fetchDashboard = async () => {
+    try {
+      setRefreshing(true);
+      const response = await fetch('/api/admin/extraction-dashboard');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setDashboard(data.dashboard);
+        } else {
+          setError(data.error || 'Failed to load dashboard');
+        }
+      } else {
+        setError('Failed to fetch dashboard data');
+      }
+    } catch (error) {
+      console.error('Dashboard error:', error);
+      setError('Failed to load dashboard');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const getQualityColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 0.8) return 'text-green-600';
+    if (confidence >= 0.6) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  if (loading) {
+    return (
+      <PageLayout>
+        <Container>
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p>Loading quality dashboard...</p>
+            </div>
+          </div>
+        </Container>
+      </PageLayout>
+    );
+  }
+
+  if (error || !dashboard) {
+    return (
+      <PageLayout>
+        <Container>
+          <div className="bg-red-50 text-red-800 p-4 rounded mb-4">
+            {error || 'Dashboard not available'}
+          </div>
+          <Button onClick={fetchDashboard}>Try Again</Button>
+        </Container>
+      </PageLayout>
+    );
+  }
+
+  return (
+    <PageLayout>
+      {/* Header */}
+      <section className="py-8 bg-gradient-to-r from-green-50 to-emerald-50">
+        <Container>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Quality Control Dashboard</h1>
+              <p className="text-muted-foreground">
+                Monitor extraction quality, confidence scores, and verify community intelligence data
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={fetchDashboard} 
+                disabled={refreshing}
+              >
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
+              <Link href="/documents">
+                <Button variant="secondary">View Documents</Button>
+              </Link>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* Overview Stats */}
+      <section className="py-8">
+        <Container>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-blue-600">
+                    {dashboard.overview.total_themes.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Total Themes</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <p className={`text-3xl font-bold ${getConfidenceColor(dashboard.overview.average_confidence)}`}>
+                    {Math.round(dashboard.overview.average_confidence * 100)}%
+                  </p>
+                  <p className="text-sm text-muted-foreground">Average Confidence</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-green-600">
+                    {dashboard.overview.high_confidence}
+                  </p>
+                  <p className="text-sm text-muted-foreground">High Confidence</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <p className={`text-3xl font-bold ${getQualityColor(dashboard.overview.quality_score)}`}>
+                    {dashboard.overview.quality_score}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Quality Score</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quality Summary */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Extraction Quality Summary</CardTitle>
+              <CardDescription>
+                Period: {new Date(dashboard.overview.extraction_period.first).toLocaleDateString()} - {new Date(dashboard.overview.extraction_period.last).toLocaleDateString()}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <h4 className="font-medium mb-2">Confidence Distribution</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>High Confidence (≥80%):</span>
+                      <span className="font-medium text-green-600">
+                        {dashboard.overview.high_confidence}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Needs Review (<60%):</span>
+                      <span className="font-medium text-orange-600">
+                        {dashboard.overview.needs_review}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-2">Processing Details</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>AI Models Used:</span>
+                      <span className="font-medium">{dashboard.overview.ai_models_used}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Total Extractions:</span>
+                      <span className="font-medium">{dashboard.overview.total_themes.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-2">Quality Assessment</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Overall Score:</span>
+                      <span className={`font-medium ${getQualityColor(dashboard.overview.quality_score)}`}>
+                        {dashboard.overview.quality_score}/100
+                      </span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {dashboard.overview.quality_score >= 80 ? 'Excellent quality' :
+                       dashboard.overview.quality_score >= 60 ? 'Good quality' : 'Needs improvement'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Container>
+      </section>
+
+      {/* AI Models Performance */}
+      <section className="py-8 bg-muted/30">
+        <Container>
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>AI Models Performance</CardTitle>
+              <CardDescription>Performance comparison across different AI models</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {dashboard.by_model.map((model, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <h4 className="font-medium">{model.model}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {model.count.toLocaleString()} extractions
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-bold ${getConfidenceColor(model.avg_confidence)}`}>
+                        {Math.round(model.avg_confidence * 100)}%
+                      </p>
+                      <p className="text-xs text-muted-foreground">avg confidence</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </Container>
+      </section>
+
+      {/* Categories and Duplicates */}
+      <section className="py-8">
+        <Container>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Category Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Service Categories</CardTitle>
+                <CardDescription>Distribution of themes by category</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {dashboard.category_distribution.map((category, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <span className="font-medium capitalize">
+                          {category.category.replace('_', ' ')}
+                        </span>
+                        <p className="text-sm text-muted-foreground">
+                          {Math.round(category.avg_confidence * 100)}% avg confidence
+                        </p>
+                      </div>
+                      <Badge variant="outline">{category.count}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Potential Duplicates */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Potential Duplicates</CardTitle>
+                <CardDescription>Themes that may need deduplication</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {dashboard.potential_duplicates.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4">
+                    No potential duplicates detected
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {dashboard.potential_duplicates.slice(0, 5).map((duplicate, index) => (
+                      <div key={index} className="p-3 border rounded-lg bg-yellow-50">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-sm">{duplicate.theme_name}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              Models: {duplicate.models_used.join(', ')}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant="secondary">{duplicate.occurrences}×</Badge>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {Math.round(duplicate.avg_confidence * 100)}% conf
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </Container>
+      </section>
+
+      {/* Recent Bulk Extractions */}
+      {dashboard.recent_bulk_extractions.length > 0 && (
+        <section className="py-8 bg-muted/30">
+          <Container>
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Bulk Extractions</CardTitle>
+                <CardDescription>Large-scale processing activity in the last 2 hours</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {dashboard.recent_bulk_extractions.map((extraction, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <h4 className="font-medium">{extraction.title}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {extraction.ai_model} • {new Date(extraction.processed_at).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant="outline">{extraction.themes_extracted} themes</Badge>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="ml-2"
+                          onClick={() => window.open(`/documents/${extraction.document_id}`, '_blank')}
+                        >
+                          View
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </Container>
+        </section>
+      )}
+
+      {/* Recommendations */}
+      <section className="py-8">
+        <Container>
+          <Card>
+            <CardHeader>
+              <CardTitle>Quality Recommendations</CardTitle>
+              <CardDescription>Suggested actions to improve data quality</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {dashboard.recommendations.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-green-600 font-medium">✅ All quality checks passed!</p>
+                  <p className="text-muted-foreground">No recommendations at this time.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {dashboard.recommendations.map((recommendation, index) => (
+                    <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg">
+                      <span className="text-blue-500 mt-1">•</span>
+                      <span className="text-sm">{recommendation}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </Container>
+      </section>
+
+      {/* Quick Actions */}
+      <section className="py-8">
+        <Container>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Document Processing</CardTitle>
+                <CardDescription>Manage document processing and reprocessing</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Link href="/documents" className="block">
+                    <Button className="w-full" variant="outline">View All Documents</Button>
+                  </Link>
+                  <Button 
+                    className="w-full" 
+                    variant="ghost"
+                    onClick={() => window.open('/api/documents/reprocess-enhanced?action=failed_documents', '_blank')}
+                  >
+                    View Failed Documents
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Verification Tools</CardTitle>
+                <CardDescription>Manual review and verification workflows</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Button className="w-full" variant="outline">
+                    Verify Random Sample
+                  </Button>
+                  <Button className="w-full" variant="ghost">
+                    Review Low Confidence
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Export & Reports</CardTitle>
+                <CardDescription>Generate quality reports and export data</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Button className="w-full" variant="outline">
+                    Generate Quality Report
+                  </Button>
+                  <Button className="w-full" variant="ghost">
+                    Export Dashboard Data
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </Container>
+      </section>
+    </PageLayout>
+  );
+}

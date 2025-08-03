@@ -59,10 +59,12 @@ export class BackgroundProcessor {
       this.sendProgress(documentId, 'starting', 0, 'Initializing PDF processing...');
 
       // Update document status to processing
-      await prisma.document.update({
-        where: { id: documentId },
-        data: { status: 'PROCESSING' }
-      });
+      if (prisma) {
+        await prisma.document.update({
+          where: { id: documentId },
+          data: { status: 'PROCESSING' }
+        });
+      }
 
       this.sendProgress(documentId, 'extracting', 10, 'Analyzing PDF structure...');
 
@@ -77,7 +79,7 @@ export class BackgroundProcessor {
       this.sendProgress(documentId, 'analyzing', 60, 'Processing extracted content...');
 
       // Calculate statistics
-      const wordCount = extractedData.text.split(/\s+/).filter(word => word.length > 0).length;
+      const wordCount = extractedData.text.split(/\s+/).filter((word: string) => word.length > 0).length;
       const pageCount = extractedData.pageCount || 1;
 
       this.sendProgress(documentId, 'analyzing', 80, 'Generating insights and themes...');
@@ -88,16 +90,18 @@ export class BackgroundProcessor {
       this.sendProgress(documentId, 'completing', 95, 'Finalizing document processing...');
 
       // Update document with results
-      await prisma.document.update({
-        where: { id: documentId },
-        data: {
-          wordCount,
-          pageCount,
-          fullText: extractedData.text.substring(0, 100000), // Limit text size
-          status: 'COMPLETED',
-          processedAt: new Date(),
-        }
-      });
+      if (prisma) {
+        await prisma.document.update({
+          where: { id: documentId },
+          data: {
+            wordCount,
+            pageCount,
+            fullText: extractedData.text.substring(0, 100000), // Limit text size
+            status: 'COMPLETED',
+            processedAt: new Date(),
+          }
+        });
+      }
 
       this.sendProgress(documentId, 'completed', 100, 'Document processing completed successfully');
 
@@ -107,14 +111,16 @@ export class BackgroundProcessor {
       const errorMessage = error instanceof Error ? error.message : 'Unknown processing error';
 
       // Update document with error status
-      await prisma.document.update({
-        where: { id: documentId },
-        data: {
-          status: 'FAILED',
-          errorMessage,
-          processedAt: new Date(),
-        }
-      });
+      if (prisma) {
+        await prisma.document.update({
+          where: { id: documentId },
+          data: {
+            status: 'FAILED',
+            errorMessage,
+            processedAt: new Date(),
+          }
+        });
+      }
 
       this.sendProgress(documentId, 'failed', 0, 'Document processing failed', errorMessage);
     } finally {
@@ -179,6 +185,11 @@ export class BackgroundProcessor {
    */
   async processQueue(): Promise<void> {
     // Find documents pending processing
+    if (!prisma) {
+      console.log('[BackgroundProcessor] Database not available');
+      return;
+    }
+    
     const pendingDocuments = await prisma.document.findMany({
       where: { status: 'PENDING' },
       orderBy: { uploadedAt: 'asc' },

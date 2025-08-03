@@ -1,261 +1,229 @@
-# Barkley Research Platform - Vercel Deployment Guide
+# Barkly Research Platform - Deployment Guide
+
+This guide will help you deploy the Barkly Research Platform to GitHub and then to Vercel.
 
 ## 🚀 Quick Deploy to Vercel
 
-### 1. **Prerequisites**
-- Vercel account (free tier available)
-- PostgreSQL database (Supabase/Neon recommended)
-- AI API keys (OpenAI and/or Anthropic)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/barkly-research-platform&env=SUPABASE_URL,SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,DATABASE_URL,OPENAI_API_KEY&envDescription=Required%20environment%20variables%20for%20the%20platform&envLink=https://github.com/your-username/barkly-research-platform/blob/main/.env.production.example)
 
-### 2. **One-Click Deploy**
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyour-username%2Fbarkly-research-platform)
+## 📋 Prerequisites
 
-### 3. **Manual Deployment Steps**
+- GitHub account
+- Vercel account (can sign up with GitHub)
+- Supabase project (for database)
+- OpenAI API key (for AI analysis)
 
-#### **Step 1: Clone and Setup**
+## 🔧 Environment Variables Required
+
+Copy these from `.env.production.example` to your Vercel environment:
+
+### Required Variables
 ```bash
-git clone https://github.com/your-username/barkly-research-platform.git
-cd barkly-research-platform
-npm install
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+DATABASE_URL=postgresql://postgres:[password]@[host]:5432/postgres
+OPENAI_API_KEY=sk-...
+NODE_ENV=production
 ```
 
-#### **Step 2: Environment Variables**
-Set these environment variables in your Vercel dashboard:
-
-**Required:**
+### Optional but Recommended
 ```bash
-DATABASE_URL="postgresql://user:password@host:5432/database"
-DIRECT_URL="postgresql://user:password@host:5432/database"
-OPENAI_API_KEY="sk-..."
-ANTHROPIC_API_KEY="sk-ant-..."
+ANTHROPIC_API_KEY=sk-ant-...
+REDIS_URL=redis://your-redis:6379
+MAX_FILE_SIZE=25165824
+AI_TIMEOUT_MS=60000
 ```
 
-**Optional (recommended):**
-```bash
-REDIS_URL="redis://host:port"
-ENABLE_AI_ANALYSIS="true"
-ENABLE_EMBEDDINGS="true"
-ENABLE_PARALLEL_PROCESSING="true"
-MAX_FILE_SIZE="10485760"
-AI_TIMEOUT_MS="30000"
-NODE_ENV="production"
-```
+## 📦 Step 1: Prepare for GitHub
 
-#### **Step 3: Database Setup**
-```bash
-# Push database schema
-npx prisma db push
+1. **Clean up sensitive files** (already done):
+   ```bash
+   # These are already in .gitignore:
+   # - .env files
+   # - Generated thumbnails  
+   # - Test documents
+   # - Build artifacts
+   ```
 
-# Generate client
-npx prisma generate
-```
+2. **Verify build works**:
+   ```bash
+   npm run build
+   npm run type-check
+   ```
 
-#### **Step 4: Deploy to Vercel**
-```bash
-# Install Vercel CLI
-npm i -g vercel
+## 🔨 Step 2: Create GitHub Repository
 
-# Deploy
-vercel --prod
-```
+1. **Initialize Git** (if not already done):
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit: Barkly Research Platform"
+   ```
 
-## 🔧 Configuration Details
+2. **Create GitHub Repository**:
+   - Go to https://github.com/new
+   - Repository name: `barkly-research-platform`
+   - Description: "AI-powered platform for transforming community stories into actionable intelligence"
+   - Public or Private (your choice)
+   - Do NOT initialize with README (we have one)
 
-### **Database Configuration**
-- **PostgreSQL** with pgvector extension required
-- **Supabase** (recommended): Free tier with pgvector support
-- **Neon**: Good alternative with serverless PostgreSQL
+3. **Push to GitHub**:
+   ```bash
+   git remote add origin https://github.com/YOUR-USERNAME/barkly-research-platform.git
+   git branch -M main
+   git push -u origin main
+   ```
 
-### **AI Services**
-- **OpenAI**: Required for embeddings and analysis
-- **Anthropic**: Alternative/backup AI provider
-- **Moonshot**: Optional third provider
+## ☁️ Step 3: Deploy to Vercel
 
-### **File Storage**
-- Uses local filesystem (Vercel's /tmp directory)
-- For production, consider upgrading to cloud storage
+### Option A: Automatic Deploy (Recommended)
 
-## 🎯 Key Features Available
+1. **Connect GitHub to Vercel**:
+   - Go to [vercel.com](https://vercel.com)
+   - Sign up/in with GitHub
+   - Click "New Project"
+   - Import your `barkly-research-platform` repository
 
-### **AI Analysis Pipeline**
-- ✅ Multi-provider AI integration (OpenAI, Anthropic, Moonshot)
-- ✅ Rate limiting with exponential backoff
-- ✅ Automatic failover and health monitoring
-- ✅ Background job processing with priority queuing
-- ✅ Real-time progress streaming
+2. **Configure Build Settings**:
+   - Framework Preset: `Next.js`
+   - Build Command: `npm run build`
+   - Output Directory: `.next`
+   - Install Command: `npm install`
 
-### **Document Processing**
-- ✅ Intelligent chunking with 8 different strategies
-- ✅ Quality validation with automatic reprocessing
-- ✅ Performance optimization with caching
-- ✅ Comprehensive metadata tracking
+3. **Add Environment Variables**:
+   - In Vercel dashboard → Settings → Environment Variables
+   - Add all variables from `.env.production.example`
 
-### **User Interface**
-- ✅ Complete upload interface with AI options
-- ✅ Real-time job queue monitoring
-- ✅ Performance insights and system health
-- ✅ Document analysis results viewer
+### Option B: Vercel CLI Deploy
 
-## 🔐 Security Considerations
+1. **Install Vercel CLI**:
+   ```bash
+   npm i -g vercel
+   ```
 
-### **API Keys**
-- Store all API keys in Vercel environment variables
-- Never commit keys to version control
-- Use separate keys for development and production
+2. **Login and Deploy**:
+   ```bash
+   vercel login
+   vercel
+   ```
 
-### **Database Security**
-- Use connection pooling for PostgreSQL
-- Enable SSL connections
-- Implement proper user permissions
+3. **Follow prompts**:
+   - Link to existing project? No
+   - Project name: `barkly-research-platform`
+   - Directory: `./`
+   - Want to override settings? No
 
-### **File Upload Security**
-- File type validation (PDF only)
-- Size limits (10MB default)
-- Virus scanning recommended for production
+## 🔧 Step 4: Configure Production Environment
 
-## 📊 Performance Optimization
+1. **Set Environment Variables** in Vercel Dashboard:
+   - Go to Project Settings → Environment Variables
+   - Add all required variables from `.env.production.example`
 
-### **Caching Strategy**
-- Document chunking results cached
-- AI analysis results cached
-- Performance metrics cached
+2. **Configure Database**:
+   - Ensure Supabase project is set up
+   - Run migrations if needed:
+     ```bash
+     # In your Supabase SQL editor:
+     # Run any pending migration files from /database-setup/
+     ```
 
-### **Database Optimization**
-- Indexes on frequently queried columns
-- Connection pooling enabled
-- Query optimization for large datasets
+3. **Test Deployment**:
+   - Visit your Vercel URL
+   - Test document upload
+   - Check AI analysis works
+   - Verify thumbnails load
 
-### **Resource Management**
-- Background job processing
-- Memory usage monitoring
-- CPU usage alerts
+## 🛠️ Step 5: Custom Domain (Optional)
 
-## 🚨 Monitoring & Alerts
+1. **Add Custom Domain** in Vercel:
+   - Go to Project Settings → Domains
+   - Add your domain: `your-domain.com`
+   - Follow DNS configuration instructions
 
-### **Built-in Monitoring**
-- Real-time performance metrics
-- System health monitoring
-- Queue length tracking
-- Error rate monitoring
+2. **Update Environment Variables**:
+   ```bash
+   NEXTAUTH_URL=https://your-domain.com
+   ALLOWED_ORIGINS=https://your-domain.com
+   ```
 
-### **Alert Thresholds**
-- High processing time (>30s)
-- Low success rate (<95%)
-- High queue length (>50)
-- High memory usage (>80%)
+## 📊 Production Monitoring
 
-## 🔄 Deployment Checklist
+### Performance Monitoring
+- Vercel Analytics (automatic)
+- Function logs in Vercel dashboard
+- Database performance in Supabase
 
-### **Pre-deployment**
-- [ ] Environment variables configured
-- [ ] Database schema pushed
-- [ ] AI API keys tested
-- [ ] Build succeeds locally
+### Error Tracking
+- Check Vercel function logs
+- Monitor Supabase logs
+- Set up Sentry (optional):
+  ```bash
+  SENTRY_DSN=your-sentry-dsn
+  ```
 
-### **Post-deployment**
-- [ ] Database connection verified
-- [ ] AI services responding
-- [ ] Upload functionality working
-- [ ] Job queue processing
-- [ ] Performance monitoring active
+## 🔄 Continuous Deployment
 
-## 🐛 Troubleshooting
+Once connected to GitHub:
+- Push to `main` branch → Auto-deploy to production
+- Push to other branches → Deploy previews
+- Pull requests → Automatic preview deployments
 
-### **Common Issues**
+## 🚨 Troubleshooting
 
-**Database Connection:**
-```bash
-# Test database connection
-npx prisma db push
-```
+### Common Issues
 
-**AI API Issues:**
-```bash
-# Test AI service status
-curl https://your-app.vercel.app/api/ai/status
-```
+1. **Build Failures**:
+   ```bash
+   # Check build locally first
+   npm run build
+   npm run type-check
+   ```
 
-**Build Errors:**
-```bash
-# Check build logs
-vercel logs your-deployment-url
-```
+2. **Environment Variable Issues**:
+   - Ensure all required variables are set in Vercel
+   - Check variable names match exactly
+   - Verify Supabase keys are correct
 
-**Memory Issues:**
-- Increase Vercel function memory in dashboard
-- Check for memory leaks in job processing
+3. **Database Connection Issues**:
+   - Verify DATABASE_URL format
+   - Check Supabase project is not paused
+   - Ensure connection pooling is enabled
 
-## 📈 Scaling Considerations
+4. **API Timeouts**:
+   - Check Vercel function timeouts (max 60s on Hobby plan)
+   - Increase timeouts in `vercel.json` if needed
+   - Consider breaking up large operations
 
-### **Current Limits**
-- Vercel function timeout: 300s
-- Memory: 1GB (can be increased)
-- File uploads: 10MB (configurable)
+### Getting Help
 
-### **Scaling Options**
-- Increase function memory/timeout
-- Implement Redis for job queue
-- Use cloud storage for files
-- Add CDN for static assets
+1. **Check Vercel logs**: Project → Functions → View function logs
+2. **Check build logs**: Project → Deployments → Click deployment → View logs
+3. **Supabase logs**: Supabase Dashboard → Logs
+4. **Local development**: `npm run dev` to test locally
 
-## 🎉 Success Metrics
+## 📝 Post-Deployment Checklist
 
-After deployment, you should see:
-- AI analysis working with multiple providers
-- Real-time job queue processing
-- Document upload and analysis pipeline
-- Performance monitoring dashboard
-- Quality validation system
+- [ ] Site loads at Vercel URL
+- [ ] Document upload works
+- [ ] AI analysis processes documents
+- [ ] Thumbnails display correctly
+- [ ] Database connections work
+- [ ] All API endpoints respond
+- [ ] Custom domain configured (if applicable)
+- [ ] Environment variables secure
+- [ ] Monitoring set up
 
-## 🚀 Final Deployment Steps
+## 🔐 Security Notes
 
-### **Step 1: Run Production Build Test**
-```bash
-# Ensure production build succeeds
-npm run build
-
-# If successful, you should see:
-# ✓ Compiled successfully
-# ✓ Collecting page data
-# ✓ Generating static pages
-```
-
-### **Step 2: Deploy to Vercel**
-```bash
-# Deploy to production
-vercel --prod
-
-# Or connect GitHub repo in Vercel dashboard for automatic deployments
-```
-
-### **Step 3: Verify Deployment**
-```bash
-# Run verification script
-./verify-deployment.sh https://your-app.vercel.app
-
-# Check all endpoints and features
-# Should show ✅ for all key features
-```
-
-### **Step 4: Production Checklist**
-- [ ] Production build succeeds without errors
-- [ ] All environment variables configured in Vercel
-- [ ] Database connection verified
-- [ ] AI API keys tested and working
-- [ ] Document upload and processing working
-- [ ] Real-time job streaming active
-- [ ] Performance monitoring enabled
-- [ ] Error handling and logging active
-
-## 📞 Support
-
-For deployment issues:
-1. Check Vercel deployment logs
-2. Verify environment variables
-3. Test database connectivity
-4. Validate AI API keys
-5. Review performance metrics
+- All environment variables are kept secure in Vercel
+- `.env` files are NOT committed to GitHub
+- Supabase handles database security
+- CORS is configured for your domain only
+- Rate limiting is enabled on API endpoints
 
 ---
 
-**Ready to deploy!** 🚀 Your comprehensive AI-powered research platform is production-ready with all advanced features enabled.
+🎉 **Congratulations!** Your Barkly Research Platform is now deployed and ready to help transform community stories into actionable intelligence.
+
+For support, create an issue in the GitHub repository.

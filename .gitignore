@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/test-results
+/.nyc_output
+/jest-html-reporters-attach
 
 # next.js
 /.next/
@@ -19,6 +22,7 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -30,8 +34,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files - IMPORTANT: Keep all environment files private
+.env
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
@@ -40,8 +49,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma
 /src/generated/prisma
-.env*.local
 
 # Redis
 dump.rdb
@@ -49,6 +58,7 @@ dump.rdb
 # Logs
 logs/
 *.log
+dev.log
 
 # IDE
 .idea/
@@ -56,15 +66,48 @@ logs/
 *.swp
 *.swo
 
-# Database
+# Database files
 *.db
 *.db-journal
 *.sqlite
 *.sqlite-journal
-
-# Test artifacts
-test-results/
-.nyc_output/
+/prisma/dev.db
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Development files
+/archive/
+/docs/private/
+/temp/
+/tmp/
+
+# Large PDF files in docs (keep documentation, exclude large files)
+/docs/*.pdf
+/docs/**/*.pdf
+
+# Test documents (keep sample files, exclude large uploads)
+/test-documents/*.pdf
+!/test-documents/simple-test.pdf
+/uploads/
+
+# Thumbnails - keep placeholders, exclude generated
+/public/thumbnails/real-preview-*
+/public/thumbnails/enhanced-*
+/public/thumbnails/thumb-*
+!/public/thumbnails/test-thumb.png
+
+# Scripts output
+/scripts/output/
+/scripts/logs/
+
+# OS generated files
+.DS_Store?
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Local development
+.vscode/settings.json
+.vscode/launch.json

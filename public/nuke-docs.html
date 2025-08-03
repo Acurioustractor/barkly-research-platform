@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuclear Delete</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .btn {
+            background: #dc2626;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px;
+        }
+        .btn:hover {
+            background: #b91c1c;
+        }
+        .result {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>🔥 NUCLEAR DELETE 🔥</h1>
+    <p>This will forcefully delete unwanted documents</p>
+    
+    <button class="btn" onclick="nukeUnwanted()">DELETE ALL UNWANTED DOCS</button>
+    <button class="btn" onclick="nukeFailed()">DELETE FAILED DOCX UPLOADS</button>
+    <button class="btn" onclick="nukeAll()">DELETE EVERYTHING (DANGER!)</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        async function nukeUnwanted() {
+            const unwanted = [
+                'Best Practice Marketing & Communications Strategy for Potential First Pathways Rollout.pdf',
+                'null',
+                'BRD Story of Change Tree Image (1).pdf',
+                'BRD Principles and Systems Change Rubric (1).pdf',
+                'Blueprint for Tennant Creek Youth Strategy Analytics  Dashboard System.pdf'
+            ];
+            
+            await nukeDocuments(unwanted, 'unwanted documents');
+        }
+        
+        async function nukeFailed() {
+            const failed = [
+                'Negotiating Barkly Training Pathways Sector Action Plans 2025 (1).docx',
+                'Outcomes indicator alignment with CTG outcomes and Priority Reforms (1).docx'
+            ];
+            
+            await nukeDocuments(failed, 'failed DOCX uploads');
+        }
+        
+        async function nukeAll() {
+            if (!confirm('ARE YOU SURE? This will delete ALL documents!')) return;
+            
+            // Get all documents first
+            try {
+                const response = await fetch('/api/list-docs');
+                const data = await response.json();
+                const allTitles = data.documents.map(doc => doc.title);
+                
+                await nukeDocuments(allTitles, 'ALL DOCUMENTS');
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<div class="result error">Error getting document list: ${error.message}</div>`;
+            }
+        }
+        
+        async function nukeDocuments(titles, description) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result">🔥 NUKING ${description.toUpperCase()}...</div>`;
+            
+            try {
+                const response = await fetch('/api/nuke-docs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titles: titles })
+                });
+                
+                const result = await response.json();
+                
+                let output = `<div class="result">🔥 NUKE RESULTS for ${description}:\n\n`;
+                
+                result.results.forEach(r => {
+                    const status = r.success ? '✅ DELETED' : '❌ FAILED';
+                    const error = r.error ? ` (${r.error})` : '';
+                    output += `${status}: ${r.title}${error}\n`;
+                });
+                
+                output += `\nProcessed: ${result.results.length} items</div>`;
+                resultDiv.innerHTML = output;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">🔥 NUKE FAILED: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

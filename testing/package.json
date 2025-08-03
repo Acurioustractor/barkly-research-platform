@@ -1,0 +1,74 @@
+{
+  "name": "barkly-research-platform-tests",
+  "version": "1.0.0",
+  "description": "Comprehensive testing suite for Barkly Research Platform",
+  "type": "module",
+  "scripts": {
+    "test": "node comprehensive-validation.cjs",
+    "test:foundation": "npx jest 01-database-foundation.test.js --verbose",
+    "test:ai": "npx jest 02-ai-integration.test.js --verbose",
+    "test:cultural": "npx jest 03-cultural-protocols.test.js --verbose",
+    "test:e2e": "npx jest 04-end-to-end-workflows.test.js --verbose",
+    "test:performance": "npx jest 05-performance-security.test.js --verbose",
+    "test:watch": "npx jest --watch",
+    "test:coverage": "npx jest --coverage",
+    "test:simple": "node simple-test.cjs",
+    "setup": "node two-step-setup.cjs",
+    "setup:full": "node ../database-setup/master-setup.cjs",
+    "cleanup": "node cleanup-test-data.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.17.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^17.2.1",
+    "openai": "^4.24.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0"
+  },
+  "jest": {
+    "preset": "default",
+    "testEnvironment": "node",
+    "extensionsToTreatAsEsm": [
+      ".js"
+    ],
+    "globals": {
+      "NODE_OPTIONS": "--experimental-vm-modules"
+    },
+    "transform": {},
+    "testTimeout": 60000,
+    "maxWorkers": 1,
+    "verbose": true,
+    "collectCoverage": false,
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "testMatch": [
+      "**/*.test.js"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "json"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "testing",
+    "indigenous-research",
+    "cultural-protocols",
+    "database",
+    "ai-integration",
+    "supabase",
+    "openai",
+    "anthropic"
+  ],
+  "author": "Barkly Research Platform Team",
+  "license": "MIT"
+}

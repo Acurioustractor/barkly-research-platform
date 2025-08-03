@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test DOCX Processing</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .result {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        .success {
+            background: #f0fdf4;
+            color: #166534;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test DOCX Processing</h1>
+    
+    <input type="file" id="fileInput" accept=".docx,.doc" />
+    <button onclick="testFile()">Test DOCX Processing</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        async function testFile() {
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<div class="result error">Please select a file</div>';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            resultDiv.innerHTML = '<div class="result">Testing...</div>';
+            
+            try {
+                const response = await fetch('/api/test-mammoth', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <strong>Success!</strong><br>
+                            Text Length: ${result.textLength} characters<br>
+                            File: ${result.file.name} (${result.file.size} bytes)<br><br>
+                            <strong>Preview:</strong><br>
+                            ${result.preview}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <strong>Error:</strong> ${result.error}<br><br>
+                            <strong>Stack:</strong><br>
+                            ${result.stack}
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">Network error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

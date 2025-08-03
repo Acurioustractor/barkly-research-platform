@@ -1,42 +1,31 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/database-safe';
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET() {
   try {
-    if (!prisma) {
-      return NextResponse.json({
-        error: 'Database not connected',
-        hasPrisma: false
-      });
+    const supabase = await createClient()
+    
+    // Test basic connection
+    const { data, error } = await supabase
+      .from('documents')
+      .select('id')
+      .limit(1)
+
+    if (error) {
+      return NextResponse.json(
+        { status: 'error', message: error.message },
+        { status: 500 }
+      )
     }
 
-    // Get document count and recent documents
-    const count = await prisma.document.count();
-    const recentDocs = await prisma.document.findMany({
-      take: 10,
-      orderBy: { uploadedAt: 'desc' },
-      select: {
-        id: true,
-        originalName: true,
-        status: true,
-        uploadedAt: true,
-        size: true,
-        fullText: true
-      }
-    });
-
     return NextResponse.json({
-      success: true,
-      totalDocuments: count,
-      recentDocuments: recentDocs,
-      databaseConnected: true
-    });
-  } catch (error) {
-    console.error('Database check error:', error);
-    return NextResponse.json({
-      error: 'Database query failed',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      hasPrisma: Boolean(prisma)
-    }, { status: 500 });
+      status: 'connected',
+      message: 'Database connection successful'
+    })
+  } catch (error: any) {
+    return NextResponse.json(
+      { status: 'error', message: error.message },
+      { status: 500 }
+    )
   }
 }

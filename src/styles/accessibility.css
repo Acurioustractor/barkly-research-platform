@@ -1,0 +1,661 @@
+/* Accessibility Styles for Community Intelligence Platform */
+/* Comprehensive CSS for accessibility features including WCAG compliance, 
+   cultural considerations, and assistive technology support */
+
+/* Screen Reader Only Content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Skip Links */
+.skip-links {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  z-index: 1000;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #000;
+  color: #fff;
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+  font-weight: bold;
+  z-index: 1001;
+  transition: top 0.3s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* High Contrast Mode */
+.high-contrast,
+.user-high-contrast {
+  --text-color: #000000;
+  --background-color: #ffffff;
+  --border-color: #000000;
+  --focus-color: #ff0000;
+  --link-color: #0000ff;
+  --visited-link-color: #800080;
+  --button-bg: #ffffff;
+  --button-border: #000000;
+  --button-text: #000000;
+}
+
+.high-contrast *,
+.user-high-contrast * {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+.high-contrast a,
+.user-high-contrast a {
+  color: var(--link-color) !important;
+  text-decoration: underline !important;
+}
+
+.high-contrast a:visited,
+.user-high-contrast a:visited {
+  color: var(--visited-link-color) !important;
+}
+
+.high-contrast button,
+.user-high-contrast button {
+  background-color: var(--button-bg) !important;
+  color: var(--button-text) !important;
+  border: 2px solid var(--button-border) !important;
+}
+
+.high-contrast input,
+.high-contrast select,
+.high-contrast textarea,
+.user-high-contrast input,
+.user-high-contrast select,
+.user-high-contrast textarea {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+  border: 2px solid var(--border-color) !important;
+}
+
+/* Reduced Motion */
+.reduce-motion *,
+.user-reduce-motion *,
+@media (prefers-reduced-motion: reduce) {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+.reduce-motion .animate-spin,
+.user-reduce-motion .animate-spin {
+  animation: none !important;
+}
+
+.reduce-motion .animate-pulse,
+.user-reduce-motion .animate-pulse {
+  animation: none !important;
+}
+
+/* Large Text Support */
+.large-text {
+  font-size: 1.25em !important;
+  line-height: 1.6 !important;
+}
+
+.large-text h1 { font-size: 2.5em !important; }
+.large-text h2 { font-size: 2em !important; }
+.large-text h3 { font-size: 1.75em !important; }
+.large-text h4 { font-size: 1.5em !important; }
+.large-text h5 { font-size: 1.25em !important; }
+.large-text h6 { font-size: 1.125em !important; }
+
+/* Font Size Scaling */
+[data-font-size="small"] {
+  --font-size-scale: 0.875;
+}
+
+[data-font-size="medium"] {
+  --font-size-scale: 1;
+}
+
+[data-font-size="large"] {
+  --font-size-scale: 1.125;
+}
+
+[data-font-size="extra-large"] {
+  --font-size-scale: 1.25;
+}
+
+* {
+  font-size: calc(1rem * var(--font-size-scale, 1)) !important;
+}
+
+/* Color Blindness Support */
+[data-color-blindness="protanopia"] {
+  filter: url(#protanopia-filter);
+}
+
+[data-color-blindness="deuteranopia"] {
+  filter: url(#deuteranopia-filter);
+}
+
+[data-color-blindness="tritanopia"] {
+  filter: url(#tritanopia-filter);
+}
+
+[data-color-blindness="achromatopsia"] {
+  filter: grayscale(100%);
+}
+
+/* Focus Management */
+.keyboard-navigation-active *:focus {
+  outline: 3px solid var(--focus-color, #005fcc) !important;
+  outline-offset: 2px !important;
+}
+
+.keyboard-navigation *:focus-visible {
+  outline: 3px solid var(--focus-color, #005fcc) !important;
+  outline-offset: 2px !important;
+}
+
+/* Enhanced focus for interactive elements */
+.keyboard-navigation button:focus,
+.keyboard-navigation a:focus,
+.keyboard-navigation input:focus,
+.keyboard-navigation select:focus,
+.keyboard-navigation textarea:focus,
+.keyboard-navigation [tabindex]:focus {
+  box-shadow: 0 0 0 3px rgba(0, 95, 204, 0.3) !important;
+}
+
+/* Screen Reader Optimizations */
+.screen-reader-active {
+  /* Optimize for screen readers */
+}
+
+.screen-reader-active img:not([alt]) {
+  opacity: 0.5;
+}
+
+.screen-reader-active img:not([alt])::after {
+  content: " (Missing alt text)";
+  color: red;
+  font-weight: bold;
+}
+
+/* Cultural Accessibility Styles */
+
+/* Indigenous/Traditional Interface */
+.traditional-interface {
+  --primary-color: #8B4513; /* Earth brown */
+  --secondary-color: #DAA520; /* Golden rod */
+  --accent-color: #CD853F; /* Peru */
+  --text-color: #2F4F4F; /* Dark slate gray */
+  --background-color: #F5F5DC; /* Beige */
+}
+
+.traditional-interface * {
+  font-family: Georgia, "Times New Roman", serif !important;
+  border-radius: 0 !important; /* Square corners for traditional feel */
+}
+
+.traditional-interface button,
+.traditional-interface .btn {
+  background: linear-gradient(145deg, var(--primary-color), var(--accent-color));
+  color: white;
+  border: 2px solid var(--secondary-color);
+  padding: 12px 24px;
+  font-weight: bold;
+}
+
+/* Elder-Friendly Mode */
+.elder-friendly {
+  --min-touch-target: 48px;
+  --font-size-base: 1.2rem;
+  --line-height-base: 1.8;
+  --spacing-base: 1.5rem;
+}
+
+.elder-friendly * {
+  font-size: var(--font-size-base) !important;
+  line-height: var(--line-height-base) !important;
+}
+
+.elder-friendly button,
+.elder-friendly a,
+.elder-friendly input,
+.elder-friendly select {
+  min-height: var(--min-touch-target) !important;
+  min-width: var(--min-touch-target) !important;
+  padding: 12px 16px !important;
+  margin: 8px 4px !important;
+}
+
+.elder-friendly .card,
+.elder-friendly .panel {
+  padding: var(--spacing-base) !important;
+  margin-bottom: var(--spacing-base) !important;
+}
+
+/* Simplified navigation for elders */
+.elder-friendly nav {
+  font-size: 1.4rem !important;
+}
+
+.elder-friendly nav a {
+  padding: 16px 24px !important;
+  display: block !important;
+  border-bottom: 1px solid #ddd !important;
+}
+
+/* Youth Mode */
+.youth-mode {
+  --primary-color: #4A90E2;
+  --secondary-color: #7ED321;
+  --accent-color: #F5A623;
+  --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.youth-mode {
+  background: var(--gradient-bg);
+  color: white;
+}
+
+.youth-mode button,
+.youth-mode .btn {
+  background: var(--secondary-color);
+  color: white;
+  border-radius: 25px !important;
+  padding: 10px 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.youth-mode .card {
+  border-radius: 15px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+/* Touch-Friendly Interactions */
+.touch-friendly button,
+.touch-friendly a,
+.touch-friendly input,
+.touch-friendly select,
+.touch-friendly [role="button"] {
+  min-height: 44px !important;
+  min-width: 44px !important;
+  touch-action: manipulation;
+}
+
+/* Assistive Technology Support */
+
+/* Voice Control Optimization */
+.voice-control-active [data-voice-command] {
+  position: relative;
+}
+
+.voice-control-active [data-voice-command]::before {
+  content: attr(data-voice-command);
+  position: absolute;
+  top: -20px;
+  left: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 2px 6px;
+  font-size: 10px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.voice-control-active [data-voice-command]:hover::before {
+  opacity: 1;
+}
+
+/* Switch Navigation Support */
+.switch-navigation-active {
+  /* Larger focus indicators for switch users */
+}
+
+.switch-navigation-active *:focus {
+  outline: 5px solid #ff6b35 !important;
+  outline-offset: 3px !important;
+  background-color: rgba(255, 107, 53, 0.1) !important;
+}
+
+/* Eye Tracking Optimization */
+.eye-tracking-active {
+  /* Optimize for eye tracking devices */
+}
+
+.eye-tracking-active button,
+.eye-tracking-active a,
+.eye-tracking-active [role="button"] {
+  min-height: 60px !important;
+  min-width: 60px !important;
+  margin: 10px !important;
+}
+
+.eye-tracking-active .dwell-target {
+  border: 3px dashed #4CAF50;
+  animation: dwell-pulse 2s infinite;
+}
+
+@keyframes dwell-pulse {
+  0%, 100% { border-color: #4CAF50; }
+  50% { border-color: #8BC34A; }
+}
+
+/* Language and Internationalization Support */
+[lang="ar"], [lang="he"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[lang="zh"], [lang="ja"], [lang="ko"] {
+  line-height: 1.8 !important;
+  letter-spacing: 0.05em;
+}
+
+/* Cultural Color Meanings */
+[data-cultural-context="indigenous"] {
+  --sacred-red: #CC0000;
+  --earth-brown: #8B4513;
+  --sky-blue: #87CEEB;
+  --sun-yellow: #FFD700;
+}
+
+[data-cultural-context="indigenous"] .sacred {
+  color: var(--sacred-red) !important;
+}
+
+[data-cultural-context="indigenous"] .earth {
+  color: var(--earth-brown) !important;
+}
+
+[data-cultural-context="indigenous"] .sky {
+  color: var(--sky-blue) !important;
+}
+
+[data-cultural-context="indigenous"] .sun {
+  color: var(--sun-yellow) !important;
+}
+
+/* Print Accessibility */
+@media print {
+  .skip-links,
+  .sr-only,
+  [aria-hidden="true"] {
+    display: none !important;
+  }
+  
+  a[href^="http"]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+  
+  .high-contrast *,
+  .user-high-contrast * {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* Dark Mode Accessibility */
+@media (prefers-color-scheme: dark) {
+  .auto-dark {
+    --text-color: #ffffff;
+    --background-color: #121212;
+    --border-color: #333333;
+    --focus-color: #66b3ff;
+  }
+}
+
+.dark-mode {
+  --text-color: #ffffff;
+  --background-color: #121212;
+  --border-color: #333333;
+  --focus-color: #66b3ff;
+}
+
+.dark-mode * {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Animation Controls */
+.animation-controls {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.animation-controls button {
+  background: transparent;
+  border: 1px solid white;
+  color: white;
+  padding: 5px 10px;
+  margin: 2px;
+  cursor: pointer;
+}
+
+/* Responsive Accessibility */
+@media (max-width: 768px) {
+  .mobile-a11y button,
+  .mobile-a11y a,
+  .mobile-a11y input,
+  .mobile-a11y select {
+    min-height: 48px !important;
+    min-width: 48px !important;
+    font-size: 16px !important; /* Prevent zoom on iOS */
+  }
+  
+  .mobile-a11y .touch-target {
+    padding: 12px !important;
+    margin: 8px 0 !important;
+  }
+}
+
+/* Error and Success States */
+.error-state {
+  border: 2px solid #d32f2f !important;
+  background-color: #ffebee !important;
+}
+
+.error-state:focus {
+  outline: 3px solid #d32f2f !important;
+  outline-offset: 2px !important;
+}
+
+.success-state {
+  border: 2px solid #388e3c !important;
+  background-color: #e8f5e8 !important;
+}
+
+.warning-state {
+  border: 2px solid #f57c00 !important;
+  background-color: #fff3e0 !important;
+}
+
+/* Loading States */
+.loading-accessible {
+  position: relative;
+}
+
+.loading-accessible::after {
+  content: "Loading...";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+/* Utility Classes */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.focusable {
+  tabindex: 0;
+}
+
+.not-focusable {
+  tabindex: -1;
+}
+
+.aria-expanded-true {
+  /* Styles for expanded state */
+}
+
+.aria-expanded-false {
+  /* Styles for collapsed state */
+}
+
+/* SVG Color Filters for Color Blindness */
+.color-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Ensure proper contrast ratios */
+.contrast-aa {
+  /* Minimum 4.5:1 contrast ratio for normal text */
+  /* Minimum 3:1 contrast ratio for large text */
+}
+
+.contrast-aaa {
+  /* Minimum 7:1 contrast ratio for normal text */
+  /* Minimum 4.5:1 contrast ratio for large text */
+}
+
+/* Custom scrollbars for better accessibility */
+::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 8px;
+  border: 2px solid #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+::-webkit-scrollbar-thumb:focus {
+  outline: 2px solid #005fcc;
+  outline-offset: -2px;
+}
+
+/* Ensure all interactive elements are accessible */
+button:not([disabled]),
+a[href],
+input:not([disabled]),
+select:not([disabled]),
+textarea:not([disabled]),
+[tabindex]:not([tabindex="-1"]),
+[role="button"]:not([disabled]),
+[role="link"]:not([disabled]) {
+  cursor: pointer;
+}
+
+button[disabled],
+input[disabled],
+select[disabled],
+textarea[disabled],
+[role="button"][disabled],
+[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Ensure proper spacing for readability */
+p, li, dd {
+  line-height: 1.6;
+  margin-bottom: 1em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.3;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+/* Improve table accessibility */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+caption {
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: left;
+}

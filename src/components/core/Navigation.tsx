@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/utils/cn';
 import { Container } from './Container';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { Button } from './Button';
+import { User, LogOut, Settings } from 'lucide-react';
 
 export interface NavigationItem {
   label: string;
@@ -19,13 +22,24 @@ export interface NavigationProps {
 
 export const Navigation: React.FC<NavigationProps> = ({ items, logo }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { user, signOut, loading } = useAuth();
 
   const isActive = (href: string) => {
     if (href === '/') {
       return pathname === href;
     }
     return pathname.startsWith(href);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setUserMenuOpen(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
@@ -38,7 +52,7 @@ export const Navigation: React.FC<NavigationProps> = ({ items, logo }) => {
               logo
             ) : (
               <Link href="/" className="flex items-center space-x-2">
-                <span className="text-xl font-bold text-primary">Barkly Youth</span>
+                <span className="text-xl font-bold text-primary">Tennant Creek</span>
               </Link>
             )}
           </div>
@@ -60,6 +74,49 @@ export const Navigation: React.FC<NavigationProps> = ({ items, logo }) => {
                 {item.label}
               </Link>
             ))}
+            
+            {/* User Menu */}
+            <div className="ml-4 relative">
+              {user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>{user.email}</span>
+                  </button>
+                  
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-background border rounded-md shadow-lg z-50">
+                      <div className="py-1">
+                        <Link
+                          href="/profile"
+                          className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-accent/10"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <Settings className="w-4 h-4 mr-2" />
+                          Profile
+                        </Link>
+                        <button
+                          onClick={handleSignOut}
+                          className="flex items-center w-full px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-accent/10"
+                        >
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link href="/login">
+                  <Button variant="primary" size="sm">
+                    Sign In
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* Mobile menu button */}

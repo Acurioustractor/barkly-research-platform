@@ -21,6 +21,7 @@ model Document {
   size         Int
   uploadedAt   DateTime  @default(now())
   processedAt  DateTime?
+  uploadedBy   String?   // User ID who uploaded the document
 
   // Document metadata
   pageCount Int?
@@ -38,6 +39,7 @@ model Document {
   fullText        String? // Full extracted text
   summary         String? // AI-generated summary
   systemsMetadata Json? // Extracted systems data
+  thumbnailPath   String? // Path to first page thumbnail image
 
   // Relationships
   chunks              DocumentChunk[]

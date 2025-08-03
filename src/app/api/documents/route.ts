@@ -1,47 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database-safe';
 import { ImprovedPDFExtractor } from '@/utils/pdf-extractor-improved';
-// Temporarily disable security middleware for Vercel debugging
-// import { 
-//   checkRateLimit, 
-//   validateFileUpload, 
-//   validateContentType,
-//   addSecurityHeaders,
-//   validateIndigenousDataProtocols,
-//   sanitizeInput,
-//   logSecurityEvent
-// } from '@/middleware/security';
+import { 
+  checkRateLimit, 
+  validateFileUpload, 
+  validateContentType,
+  addSecurityHeaders,
+  validateIndigenousDataProtocols,
+  sanitizeInput,
+  logSecurityEvent
+} from '@/middleware/security';
+import { 
+  validateAuth, 
+  createUnauthorizedResponse,
+  getUserId
+} from '@/middleware/auth';
 
 export async function POST(request: NextRequest) {
   try {
     console.log('[documents] POST request received');
 
-    // Temporarily disable security checks for Vercel debugging
-    // // Rate limiting check
-    // const rateLimitResult = checkRateLimit(request);
-    // if (!rateLimitResult.allowed) {
-    //   logSecurityEvent('RATE_LIMIT_EXCEEDED', request);
-    //   return NextResponse.json(
-    //     { error: 'Rate limit exceeded. Please try again later.' },
-    //     { 
-    //       status: 429,
-    //       headers: {
-    //         'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-    //         'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
-    //       }
-    //     }
-    //   );
-    // }
+    // Authentication check
+    const authResult = await validateAuth(request);
+    if (!authResult.authenticated) {
+      logSecurityEvent('UNAUTHORIZED_ACCESS', request, { endpoint: '/api/documents' });
+      return createUnauthorizedResponse(authResult.error);
+    }
 
-    // // Content type validation (more lenient for development)
-    // const contentType = request.headers.get('content-type');
-    // if (contentType && !contentType.includes('multipart/form-data') && !contentType.includes('application/x-www-form-urlencoded')) {
-    //   logSecurityEvent('INVALID_CONTENT_TYPE', request, { 
-    //     contentType: contentType 
-    //   });
-    //   console.warn('[SECURITY] Unexpected content type:', contentType);
-    //   // Don't block for now, just log
-    // }
+    const userId = getUserId(authResult.user);
+    console.log(`[documents] Authenticated user: ${userId}`);
+
+    // Rate limiting check
+    const rateLimitResult = checkRateLimit(request);
+    if (!rateLimitResult.allowed) {
+      logSecurityEvent('RATE_LIMIT_EXCEEDED', request);
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+          }
+        }
+      );
+    }
+
+    // Content type validation 
+    const contentType = request.headers.get('content-type');
+    if (contentType && !contentType.includes('multipart/form-data') && !contentType.includes('application/x-www-form-urlencoded')) {
+      logSecurityEvent('INVALID_CONTENT_TYPE', request, { 
+        contentType: contentType 
+      });
+      return NextResponse.json(
+        { error: 'Invalid content type. Expected multipart/form-data.' },
+        { status: 400 }
+      );
+    }
 
     if (!prisma) {
       return NextResponse.json({ error: 'Database not available' }, { status: 500 });
@@ -51,8 +66,19 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File || formData.get('files') as File;
     
     if (!file) {
-      // logSecurityEvent('MISSING_FILE', request);
+      logSecurityEvent('MISSING_FILE', request);
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+    }
+
+    // Validate file upload security
+    const fileValidation = validateFileUpload(file);
+    if (!fileValidation.valid) {
+      logSecurityEvent('INVALID_FILE_UPLOAD', request, { 
+        filename: file.name, 
+        size: file.size, 
+        error: fileValidation.error 
+      });
+      return NextResponse.json({ error: fileValidation.error }, { status: 400 });
     }
 
     console.log(`[documents] Processing file: ${file.name}, size: ${file.size}`);
@@ -77,10 +103,10 @@ export async function POST(request: NextRequest) {
       console.log(`[documents] Large file upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
     }
 
-    // Basic form input handling
-    const category = (formData.get('category') as string || 'general').trim();
-    const source = (formData.get('source') as string || 'upload').trim();
-    const tags = (formData.get('tags') as string || '').trim();
+    // Sanitize form input 
+    const category = sanitizeInput(formData.get('category') as string || 'general');
+    const source = sanitizeInput(formData.get('source') as string || 'upload');
+    const tags = sanitizeInput(formData.get('tags') as string || '');
 
     // Create document record first with PROCESSING status
     const document = await prisma.document.create({
@@ -97,6 +123,7 @@ export async function POST(request: NextRequest) {
         source,
         tags,
         uploadedAt: new Date(),
+        // uploadedBy: userId, // Temporarily commented until DB migration
       }
     });
 
@@ -117,13 +144,28 @@ export async function POST(request: NextRequest) {
       
       console.log(`[documents] PDF extraction completed for document ${document.id}, pages: ${extractedData.pageCount}`);
 
-      // Update document with extracted data
+      // Generate thumbnail from first page
+      console.log(`[documents] Generating thumbnail for document ${document.id}`);
+      let thumbnailPath = null;
+      try {
+        thumbnailPath = await extractor.generateThumbnail(document.id);
+        if (thumbnailPath) {
+          console.log(`[documents] Thumbnail generated successfully: ${thumbnailPath}`);
+        } else {
+          console.warn(`[documents] Thumbnail generation failed for document ${document.id}`);
+        }
+      } catch (thumbnailError) {
+        console.error(`[documents] Thumbnail generation error for document ${document.id}:`, thumbnailError);
+      }
+
+      // Update document with extracted data and thumbnail
       await prisma.document.update({
         where: { id: document.id },
         data: {
           wordCount: extractedData.text.split(/\s+/).length,
           pageCount: extractedData.pageCount || 1,
           fullText: extractedData.text,
+          thumbnailPath: thumbnailPath,
           status: 'COMPLETED',
           processedAt: new Date(),
         }
@@ -170,8 +212,8 @@ export async function POST(request: NextRequest) {
 
     console.log(`[documents] Document created with ID: ${document.id}`);
 
-    // Return response with current status
-    return NextResponse.json({
+    // Return response with current status and security headers
+    const response = NextResponse.json({
       success: true,
       document: {
         id: updatedDocument?.id || document.id,
@@ -190,18 +232,48 @@ export async function POST(request: NextRequest) {
                'Document uploaded and processing...'
     });
 
+    return addSecurityHeaders(response);
+
   } catch (error) {
     console.error('[documents] Upload error:', error);
-    // Temporarily simplified error handling for Vercel debugging
-    return NextResponse.json(
+    logSecurityEvent('UPLOAD_ERROR', request, { 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+    
+    const response = NextResponse.json(
       { error: 'Upload failed', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
+    
+    return addSecurityHeaders(response);
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    // Authentication check (optional for GET - could be public read)
+    const authResult = await validateAuth(request);
+    if (!authResult.authenticated) {
+      logSecurityEvent('UNAUTHORIZED_ACCESS', request, { endpoint: '/api/documents' });
+      return createUnauthorizedResponse(authResult.error);
+    }
+
+    // Rate limiting check for GET requests
+    const rateLimitResult = checkRateLimit(request);
+    if (!rateLimitResult.allowed) {
+      logSecurityEvent('RATE_LIMIT_EXCEEDED', request);
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+          }
+        }
+      );
+    }
+
     if (!prisma) {
       return NextResponse.json({ error: 'Database not available' }, { status: 500 });
     }
@@ -219,7 +291,6 @@ export async function GET(request: Request) {
         select: {
           id: true,
           filename: true,
-          originalName: true,
           status: true,
           uploadedAt: true,
           processedAt: true,
@@ -229,13 +300,9 @@ export async function GET(request: Request) {
           category: true,
           source: true,
           errorMessage: true,
-          _count: {
-            select: {
-              chunks: true,
-              themes: true,
-              insights: true
-            }
-          }
+          fullText: true,
+          summary: true,
+          thumbnailPath: true
         },
         orderBy: {
           uploadedAt: 'desc'
@@ -246,7 +313,7 @@ export async function GET(request: Request) {
       prisma.document.count({ where })
     ]);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       documents,
       total,
       limit,
@@ -254,11 +321,19 @@ export async function GET(request: Request) {
       hasMore: offset + limit < total
     });
 
+    return addSecurityHeaders(response);
+
   } catch (error) {
     console.error('Error fetching documents:', error);
-    return NextResponse.json(
+    logSecurityEvent('FETCH_ERROR', request, { 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+    
+    const response = NextResponse.json(
       { error: 'Failed to fetch documents' },
       { status: 500 }
     );
+    
+    return addSecurityHeaders(response);
   }
 }

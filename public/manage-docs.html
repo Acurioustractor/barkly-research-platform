@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f9fafb;
+            min-height: 100vh;
+            padding: 32px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 32px;
+            color: #111827;
+        }
+        
+        .doc-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 16px;
+            border-left: 4px solid #2563eb;
+        }
+        
+        .doc-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .doc-meta {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+        
+        .doc-content {
+            font-size: 14px;
+            color: #374151;
+            background-color: #f3f4f6;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        
+        .delete-btn {
+            background-color: #dc2626;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .delete-btn:hover {
+            background-color: #b91c1c;
+        }
+        
+        .delete-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        
+        .error {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+        
+        .success {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+        
+        .refresh-btn {
+            background-color: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+        
+        .refresh-btn:hover {
+            background-color: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Document Management</h1>
+        
+        <button onclick="loadDocuments()" class="refresh-btn">Refresh Documents</button>
+        <button onclick="deleteUnwantedDocs()" class="refresh-btn" style="background-color: #dc2626; margin-left: 10px;">Delete Unwanted Docs</button>
+        
+        <div id="message"></div>
+        <div id="documents" class="loading">Loading documents...</div>
+        
+        <div style="margin-top: 32px; text-align: center;">
+            <a href="/upload.html" style="color: #2563eb; font-weight: 500; text-decoration: none;">← Back to Upload</a>
+        </div>
+    </div>
+
+    <script>
+        async function loadDocuments() {
+            const container = document.getElementById('documents');
+            const messageDiv = document.getElementById('message');
+            
+            container.innerHTML = '<div class="loading">Loading documents...</div>';
+            messageDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/list-docs');
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to load documents');
+                }
+                
+                if (!data.documents || data.documents.length === 0) {
+                    container.innerHTML = '<div class="loading">No documents found.</div>';
+                    return;
+                }
+                
+                container.innerHTML = data.documents.map(doc => `
+                    <div class="doc-card" id="doc-${doc.id}">
+                        <div class="doc-title">${doc.title}</div>
+                        <div class="doc-meta">
+                            ID: ${doc.id}<br>
+                            Created: ${new Date(doc.created_at).toLocaleString()}<br>
+                            Cultural Sensitivity: ${doc.cultural_sensitivity}
+                        </div>
+                        <div class="doc-content">${doc.content.substring(0, 200)}${doc.content.length > 200 ? '...' : ''}</div>
+                        <button onclick="deleteDocument('${doc.id}', '${doc.title.replace(/'/g, "\\'")}', this)" class="delete-btn">
+                            Delete Document
+                        </button>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error loading documents: ${error.message}</div>`;
+            }
+        }
+        
+        async function deleteDocument(id, title, button) {
+            if (!confirm(`Are you sure you want to delete "${title}"?`)) {
+                return;
+            }
+            
+            button.disabled = true;
+            button.textContent = 'Deleting...';
+            
+            try {
+                console.log('Deleting document:', id, title);
+                
+                const response = await fetch('/api/force-delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: id })
+                });
+                
+                const result = await response.json();
+                console.log('Delete result:', result);
+                
+                if (response.ok && result.success) {
+                    document.getElementById(`doc-${id}`).remove();
+                    document.getElementById('message').innerHTML = 
+                        `<div class="success">Successfully deleted "${title}" (${result.deleted?.length || 0} records)</div>`;
+                    
+                    // Refresh the list after a short delay
+                    setTimeout(() => {
+                        loadDocuments();
+                    }, 1000);
+                } else {
+                    throw new Error(result.error || 'Delete failed');
+                }
+                
+            } catch (error) {
+                console.error('Delete error:', error);
+                document.getElementById('message').innerHTML = 
+                    `<div class="error">Error deleting document: ${error.message}</div>`;
+                button.disabled = false;
+                button.textContent = 'Delete Document';
+            }
+        }
+        
+        async function deleteUnwantedDocs() {
+            const unwantedTitles = [
+                'Best Practice Marketing & Communications Strategy for Potential First Pathways Rollout.pdf',
+                'null',
+                'BRD Story of Change Tree Image (1).pdf',
+                'BRD Principles and Systems Change Rubric (1).pdf',
+                'Blueprint for Tennant Creek Youth Strategy Analytics  Dashboard System.pdf'
+            ];
+            
+            if (!confirm(`Delete ${unwantedTitles.length} unwanted documents?`)) {
+                return;
+            }
+            
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = '<div class="loading">Deleting unwanted documents...</div>';
+            
+            for (const title of unwantedTitles) {
+                try {
+                    const response = await fetch('/api/delete-by-title', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: title })
+                    });
+                    const result = await response.json();
+                    console.log(`Delete ${title}:`, result);
+                } catch (error) {
+                    console.error(`Error deleting ${title}:`, error);
+                }
+            }
+            
+            messageDiv.innerHTML = '<div class="success">Finished deleting unwanted documents</div>';
+            setTimeout(() => loadDocuments(), 1000);
+        }
+        
+        // Load documents on page load
+        loadDocuments();
+    </script>
+</body>
+</html>

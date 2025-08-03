@@ -1,6 +1,14 @@
 {
+  "name": "barkly-research-platform",
+  "version": 2,
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
   "functions": {
     "src/app/api/**/*.ts": {
+      "runtime": "nodejs18.x",
       "maxDuration": 60
     },
     "src/app/api/documents/route.ts": {
@@ -14,7 +22,50 @@
     "src/app/api/documents/stream-process/**/*.ts": {
       "maxDuration": 60,
       "memory": 1024
+    },
+    "src/app/api/documents/[id]/thumbnail/route.ts": {
+      "maxDuration": 30,
+      "memory": 256
     }
   },
-  "regions": ["iad1"]
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods", 
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "X-Requested-With, Content-Type, Authorization"
+        }
+      ]
+    },
+    {
+      "source": "/api/documents/(.*)/thumbnail",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, s-maxage=86400"
+        },
+        {
+          "key": "Content-Type",
+          "value": "image/png"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/upload",
+      "destination": "/api/upload-enhanced"
+    }
+  ],
+  "regions": ["syd1", "iad1"],
+  "framework": "nextjs"
 }

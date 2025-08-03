@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Upload</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f9fafb;
+            min-height: 100vh;
+            padding: 32px;
+        }
+
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 32px;
+            color: #111827;
+        }
+
+        .upload-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .file-input-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            background-color: #f9fafb;
+            margin-bottom: 24px;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .upload-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background-color: #9ca3af;
+            color: white;
+            font-weight: 600;
+            border-radius: 8px;
+            border: none;
+            cursor: not-allowed;
+            font-size: 16px;
+            outline: none;
+            user-select: none;
+        }
+
+        .upload-btn.enabled {
+            background-color: #2563eb;
+            cursor: pointer;
+        }
+
+        .upload-btn.enabled:hover {
+            background-color: #1d4ed8;
+        }
+
+        .file-list {
+            margin-top: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            max-height: 128px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            background-color: #f9fafb;
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .select-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: white;
+            margin-bottom: 24px;
+        }
+
+        .label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .status-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .result-item {
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            margin-bottom: 12px;
+        }
+
+        .result-success {
+            border-left-color: #10b981;
+            background-color: #ecfdf5;
+        }
+
+        .result-error {
+            border-left-color: #ef4444;
+            background-color: #fef2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Document Upload</h1>
+
+        <div class="upload-card">
+            <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #1f2937;">Upload Files</h2>
+
+            <div class="file-input-area">
+                <input type="file" id="fileInput" class="file-input" accept=".txt,.pdf,.md,.docx,.doc,.rtf,.odt"
+                    multiple>
+                <p style="margin-top: 8px; font-size: 14px; color: #6b7280;">
+                    Select multiple files (PDF, TXT, MD, DOC, DOCX, RTF, ODT). Hold Ctrl/Cmd to select multiple files.
+                </p>
+            </div>
+
+            <div id="fileList" style="display: none;">
+                <h3 style="font-weight: 500; color: #374151; margin-bottom: 8px;">Selected Files (<span
+                        id="fileCount">0</span>):</h3>
+                <div id="fileItems" class="file-list"></div>
+            </div>
+
+            <label class="label">Community (Optional)</label>
+            <select id="communitySelect" class="select-field">
+                <option value="">Select a community...</option>
+            </select>
+
+            <label class="label">Cultural Sensitivity</label>
+            <select id="culturalSensitivity" class="select-field">
+                <option value="public">Public - Can be shared openly</option>
+                <option value="community">Community - Restricted to community members</option>
+                <option value="sacred">Sacred - Requires elder approval</option>
+            </select>
+
+            <button id="uploadBtn" class="upload-btn" onclick="handleUpload()">Upload Files</button>
+        </div>
+
+        <div id="statusCard" class="status-card" style="display: none;">
+            <h3 style="font-weight: 600; font-size: 18px; margin-bottom: 8px; color: #1f2937;">Upload Status</h3>
+            <p id="statusText" style="font-size: 16px;"></p>
+        </div>
+
+        <div id="resultsCard" class="status-card" style="display: none;">
+            <h3 style="font-weight: 600; font-size: 18px; margin-bottom: 16px; color: #1f2937;">Upload Results</h3>
+            <div id="resultsContainer"></div>
+        </div>
+
+        <div style="margin-top: 32px; text-align: center;">
+            <a href="/" style="color: #2563eb; font-weight: 500; text-decoration: none;">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+        let uploading = false;
+
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            selectedFiles = Array.from(e.target.files);
+            updateFileList();
+            updateUploadButton();
+        });
+
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            const fileCount = document.getElementById('fileCount');
+            const fileItems = document.getElementById('fileItems');
+
+            if (selectedFiles.length > 0) {
+                fileList.style.display = 'block';
+                fileCount.textContent = selectedFiles.length;
+
+                fileItems.innerHTML = selectedFiles.map(file => `
+                    <div class="file-item">
+                        <span style="color: #374151;">${file.name}</span>
+                        <span style="color: #6b7280;">(${Math.round(file.size / 1024)}KB)</span>
+                    </div>
+                `).join('');
+            } else {
+                fileList.style.display = 'none';
+            }
+        }
+
+        function updateUploadButton() {
+            const btn = document.getElementById('uploadBtn');
+            if (selectedFiles.length > 0 && !uploading) {
+                btn.classList.add('enabled');
+                btn.textContent = `Upload ${selectedFiles.length} File${selectedFiles.length > 1 ? 's' : ''}`;
+            } else {
+                btn.classList.remove('enabled');
+                btn.textContent = uploading ? 'Uploading...' : 'Upload Files';
+            }
+        }
+
+        async function handleUpload() {
+            if (selectedFiles.length === 0 || uploading) return;
+
+            uploading = true;
+            updateUploadButton();
+
+            const statusCard = document.getElementById('statusCard');
+            const statusText = document.getElementById('statusText');
+            const resultsCard = document.getElementById('resultsCard');
+            const resultsContainer = document.getElementById('resultsContainer');
+
+            statusCard.style.display = 'block';
+            statusText.textContent = 'Uploading files...';
+            statusText.style.color = '#2563eb';
+
+            const results = [];
+
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                statusText.textContent = `Uploading ${i + 1} of ${selectedFiles.length}: ${file.name}`;
+
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('community_id', document.getElementById('communitySelect').value);
+                    formData.append('cultural_sensitivity', document.getElementById('culturalSensitivity').value);
+
+                    const response = await fetch('/api/upload-enhanced', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    results.push({
+                        filename: file.name,
+                        success: response.ok,
+                        result: result
+                    });
+                } catch (error) {
+                    results.push({
+                        filename: file.name,
+                        success: false,
+                        result: { error: error.message }
+                    });
+                }
+            }
+
+            const successCount = results.filter(r => r.success).length;
+            statusText.textContent = `Completed! ${successCount} of ${selectedFiles.length} files uploaded successfully`;
+            statusText.style.color = successCount === selectedFiles.length ? '#059669' : '#dc2626';
+
+            // Show results
+            resultsCard.style.display = 'block';
+            resultsContainer.innerHTML = results.map(result => `
+                <div class="result-item ${result.success ? 'result-success' : 'result-error'}">
+                    <h4 style="font-weight: 500; color: #1f2937; margin-bottom: 4px;">${result.filename}</h4>
+                    <p style="font-size: 14px; color: ${result.success ? '#059669' : '#dc2626'};">
+                        ${result.success ? '✓ Upload successful' : '✗ Upload failed'}
+                    </p>
+                    <details style="margin-top: 8px;">
+                        <summary style="cursor: pointer; font-size: 14px; color: #6b7280;">View details</summary>
+                        <pre style="font-size: 12px; background-color: #f3f4f6; padding: 8px; border-radius: 4px; margin-top: 8px; overflow: auto; max-height: 128px;">${JSON.stringify(result.result, null, 2)}</pre>
+                    </details>
+                </div>
+            `).join('');
+
+            uploading = false;
+            updateUploadButton();
+        }
+
+        // Load communities
+        fetch('/api/communities')
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById('communitySelect');
+                (data.communities || []).forEach(community => {
+                    const option = document.createElement('option');
+                    option.value = community.id;
+                    option.textContent = community.name;
+                    select.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Failed to load communities:', error));
+    </script>
+</body>
+
+</html>

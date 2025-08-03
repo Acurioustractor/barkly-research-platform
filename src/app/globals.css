@@ -2,30 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Custom Properties for Design System */
 @layer base {
   :root {
+    /* Core Colors */
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
+    
+    /* Brand Colors */
     --primary: 346 72% 52%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
     --accent: 197 92% 48%;
     --accent-foreground: 240 5.9% 10%;
+    
+    /* Semantic Colors */
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+    
+    /* UI Elements */
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 346 72% 52%;
     --radius: 0.5rem;
+    
+    /* Cultural Colors */
+    --cultural-respect: 25 76% 31%;
+    --cultural-knowledge: 43 74% 49%;
+    --cultural-community: 142 69% 58%;
+    --cultural-ceremony: 271 91% 65%;
   }
 
+  /* Dark Mode Support */
   @media (prefers-color-scheme: dark) {
     :root {
       --background: 240 10% 3.9%;
@@ -51,24 +70,140 @@
   }
 }
 
+/* Base Styles - Rock Solid Foundation */
 @layer base {
-  * {
-    @apply border-border;
+  /* Universal Box Sizing */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: hsl(var(--border));
+  }
+  
+  /* HTML & Body Reset */
+  html {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    -moz-tab-size: 4;
+    tab-size: 4;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-feature-settings: normal;
+    font-variation-settings: normal;
   }
   
   body {
-    @apply bg-background text-foreground;
+    margin: 0;
+    line-height: inherit;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
+  /* Typography Reset */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display;
+    font-size: inherit;
+    font-weight: inherit;
+    margin: 0;
+    line-height: 1.2;
+  }
+  
+  p {
+    margin: 0;
+  }
+  
+  /* Interactive Elements */
+  button,
+  input,
+  optgroup,
+  select,
+  textarea {
+    font-family: inherit;
+    font-size: 100%;
+    font-weight: inherit;
+    line-height: inherit;
+    color: inherit;
+    margin: 0;
+    padding: 0;
+  }
+  
+  button,
+  select {
+    text-transform: none;
+  }
+  
+  button,
+  [type='button'],
+  [type='reset'],
+  [type='submit'] {
+    -webkit-appearance: button;
+    background-color: transparent;
+    background-image: none;
+    cursor: pointer;
+  }
+  
+  /* Focus Styles */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  
+  /* Disabled Elements */
+  :disabled {
+    cursor: default;
+  }
+  
+  /* Lists */
+  ol, ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Links */
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+  
+  /* Media Elements */
+  img,
+  svg,
+  video,
+  canvas,
+  audio,
+  iframe,
+  embed,
+  object {
+    display: block;
+    vertical-align: middle;
+  }
+  
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Hidden Elements */
+  [hidden] {
+    display: none;
   }
 }
 
+/* Component Styles - Bulletproof Components */
 @layer components {
+  /* Card Components */
   .card {
-    @apply bg-card text-card-foreground rounded-lg border shadow-sm;
+    @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm;
+    @apply transition-shadow duration-200 ease-in-out;
+  }
+  
+  .card:hover {
+    @apply shadow-md;
   }
   
   .card-header {
@@ -80,42 +215,238 @@
   }
   
   .card-footer {
-    @apply p-6 pt-0;
+    @apply p-6 pt-0 flex items-center;
   }
   
+  /* Button Components */
   .btn {
-    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium;
+    @apply transition-all duration-200 ease-in-out;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed;
+    @apply ring-offset-background;
+    @apply select-none;
+    min-height: 2.5rem;
+    min-width: fit-content;
   }
   
   .btn-primary {
-    @apply btn bg-primary text-primary-foreground hover:bg-primary/90;
+    @apply btn bg-primary text-primary-foreground;
+    @apply hover:bg-primary/90 active:bg-primary/95;
+    @apply shadow-sm hover:shadow-md;
   }
   
   .btn-secondary {
-    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80;
+    @apply btn bg-secondary text-secondary-foreground;
+    @apply hover:bg-secondary/80 active:bg-secondary/90;
+    @apply border border-border;
   }
   
   .btn-accent {
-    @apply btn bg-accent text-accent-foreground hover:bg-accent/90;
+    @apply btn bg-accent text-accent-foreground;
+    @apply hover:bg-accent/90 active:bg-accent/95;
   }
   
   .btn-ghost {
-    @apply btn hover:bg-accent/10 hover:text-accent;
+    @apply btn text-foreground;
+    @apply hover:bg-accent/10 hover:text-accent;
+    @apply active:bg-accent/20;
   }
   
+  .btn-destructive {
+    @apply btn bg-destructive text-destructive-foreground;
+    @apply hover:bg-destructive/90 active:bg-destructive/95;
+  }
+  
+  .btn-outline {
+    @apply btn border border-border bg-background;
+    @apply hover:bg-accent hover:text-accent-foreground;
+    @apply active:bg-accent/90;
+  }
+  
+  /* Button Sizes */
   .btn-sm {
-    @apply h-9 px-3;
+    @apply h-9 px-3 text-xs;
+    min-height: 2.25rem;
   }
   
   .btn-md {
-    @apply h-10 px-4 py-2;
+    @apply h-10 px-4 py-2 text-sm;
+    min-height: 2.5rem;
   }
   
   .btn-lg {
-    @apply h-11 px-8;
+    @apply h-11 px-8 text-base;
+    min-height: 2.75rem;
   }
   
+  /* Input Components */
   .input {
-    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-10 w-full rounded-md border border-input bg-background;
+    @apply px-3 py-2 text-sm ring-offset-background;
+    @apply file:border-0 file:bg-transparent file:text-sm file:font-medium;
+    @apply placeholder:text-muted-foreground;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+    @apply transition-colors duration-200;
+  }
+  
+  .input:focus {
+    @apply border-ring;
+  }
+  
+  /* Badge Components */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    @apply transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+  
+  .badge-default {
+    @apply badge bg-primary text-primary-foreground hover:bg-primary/80;
+  }
+  
+  .badge-secondary {
+    @apply badge bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+  
+  .badge-success {
+    @apply badge bg-green-500 text-white hover:bg-green-600;
+  }
+  
+  .badge-destructive {
+    @apply badge bg-destructive text-destructive-foreground hover:bg-destructive/80;
+  }
+  
+  .badge-outline {
+    @apply badge text-foreground border border-input bg-background;
+    @apply hover:bg-accent hover:text-accent-foreground;
+  }
+  
+  /* Progress Components */
+  .progress {
+    @apply relative h-4 w-full overflow-hidden rounded-full bg-secondary;
+  }
+  
+  .progress-indicator {
+    @apply h-full w-full flex-1 bg-primary transition-all duration-300 ease-in-out;
+  }
+  
+  /* Container Components */
+  .container {
+    @apply w-full mx-auto px-4 sm:px-6 lg:px-8;
+    max-width: 1280px;
+  }
+  
+  /* Utility Classes */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+  
+  .shadow-cultural {
+    box-shadow: 0 4px 6px -1px rgba(139, 69, 19, 0.1), 0 2px 4px -1px rgba(139, 69, 19, 0.06);
+  }
+  
+  .border-cultural {
+    @apply border-l-4;
+    border-left-color: hsl(var(--cultural-respect));
+  }
+  
+  /* Animation Classes */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+}
+
+/* Utility Layer - Additional Utilities */
+@layer utilities {
+  /* Accessibility Utilities */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  /* Focus Utilities */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+  
+  /* Cultural Color Utilities */
+  .text-cultural-respect {
+    color: hsl(var(--cultural-respect));
+  }
+  
+  .text-cultural-knowledge {
+    color: hsl(var(--cultural-knowledge));
+  }
+  
+  .text-cultural-community {
+    color: hsl(var(--cultural-community));
+  }
+  
+  .text-cultural-ceremony {
+    color: hsl(var(--cultural-ceremony));
+  }
+  
+  .bg-cultural-respect {
+    background-color: hsl(var(--cultural-respect));
+  }
+  
+  .bg-cultural-knowledge {
+    background-color: hsl(var(--cultural-knowledge));
+  }
+  
+  .bg-cultural-community {
+    background-color: hsl(var(--cultural-community));
+  }
+  
+  .bg-cultural-ceremony {
+    background-color: hsl(var(--cultural-ceremony));
+  }
+}
+
+/* Keyframes for Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }

@@ -3,6 +3,9 @@
  * Handles various PDF types including scanned documents
  */
 import { extractText } from 'unpdf';
+import * as pdfPoppler from 'pdf-poppler';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
 /// <reference types="node" />
 
 export interface ExtractionResult {
@@ -11,6 +14,8 @@ export interface ExtractionResult {
   method: 'unpdf' | 'pdf-parse' | 'buffer-parse' | 'ocr' | 'failed';
   confidence: number;
   warnings: string[];
+  thumbnail?: Buffer; // First page as image
+  thumbnailFormat?: 'png' | 'jpg';
   metadata?: {
     title?: string;
     author?: string;
@@ -26,6 +31,40 @@ export class ImprovedPDFExtractor {
   
   constructor(buffer: Buffer) {
     this.buffer = buffer;
+  }
+
+  /**
+   * Detect if PDF is image-heavy and should use vision processing
+   */
+  async isImageHeavyPDF(): Promise<boolean> {
+    try {
+      // Quick text extraction to check content density
+      const quickResult = await this.extractWithUnpdf();
+      const textLength = quickResult.text ? quickResult.text.length : 0;
+      const fileSize = this.buffer.length;
+      
+      // Calculate text density ratio
+      const textDensityRatio = textLength / fileSize;
+      
+      console.log(`[PDFExtractor] Text density ratio: ${textDensityRatio} (${textLength} chars / ${fileSize} bytes)`);
+      
+      // If very low text density, likely image-heavy
+      if (textDensityRatio < 0.001) {
+        console.log(`[PDFExtractor] Detected image-heavy PDF - text density ${textDensityRatio}`);
+        return true;
+      }
+      
+      // If very short text content but large file, likely images
+      if (textLength < 200 && fileSize > 50000) {
+        console.log(`[PDFExtractor] Detected image-heavy PDF - short text in large file`);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.warn(`[PDFExtractor] Could not determine if image-heavy:`, error);
+      return false;
+    }
   }
 
   /**
@@ -311,6 +350,54 @@ export class ImprovedPDFExtractor {
       // Remove repeated spaces
       .replace(/ +/g, ' ')
       .trim();
+  }
+
+  /**
+   * Generate thumbnail from first page of PDF
+   */
+  async generateThumbnail(documentId: string): Promise<string | null> {
+    try {
+      // Ensure thumbnails directory exists
+      const thumbnailsDir = join(process.cwd(), 'public', 'thumbnails');
+      await mkdir(thumbnailsDir, { recursive: true });
+
+      // Write PDF buffer to temporary file for pdf-poppler
+      const tempPdfPath = join(thumbnailsDir, `temp-${documentId}.pdf`);
+      await writeFile(tempPdfPath, this.buffer);
+
+      const options = {
+        format: 'png' as const,
+        out_dir: thumbnailsDir,
+        out_prefix: `thumb-${documentId}`,
+        page: 1, // Only first page
+        single_file: true
+      };
+
+      // Generate thumbnail
+      await pdfPoppler.convert(tempPdfPath, options);
+
+      // Clean up temp PDF file
+      const fs = await import('fs/promises');
+      await fs.unlink(tempPdfPath).catch(() => {});
+
+      // Return the thumbnail filename
+      const thumbnailFilename = `thumb-${documentId}-1.png`;
+      
+      // Check if file was created successfully
+      const thumbnailPath = join(thumbnailsDir, thumbnailFilename);
+      const fileExists = await fs.access(thumbnailPath).then(() => true).catch(() => false);
+      
+      if (fileExists) {
+        return thumbnailFilename;
+      } else {
+        console.warn(`[PDFExtractor] Thumbnail generation failed - file not created: ${thumbnailPath}`);
+        return null;
+      }
+
+    } catch (error) {
+      console.error('[PDFExtractor] Error generating thumbnail:', error);
+      return null;
+    }
   }
 
   /**

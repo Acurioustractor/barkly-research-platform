@@ -178,7 +178,7 @@ export class ChunkedUploader {
               }
 
               if (data.status === 'completed') {
-                onComplete?.(data);
+                onComplete?.();
                 return;
               }
 
