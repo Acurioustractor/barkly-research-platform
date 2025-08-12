@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     if (!prisma) {
       return NextResponse.json({ error: 'Database not available' }, { status: 503 });
     }
-    const db = prisma;
+    const db = prisma!;
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
