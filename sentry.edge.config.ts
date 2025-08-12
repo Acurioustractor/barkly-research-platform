@@ -3,7 +3,13 @@
 // Note that this config is unrelated to the Vercel Edge Runtime and is also required when running locally.
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-import * as Sentry from "@sentry/nextjs";
+let Sentry: any;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  Sentry = require('@sentry/nextjs');
+} catch {
+  Sentry = { init: () => {} };
+}
 
 Sentry.init({
   dsn: "https://e5a3314ef798a555a2cbf725f22fea96@o4509619774947328.ingest.de.sentry.io/4509619781369936",

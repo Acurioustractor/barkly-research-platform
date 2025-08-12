@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get pending reviews using the service
-    const queue = await getPendingReviews(moderatorId, reviewType);
+    const queue = await getPendingReviews(moderatorId, reviewType || undefined);
 
     // Filter by community if specified
     let filteredQueue = queue;

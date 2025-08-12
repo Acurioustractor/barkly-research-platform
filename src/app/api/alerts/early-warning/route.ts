@@ -78,12 +78,8 @@ export async function POST(request: NextRequest) {
         }
         
         const { resourceTypes, timeHorizon } = body;
-        const predictions = await earlyWarningSystemService.generateResourcePredictions(
-          communityId,
-          resourceTypes,
-          timeHorizon
-        );
-        return NextResponse.json({ predictions });
+        // Fallback: not yet implemented in service; return 501
+        return NextResponse.json({ error: 'generateResourcePredictions not implemented' }, { status: 501 });
 
       case 'start_monitoring':
         earlyWarningSystemService.startMonitoring();

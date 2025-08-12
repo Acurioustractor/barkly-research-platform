@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     let protocols = [];
     
     if (contentType) {
-      protocols = await getCulturalProtocols(contentType, communityId);
+      protocols = await getCulturalProtocols(contentType, communityId || undefined);
     } else {
       // Get all protocols
       let query = supabase
