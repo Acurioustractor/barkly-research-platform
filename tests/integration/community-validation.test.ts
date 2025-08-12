@@ -2,95 +2,96 @@ import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals
 import { communityValidationService, ValidationRequest } from '../../src/lib/community-validation-service';
 
 // Mock Supabase
-jest.mock('../../src/lib/supabase', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          single: jest.fn(() => Promise.resolve({ 
-            data: { 
+jest.mock('../../src/lib/supabase', () => {
+  const selectChain = {
+    eq: jest.fn(() => ({
+      single: jest.fn(() => Promise.resolve({
+        data: {
+          id: 'validation-1',
+          content_id: 'ai-insight-1',
+          content_type: 'ai_insight',
+          content: {
+            title: 'Test Insight',
+            description: 'Test description',
+            aiGeneratedInsight: 'Test AI insight',
+            supportingData: ['test_data'],
+            methodology: 'Test methodology',
+            assumptions: ['Test assumption'],
+            limitations: ['Test limitation'],
+            potentialImpact: 'Test impact'
+          },
+          submitted_by: 'test-user',
+          submitted_at: new Date().toISOString(),
+          priority: 'medium',
+          community_id: 'community-1',
+          community_name: 'Test Community',
+          required_validators: 3,
+          current_validators: 0,
+          status: 'pending',
+          cultural_sensitivity: 'medium',
+          traditional_knowledge_involved: false,
+          elder_review_required: false,
+          validations: [],
+          consensus_reached: false,
+          final_score: 0,
+          confidence: 0,
+          source_attribution: [],
+          feedback: [],
+          revisions: []
+        },
+        error: null
+      })),
+      order: jest.fn(() => Promise.resolve({
+        data: [
+          {
+            id: 'validation-1',
+            content_type: 'ai_insight',
+            status: 'pending',
+            community_id: 'community-1',
+            submitted_at: new Date().toISOString(),
+            consensus_reached: false,
+            confidence: 0
+          }
+        ],
+        error: null
+      })),
+      gte: jest.fn(() => ({
+        order: jest.fn(() => Promise.resolve({
+          data: [
+            {
               id: 'validation-1',
-              content_id: 'ai-insight-1',
               content_type: 'ai_insight',
-              content: {
-                title: 'Test Insight',
-                description: 'Test description',
-                aiGeneratedInsight: 'Test AI insight',
-                supportingData: ['test_data'],
-                methodology: 'Test methodology',
-                assumptions: ['Test assumption'],
-                limitations: ['Test limitation'],
-                potentialImpact: 'Test impact'
-              },
-              submitted_by: 'test-user',
-              submitted_at: new Date().toISOString(),
-              priority: 'medium',
+              status: 'validated',
               community_id: 'community-1',
-              community_name: 'Test Community',
-              required_validators: 3,
-              current_validators: 0,
-              status: 'pending',
-              cultural_sensitivity: 'medium',
-              traditional_knowledge_involved: false,
-              elder_review_required: false,
-              validations: [],
-              consensus_reached: false,
-              final_score: 0,
-              confidence: 0,
-              source_attribution: [],
-              feedback: [],
-              revisions: []
-            }, 
-            error: null 
-          })),
-          order: jest.fn(() => Promise.resolve({ 
-            data: [
-              {
-                id: 'validation-1',
-                content_type: 'ai_insight',
-                status: 'pending',
-                community_id: 'community-1',
-                submitted_at: new Date().toISOString(),
-                consensus_reached: false,
-                confidence: 0
-              }
-            ], 
-            error: null 
-          })),
-          gte: jest.fn(() => ({
-            order: jest.fn(() => Promise.resolve({ 
-              data: [
+              submitted_at: new Date().toISOString(),
+              completed_at: new Date().toISOString(),
+              consensus_reached: true,
+              confidence: 0.85,
+              validations: [
                 {
-                  id: 'validation-1',
-                  content_type: 'ai_insight',
-                  status: 'validated',
-                  community_id: 'community-1',
-                  submitted_at: new Date().toISOString(),
-                  completed_at: new Date().toISOString(),
-                  consensus_reached: true,
-                  confidence: 0.85,
-                  validations: [
-                    {
-                      validatorId: 'validator-1',
-                      validationScore: 4.2,
-                      confidenceLevel: 0.8
-                    }
-                  ],
-                  feedback: []
+                  validatorId: 'validator-1',
+                  validationScore: 4.2,
+                  confidenceLevel: 0.8
                 }
-              ], 
-              error: null 
-            }))
-          }))
-        })),
-        insert: jest.fn(() => Promise.resolve({ error: null })),
-        update: jest.fn(() => ({
-          eq: jest.fn(() => Promise.resolve({ error: null }))
+              ],
+              feedback: []
+            }
+          ],
+          error: null
         }))
       }))
     }))
-  }
-}));
+  };
+  return {
+    supabase: {
+      from: jest.fn(() => ({
+        select: jest.fn(() => selectChain),
+        insert: jest.fn(() => Promise.resolve({ error: null })),
+        update: jest.fn(() => ({ eq: jest.fn(() => Promise.resolve({ error: null })) }))
+      }))
+    }
+  };
+});
 
 // Mock Cultural Safety Service
 jest.mock('../../src/lib/cultural-safety-service', () => ({
