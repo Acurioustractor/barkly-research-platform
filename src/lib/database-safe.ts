@@ -1,8 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
+const globalForPrisma = (globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+});
 
 // Check for various Supabase/Vercel Postgres environment variable patterns
 const getDatabaseUrl = () => {
@@ -61,14 +61,14 @@ export const prisma = databaseUrl
       },
       log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
     }))
-  : null
+  : null;
 
 if (process.env.NODE_ENV !== 'production' && prisma) {
-  globalForPrisma.prisma = prisma
+  globalForPrisma.prisma = prisma;
 }
 
 // Helper function to check if database is available
-export const isDatabaseAvailable = () => Boolean(databaseUrl && prisma)
+export const isDatabaseAvailable = () => Boolean(databaseUrl && prisma);
 
 // Debug helper to see what env vars are available
 export const getAvailableEnvVars = () => {
