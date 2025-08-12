@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { culturalSafetyService } from './cultural-safety-service';
+import { analyzeCulturalSafety, submitForCulturalReview } from './cultural-safety-service';
 
 export interface CommunicationChannel {
   id: string;
@@ -1098,7 +1098,7 @@ export class TwoWayCommunicationService {
       priority: 'medium'
     };
 
-    await culturalSafetyService.submitForReview(reviewRequest);
+    await submitForCulturalReview(reviewRequest);
   }
 
   private async notifyMeetingSummaryPublication(summary: MeetingSummary): Promise<void> {

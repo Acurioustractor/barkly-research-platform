@@ -450,11 +450,30 @@ export default function DocumentViewPage() {
                     {document.content_preview?.text || 'No content preview available'}
                   </pre>
                 </div>
-                {navigation.has_original_content && (
-                  <div className="mt-4 text-center">
-                    <Button variant="outline">View Full Content</Button>
-                  </div>
-                )}
+                <div className="mt-4 text-center space-x-2">
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open(`/api/documents/${params.id}/file`, '_blank')}
+                  >
+                    📄 View Original Document
+                  </Button>
+                  <Link href={`/documents/${params.id}/view`}>
+                    <Button variant="ghost">
+                      📄 View Extracted Text
+                    </Button>
+                  </Link>
+                  <Button 
+                    variant="ghost"
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = `/api/documents/${params.id}/file?download=true`;
+                      link.download = '';
+                      link.click();
+                    }}
+                  >
+                    💾 Download
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}

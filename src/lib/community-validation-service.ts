@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { culturalSafetyService } from './cultural-safety-service';
+import { analyzeCulturalSafety, submitForCulturalReview } from './cultural-safety-service';
 
 export interface ValidationRequest {
   id: string;

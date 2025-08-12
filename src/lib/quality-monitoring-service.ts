@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { aiService } from './ai-service';
+import { analyzeDocumentChunk, analyzeCommunityIntelligence } from './ai-service';
 
 export interface QualityMetrics {
   id: string;
@@ -309,7 +309,7 @@ class QualityMonitoringService {
   async detectBias(insight: any): Promise<number> {
     try {
       // Use AI to detect potential bias in the insight
-      const biasAnalysis = await aiService.analyzeDocument(
+      const biasAnalysis = await analyzeDocumentChunk(
         JSON.stringify(insight.content),
         'bias_detection'
       );

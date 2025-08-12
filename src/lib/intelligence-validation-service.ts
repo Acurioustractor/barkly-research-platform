@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
-import { aiService } from './ai-service';
-import { culturalSafetyService } from './cultural-safety-service';
+import { analyzeDocumentChunk, analyzeCommunityIntelligence } from './ai-service';
+import { analyzeCulturalSafety } from './cultural-safety-service';
 
 export interface IntelligenceInsight {
   id: string;

@@ -157,15 +157,15 @@ export const Navigation: React.FC<NavigationProps> = ({ items, logo }) => {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t py-2">
-            <div className="space-y-1">
+            <div className="space-y-1 max-h-96 overflow-y-auto">
               {items.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'block px-3 py-2 text-base font-medium transition-colors',
+                    'block px-3 py-3 text-base font-medium transition-colors rounded-lg mx-2',
                     isActive(item.href)
-                      ? 'text-primary bg-primary/10'
+                      ? 'text-primary bg-primary/10 border-l-4 border-primary'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
                   )}
                   onClick={() => setMobileMenuOpen(false)}
@@ -173,12 +173,50 @@ export const Navigation: React.FC<NavigationProps> = ({ items, logo }) => {
                 >
                   {item.label}
                   {item.description && (
-                    <span className="block text-sm font-normal text-muted-foreground">
+                    <span className="block text-sm font-normal text-muted-foreground mt-1">
                       {item.description}
                     </span>
                   )}
                 </Link>
               ))}
+              
+              {/* Mobile User Menu */}
+              <div className="border-t mt-4 pt-4 mx-2">
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      Signed in as {user.email}
+                    </div>
+                    <Link
+                      href="/profile"
+                      className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Settings className="w-4 h-4 mr-2 inline" />
+                      Profile Settings
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleSignOut();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg"
+                    >
+                      <LogOut className="w-4 h-4 mr-2 inline" />
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <Link 
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Button variant="primary" className="w-full">
+                      Sign In
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         )}

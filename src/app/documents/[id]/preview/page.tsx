@@ -207,8 +207,10 @@ export default function DocumentPreviewPage() {
                 <CardDescription>View complete document with analysis</CardDescription>
               </CardHeader>
               <CardContent>
-                <Link href={`/documents/${params.id}`}>
-                  <Button className="w-full">View Full Document</Button>
+                <Link href={`/documents/${params.id}/view`}>
+                  <Button className="w-full">
+                    📄 View Full Document
+                  </Button>
                 </Link>
               </CardContent>
             </Card>

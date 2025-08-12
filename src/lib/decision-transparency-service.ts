@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { culturalSafetyService } from './cultural-safety-service';
+import { analyzeCulturalSafety, submitForCulturalReview } from './cultural-safety-service';
 
 export interface GovernmentDecision {
   id: string;
@@ -350,7 +350,7 @@ export class DecisionTransparencyService {
         priority: decision.culturalImpactAssessment.culturalSensitivity === 'critical' ? 'high' : 'medium'
       };
 
-      await culturalSafetyService.submitForReview(reviewRequest);
+      await submitForCulturalReview(reviewRequest);
 
       console.log(`Decision ${decisionId} submitted for cultural review`);
     } catch (error) {

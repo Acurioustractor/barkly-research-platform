@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
-import { aiService } from './ai-service';
-import { culturalSafetyService } from './cultural-safety-service';
+import { analyzeCommunityIntelligence, analyzeDocumentChunk } from './ai-service';
+import { analyzeCulturalSafety } from './cultural-safety-service';
 
 export interface PreviewSession {
   id: string;
@@ -244,7 +244,7 @@ class CommunityPreviewService {
     try {
       // Validate feedback content for cultural appropriateness
       if (feedback.comments) {
-        const culturalCheck = await culturalSafetyService.validateContent(feedback.comments);
+        const culturalCheck = await analyzeCulturalSafety(feedback.comments);
         if (!culturalCheck.isAppropriate) {
           throw new Error('Feedback contains culturally inappropriate content');
         }
@@ -329,7 +329,7 @@ class CommunityPreviewService {
       
       // Extract common themes using AI
       const allComments = feedbackList.map(f => f.comments).join(' ');
-      const themeAnalysis = await aiService.analyzeDocument(allComments, 'feedback_analysis');
+      const themeAnalysis = await analyzeDocumentChunk(allComments, 'feedback_analysis');
       
       // Identify critical issues
       const criticalIssues = feedbackList

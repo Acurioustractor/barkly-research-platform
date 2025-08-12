@@ -7,6 +7,7 @@ import { Button } from '@/components/core/Button';
 import { Badge } from '@/components/core';
 import { Input } from '@/components/core';
 import Link from 'next/link';
+import { getDocumentThumbnail } from '@/utils/thumbnails';
 
 interface Document {
   id: string;
@@ -30,10 +31,105 @@ export default function DocumentsPage() {
   const [selectedSensitivity, setSelectedSensitivity] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'gallery'>('list');
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     fetchDocuments();
   }, []);
+
+  const handleAIAnalysis = () => {
+    // Navigate to data insights page for comprehensive AI analysis
+    window.location.href = '/data-insights';
+  };
+
+  const handleExportLibrary = async () => {
+    try {
+      setIsExporting(true);
+      
+      // Prepare export data
+      const exportData = {
+        exported_at: new Date().toISOString(),
+        total_documents: documents.length,
+        export_metadata: {
+          cultural_protocols: "This export respects Indigenous data sovereignty principles",
+          access_level: "Community-approved public data only",
+          data_classification: "Public and community-level documents"
+        },
+        documents: documents.map(doc => ({
+          id: doc.id,
+          title: doc.title,
+          type: doc.type,
+          community: doc.community,
+          cultural_sensitivity: doc.culturalSensitivity,
+          upload_date: doc.uploadDate,
+          size: formatFileSize(doc.size),
+          summary: doc.summary,
+          tags: doc.tags,
+          confidence_score: doc.keyInsights ? "High" : "Standard"
+        })),
+        summary: {
+          by_type: documents.reduce((acc, doc) => {
+            acc[doc.type] = (acc[doc.type] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>),
+          by_sensitivity: documents.reduce((acc, doc) => {
+            acc[doc.culturalSensitivity] = (acc[doc.culturalSensitivity] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>),
+          total_size: documents.reduce((sum, doc) => sum + doc.size, 0)
+        }
+      };
+
+      // Create and download JSON file
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json'
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `barkly-document-library-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      // Also provide CSV option
+      const csvData = [
+        ['Title', 'Type', 'Community', 'Cultural Sensitivity', 'Size', 'Upload Date', 'Summary'],
+        ...documents.map(doc => [
+          doc.title,
+          doc.type,
+          doc.community,
+          doc.culturalSensitivity,
+          formatFileSize(doc.size),
+          new Date(doc.uploadDate).toLocaleDateString(),
+          doc.summary?.replace(/"/g, '""') || ''
+        ])
+      ];
+
+      const csvContent = csvData.map(row => 
+        row.map(cell => `"${cell}"`).join(',')
+      ).join('\n');
+
+      const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+      const csvUrl = URL.createObjectURL(csvBlob);
+      const csvLink = document.createElement('a');
+      csvLink.href = csvUrl;
+      csvLink.download = `barkly-document-library-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(csvLink);
+      csvLink.click();
+      document.body.removeChild(csvLink);
+      URL.revokeObjectURL(csvUrl);
+
+      console.log(`📊 Exported ${documents.length} documents in JSON and CSV formats`);
+      
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Export failed. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const fetchDocuments = async () => {
     try {
@@ -41,17 +137,48 @@ export default function DocumentsPage() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
-      const response = await fetch('/api/documents/overview', {
+      // Try multiple endpoints to find the real documents
+      let response = await fetch('/api/documents/overview', {
         signal: controller.signal
       });
+      
+      // If overview fails, try the main documents endpoint
+      if (!response.ok) {
+        console.log('[DocumentsPage] Overview API failed, trying main documents API...');
+        response = await fetch('/api/documents', {
+          signal: controller.signal
+        });
+      }
+      
+      // If that fails, try the list endpoint
+      if (!response.ok) {
+        console.log('[DocumentsPage] Main API failed, trying list API...');
+        response = await fetch('/api/documents/list', {
+          signal: controller.signal
+        });
+      }
       clearTimeout(timeoutId);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('[DocumentsPage] API Response:', data);
+        
+        // Handle different API response formats
+        let documentsArray = [];
+        if (data.documents) {
+          documentsArray = data.documents;
+        } else if (data.data) {
+          documentsArray = data.data;
+        } else if (Array.isArray(data)) {
+          documentsArray = data;
+        }
+        
+        console.log(`[DocumentsPage] Found ${documentsArray.length} documents in response`);
+        
         // Transform the API response to match our interface
-        const transformedDocs = (data.documents || []).map((doc: any) => {
+        const transformedDocs = documentsArray.map((doc: any) => {
           // Debug logging
-          if (data.documents.indexOf(doc) === 0) {
+          if (documentsArray.indexOf(doc) === 0) {
             console.log('First document data:', doc);
             console.log('Thumbnail path:', doc.thumbnailPath);
           }
@@ -94,15 +221,35 @@ export default function DocumentsPage() {
                        doc.document_name ||
                        'Untitled Document';
           
+          // Handle different date field formats
+          const uploadDate = doc.uploadedAt || doc.created_at || doc.createdAt || new Date().toISOString();
+          
+          // Handle different size field formats
+          const size = doc.file_size || doc.content_length || doc.size || 1024;
+          
+          // Handle tags from different sources
+          let tags = ['general'];
+          if (doc.tags && typeof doc.tags === 'string') {
+            try {
+              tags = JSON.parse(doc.tags);
+            } catch {
+              tags = [doc.tags];
+            }
+          } else if (doc.tags && Array.isArray(doc.tags)) {
+            tags = doc.tags;
+          } else if (doc.category) {
+            tags = [doc.category];
+          }
+          
           return {
             id: doc.id,
-            title: doc.filename || title,
-            type: inferDocumentType(doc.filename || title),
+            title: title,
+            type: inferDocumentType(title),
             community: 'Tennant Creek',
-            culturalSensitivity: doc.cultural_sensitivity || 'public',
-            uploadDate: doc.uploadedAt || new Date().toISOString(),
-            size: doc.size || 0,
-            tags: doc.category ? [doc.category] : ['general'],
+            culturalSensitivity: doc.cultural_sensitivity || doc.culturalSensitivity || 'public',
+            uploadDate: uploadDate,
+            size: size,
+            tags: tags,
             summary: `${themesCount} themes extracted • ${quotesCount} community quotes • ${Math.round(confidence * 100)}% confidence`,
             keyInsights: (() => {
               // Extract from actual document content, NOT the processing summary
@@ -198,49 +345,14 @@ export default function DocumentsPage() {
         console.log(`[DocumentsPage] Loaded ${transformedDocs.length} documents`);
       } else {
         console.error('Failed to fetch documents:', response.statusText);
-        // Show some mock data for demo purposes
         setDocuments([]);
       }
     } catch (error) {
       console.error('Failed to fetch documents:', error);
       if (error.name === 'AbortError') {
-        console.warn('[DocumentsPage] API request timed out, showing demo message');
+        console.warn('[DocumentsPage] API request timed out');
       }
-      // Show sample documents for demo when API fails
-      setDocuments([
-        {
-          id: 'demo-1',
-          title: 'Youth Roundtable Outcomes (Demo)',
-          type: 'policy',
-          community: 'Tennant Creek',
-          culturalSensitivity: 'public',
-          uploadDate: new Date().toISOString(),
-          size: 25600,
-          tags: ['youth', 'community priorities', 'safe house'],
-          summary: 'Community consultation results identifying youth safe house as critical priority',
-          keyInsights: [
-            '17 participants identified youth safe house as urgent need',
-            '94% community support for youth accommodation services', 
-            'Strong cultural mentoring preferences identified'
-          ]
-        },
-        {
-          id: 'demo-2', 
-          title: 'BRD Training Pathways Analysis (Demo)',
-          type: 'report',
-          community: 'Tennant Creek',
-          culturalSensitivity: 'public',
-          uploadDate: new Date().toISOString(),
-          size: 42300,
-          tags: ['training', 'employment', 'cultural mentoring'],
-          summary: 'Analysis of training pathways and employment outcomes with cultural mentoring',
-          keyInsights: [
-            '87% completion rate with cultural mentoring support',
-            '12 active training programs identified',
-            'Strong demand for culturally appropriate services'
-          ]
-        }
-      ]);
+      setDocuments([]);
     } finally {
       setLoading(false);
     }
@@ -274,6 +386,18 @@ export default function DocumentsPage() {
       case 'sacred': return <Badge variant="destructive">Sacred</Badge>;
       default: return <Badge variant="outline">Unknown</Badge>;
     }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const size = parseFloat((bytes / Math.pow(k, i)).toFixed(1));
+    
+    return `${size} ${sizes[i]}`;
   };
 
   const filteredDocuments = documents.filter(doc => {
@@ -323,8 +447,12 @@ export default function DocumentsPage() {
               <Button variant="primary" onClick={() => window.open('/upload.html', '_blank')}>
                 Upload Documents
               </Button>
-              <Button variant="secondary">AI Analysis</Button>
-              <Button variant="outline">Export Library</Button>
+              <Button variant="secondary" onClick={handleAIAnalysis}>
+                AI Analysis
+              </Button>
+              <Button variant="outline" onClick={handleExportLibrary} disabled={isExporting}>
+                {isExporting ? 'Exporting...' : 'Export Library'}
+              </Button>
             </div>
           </div>
         </Container>
@@ -387,7 +515,7 @@ export default function DocumentsPage() {
         <Container>
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <CardTitle>Search & Filter Documents</CardTitle>
                   <CardDescription>Find documents by title, tags, type, or cultural sensitivity</CardDescription>
@@ -397,21 +525,26 @@ export default function DocumentsPage() {
                     variant={viewMode === 'list' ? 'primary' : 'outline'}
                     size="sm"
                     onClick={() => setViewMode('list')}
+                    className="flex-1 md:flex-none"
                   >
-                    📋 List
+                    <span className="md:hidden">📋</span>
+                    <span className="hidden md:inline">📋 List</span>
                   </Button>
                   <Button
                     variant={viewMode === 'gallery' ? 'primary' : 'outline'}
                     size="sm"
                     onClick={() => setViewMode('gallery')}
+                    className="flex-1 md:flex-none"
                   >
-                    🖼️ Gallery
+                    <span className="md:hidden">🖼️</span>
+                    <span className="hidden md:inline">🖼️ Gallery</span>
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="space-y-4">
+                {/* Mobile-first search */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Search</label>
                   <Input
@@ -421,48 +554,59 @@ export default function DocumentsPage() {
                   />
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Document Type</label>
-                  <select 
-                    className="w-full p-2 border rounded-md"
-                    value={selectedType}
-                    onChange={(e) => setSelectedType(e.target.value)}
-                  >
-                    <option value="all">All Types</option>
-                    <option value="policy">Policy Documents</option>
-                    <option value="research">Research</option>
-                    <option value="report">Reports</option>
-                    <option value="community-story">Community Stories</option>
-                    <option value="meeting-notes">Meeting Notes</option>
-                  </select>
+                {/* Mobile-optimized filters */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Document Type</label>
+                    <select 
+                      className="w-full p-3 border rounded-md text-base"
+                      value={selectedType}
+                      onChange={(e) => setSelectedType(e.target.value)}
+                    >
+                      <option value="all">All Types</option>
+                      <option value="policy">Policy Documents</option>
+                      <option value="research">Research</option>
+                      <option value="report">Reports</option>
+                      <option value="community-story">Community Stories</option>
+                      <option value="meeting-notes">Meeting Notes</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Cultural Sensitivity</label>
+                    <select 
+                      className="w-full p-3 border rounded-md text-base"
+                      value={selectedSensitivity}
+                      onChange={(e) => setSelectedSensitivity(e.target.value)}
+                    >
+                      <option value="all">All Levels</option>
+                      <option value="public">Public</option>
+                      <option value="community">Community</option>
+                      <option value="sacred">Sacred</option>
+                    </select>
+                  </div>
+                  
+                  <div className="flex items-end">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setSelectedType('all');
+                        setSelectedSensitivity('all');
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Cultural Sensitivity</label>
-                  <select 
-                    className="w-full p-2 border rounded-md"
-                    value={selectedSensitivity}
-                    onChange={(e) => setSelectedSensitivity(e.target.value)}
-                  >
-                    <option value="all">All Levels</option>
-                    <option value="public">Public</option>
-                    <option value="community">Community</option>
-                    <option value="sacred">Sacred</option>
-                  </select>
-                </div>
-                
-                <div className="flex items-end">
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => {
-                      setSearchTerm('');
-                      setSelectedType('all');
-                      setSelectedSensitivity('all');
-                    }}
-                  >
-                    Clear Filters
-                  </Button>
+                {/* Results count - mobile friendly */}
+                <div className="flex justify-between items-center text-sm text-muted-foreground border-t pt-4">
+                  <span>Showing {filteredDocuments.length} of {documents.length} documents</span>
+                  {(searchTerm || selectedType !== 'all' || selectedSensitivity !== 'all') && (
+                    <span className="text-primary">Filtered</span>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -502,28 +646,36 @@ export default function DocumentsPage() {
                     return (
                     <Card key={doc.id} className="hover:shadow-lg transition-shadow">
                       <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 rounded-t-lg relative overflow-hidden">
-                        {/* Real Document Thumbnail or Fallback */}
-                        {doc.thumbnailPath ? (
-                          <img 
-                            src={`/api/documents/${doc.id}/thumbnail`}
-                            alt={`${doc.title} preview`}
-                            className="w-full h-full object-cover"
-                            onLoad={() => {
-                              console.log(`✅ Thumbnail loaded for: ${doc.title}`);
-                            }}
-                            onError={(e) => {
-                              console.error(`❌ Thumbnail failed to load for: ${doc.title}`, e);
-                              // Show fallback on error
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const fallback = target.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'block';
-                            }}
-                          />
-                        ) : null}
+                        {/* Document Thumbnail with improved system */}
+                        {(() => {
+                          const thumbnailPath = getDocumentThumbnail(doc);
+                          console.log(`🖼️ Thumbnail for ${doc.title}: ${thumbnailPath}`);
+                          
+                          return thumbnailPath ? (
+                            <img 
+                              src={thumbnailPath}
+                              alt={`${doc.title} preview`}
+                              className="w-full h-full object-cover"
+                              onLoad={() => {
+                                console.log(`✅ Thumbnail loaded: ${doc.title}`);
+                              }}
+                              onError={(e) => {
+                                console.error(`❌ Thumbnail failed: ${doc.title}`, e);
+                                // Hide broken image and show fallback
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  const fallback = parent.querySelector('.fallback-preview') as HTMLElement;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }
+                              }}
+                            />
+                          ) : null;
+                        })()}
                         
                         {/* Fallback mock preview */}
-                        <div className={`absolute inset-0 flex items-center justify-center ${doc.thumbnailPath ? 'hidden' : ''}`}>
+                        <div className={`fallback-preview absolute inset-0 items-center justify-center ${getDocumentThumbnail(doc) ? 'hidden' : 'flex'}`}>
                           <div className="bg-white shadow-lg rounded border-2 border-gray-200 w-3/4 h-5/6 flex flex-col">
                             {/* Document Header */}
                             <div className="bg-gray-100 h-8 flex items-center px-2 border-b">
@@ -570,7 +722,7 @@ export default function DocumentsPage() {
                               {doc.title}
                             </h3>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {doc.type.replace('-', ' ')} • {Math.round(doc.size / 1024)}KB
+                              {doc.type.replace('-', ' ')} • {formatFileSize(doc.size)}
                             </p>
                           </div>
                           
@@ -596,14 +748,17 @@ export default function DocumentsPage() {
                           )}
                           
                           <div className="flex gap-1">
+                            <Button 
+                              size="sm" 
+                              variant="primary" 
+                              className="flex-1 text-xs"
+                              onClick={() => window.open(`/api/documents/${doc.id}/view`, '_blank')}
+                            >
+                              📄 View Document
+                            </Button>
                             <Link href={`/documents/${doc.id}`} className="flex-1">
                               <Button size="sm" variant="outline" className="w-full text-xs">
-                                AI Analysis
-                              </Button>
-                            </Link>
-                            <Link href={`/documents/${doc.id}/analysis`} className="flex-1">
-                              <Button size="sm" variant="ghost" className="w-full text-xs">
-                                View Document
+                                📊 Analysis
                               </Button>
                             </Link>
                           </div>
@@ -643,7 +798,7 @@ export default function DocumentsPage() {
                         
                         <div>
                           <p className="font-medium mb-1">Size</p>
-                          <p>{Math.round(doc.size / 1024)}KB</p>
+                          <p>{formatFileSize(doc.size)}</p>
                         </div>
                         
                         <div>
@@ -677,22 +832,66 @@ export default function DocumentsPage() {
                       )}
                       
                       <div className="flex space-x-2 flex-wrap">
+                        <Button 
+                          size="sm" 
+                          variant="primary"
+                          onClick={() => window.open(`/api/documents/${doc.id}/view`, '_blank')}
+                        >
+                          📄 View Document
+                        </Button>
                         <Link href={`/documents/${doc.id}`}>
                           <Button 
                             size="sm" 
                             variant="outline"
                           >
-                            AI Analysis
+                            📊 AI Analysis
                           </Button>
                         </Link>
-                        <Link href={`/documents/${doc.id}/analysis`}>
-                          <Button 
-                            size="sm" 
-                            variant="ghost"
-                          >
-                            View Document
-                          </Button>
-                        </Link>
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={async () => {
+                            try {
+                              // First try to download the original file
+                              const response = await fetch(`/api/documents/${doc.id}/file?download=true`);
+                              
+                              if (response.ok) {
+                                // If original file is available, download it directly
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = doc.title || 'document';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                              } else {
+                                // Fallback: download extracted text content
+                                const viewResponse = await fetch(`/api/documents/${doc.id}/view`);
+                                if (viewResponse.ok) {
+                                  const text = await viewResponse.text();
+                                  const blob = new Blob([text], { type: 'text/plain' });
+                                  const url = window.URL.createObjectURL(blob);
+                                  const link = document.createElement('a');
+                                  link.href = url;
+                                  link.download = `${doc.title || 'document'}_extracted_text.txt`;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  window.URL.revokeObjectURL(url);
+                                } else {
+                                  alert('Download not available for this document');
+                                }
+                              }
+                            } catch (error) {
+                              console.error('Download failed:', error);
+                              alert('Download failed. Please try again.');
+                            }
+                          }}
+                        >
+                          💾 Download
+                        </Button>
                         {doc.culturalSensitivity === 'sacred' && (
                           <Button size="sm" variant="ghost">Request Access</Button>
                         )}

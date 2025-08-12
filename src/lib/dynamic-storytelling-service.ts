@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { analyzeDocument } from './ai-service';
+import { analyzeDocumentChunk } from './ai-service';
 
 export interface StoryNode {
   id: string;
@@ -522,7 +522,7 @@ Return JSON with: {
 }
 `;
 
-    const analysis = await analyzeDocument(analysisPrompt, 'story_connection');
+    const analysis = await analyzeDocumentChunk(analysisPrompt, 'story_connection');
     
     try {
       const result = JSON.parse(analysis.analysis);
@@ -679,7 +679,7 @@ Create an outcome pathway that shows:
 Return JSON format with pathway structure.
 `;
 
-    const analysis = await analyzeDocument(pathwayPrompt, 'pathway_generation');
+    const analysis = await analyzeDocumentChunk(pathwayPrompt, 'pathway_generation');
     
     // Create pathway structure (simplified for now)
     const pathway: OutcomePathway = {

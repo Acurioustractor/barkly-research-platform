@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { analyzeDocument } from './ai-service';
+import { analyzeDocumentChunk } from './ai-service';
 
 export interface TrendAnalysis {
   id: string;
@@ -511,7 +511,7 @@ export class CrossCommunityTrendAnalysisService {
         Return as JSON with 'concerns' and 'successes' arrays.
       `;
 
-      const analysis = await analyzeDocument(prompt, 'theme_analysis');
+      const analysis = await analyzeDocumentChunk(prompt, 'theme_analysis');
       
       try {
         const themes = JSON.parse(analysis.analysis);
@@ -838,7 +838,7 @@ export class CrossCommunityTrendAnalysisService {
         - culturalConsiderations: array of cultural factors
       `;
 
-      const analysis = await analyzeDocument(prompt, 'trend_insights');
+      const analysis = await analyzeDocumentChunk(prompt, 'trend_insights');
       
       try {
         const aiInsights = JSON.parse(analysis.analysis);
