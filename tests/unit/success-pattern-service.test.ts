@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { successPatternService } from '../../src/lib/success-pattern-service';
+import * as successPatternService from '../../src/lib/success-pattern-service';
 
 // Mock Supabase
 jest.mock('../../src/lib/supabase', () => ({
@@ -77,7 +77,7 @@ describe('Success Pattern Service Unit Tests', () => {
         ]
       };
 
-      const patterns = await successPatternService.identifySuccessPatterns(communityData);
+      const patterns = await successPatternService.identifySuccessPatterns(JSON.stringify(communityData));
 
       expect(patterns).toBeDefined();
       expect(Array.isArray(patterns)).toBe(true);

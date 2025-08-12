@@ -148,9 +148,10 @@ global.File = jest.fn((bits, name, options) => ({
 Object.defineProperty(global, 'crypto', {
   value: {
     randomUUID: jest.fn(() => 'mocked-uuid'),
-    getRandomValues: jest.fn((arr) => {
-      for (let i = 0; i < arr.length; i++) {
-        arr[i] = Math.floor(Math.random() * 256);
+    getRandomValues: jest.fn((arr: ArrayBufferView) => {
+      const u8 = new Uint8Array(arr.buffer as ArrayBuffer);
+      for (let i = 0; i < u8.length; i++) {
+        u8[i] = Math.floor(Math.random() * 256);
       }
       return arr;
     }),
@@ -166,19 +167,19 @@ Object.defineProperty(global, 'crypto', {
 global.performance = {
   ...global.performance,
   now: jest.fn(() => Date.now()),
-  mark: jest.fn(),
-  measure: jest.fn(),
+  mark: jest.fn((markName: string) => ({ name: markName } as unknown as PerformanceMark)),
+  measure: jest.fn((measureName: string) => ({ name: measureName } as unknown as PerformanceMeasure)),
   getEntriesByName: jest.fn(() => []),
   getEntriesByType: jest.fn(() => []),
 };
 
 // Mock requestAnimationFrame
-global.requestAnimationFrame = jest.fn(cb => setTimeout(cb, 16));
-global.cancelAnimationFrame = jest.fn(id => clearTimeout(id));
+global.requestAnimationFrame = jest.fn((cb: FrameRequestCallback) => setTimeout(() => cb(performance.now()), 16) as unknown as number);
+global.cancelAnimationFrame = jest.fn((id: number) => clearTimeout(id as unknown as NodeJS.Timeout));
 
 // Mock requestIdleCallback
-global.requestIdleCallback = jest.fn(cb => setTimeout(cb, 1));
-global.cancelIdleCallback = jest.fn(id => clearTimeout(id));
+global.requestIdleCallback = jest.fn((cb: IdleRequestCallback) => setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 1 } as IdleDeadline), 1) as unknown as number);
+global.cancelIdleCallback = jest.fn((id: number) => clearTimeout(id as unknown as NodeJS.Timeout));
 
 // Custom test utilities
 export const testUtils = {
