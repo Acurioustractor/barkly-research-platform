@@ -104,8 +104,8 @@ interface DynamicStorytellingInterfaceProps {
   communityName: string;
   userRole: 'admin' | 'community_member' | 'researcher';
   culturalSafetyLevel?: 'public' | 'community' | 'restricted' | 'sacred';
-}e
-xport default function DynamicStorytellingInterface({
+}
+export default function DynamicStorytellingInterface({
   communityId,
   communityName,
   userRole,

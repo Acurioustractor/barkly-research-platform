@@ -182,8 +182,8 @@ const CommunityValidationDashboard: React.FC<CommunityValidationDashboardProps> 
     } catch (error) {
       console.error('Error submitting validation:', error);
     }
-  };  co
-nst getStatusColor = (status: string) => {
+  };
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'validated':
         return 'text-green-600 bg-green-50 border-green-200';

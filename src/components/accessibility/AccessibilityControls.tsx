@@ -571,7 +571,7 @@ export default function AccessibilityControls({
                     <SelectItem value="orca">Orca</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
-                </SelectContent>
+                </Select>
               </div>
             )}
           </TabsContent>
