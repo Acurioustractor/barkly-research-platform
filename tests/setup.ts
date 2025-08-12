@@ -78,7 +78,7 @@ global.ResizeObserver = jest.fn(() => ({
 })) as any;
 
 // Mock matchMedia for responsive tests
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(globalThis, 'matchMedia', {
   writable: true,
   value: jest.fn().mockImplementation(query => ({
     matches: false,
