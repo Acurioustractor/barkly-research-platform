@@ -41,14 +41,19 @@ const config = {
   
   // Transform configuration
   preset: 'ts-jest',
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.json',
+      useESM: false
+    }
+  },
   transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: 'tsconfig.json'
-    }]
+    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json', useESM: false }]
   },
   
   // Module file extensions
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+  transformIgnorePatterns: ['/node_modules/'],
   
   // Test timeout
   testTimeout: 30000,
@@ -56,32 +61,7 @@ const config = {
   // Parallel execution
   maxWorkers: '50%',
   
-  // Test projects for different test types
-  projects: [
-    {
-      displayName: 'unit',
-      testMatch: ['<rootDir>/tests/unit/**/*.test.ts'],
-      testEnvironment: 'node'
-    },
-    {
-      displayName: 'integration',
-      testMatch: ['<rootDir>/tests/integration/**/*.test.ts'],
-      testEnvironment: 'node',
-      testTimeout: 60000
-    },
-    {
-      displayName: 'e2e',
-      testMatch: ['<rootDir>/tests/e2e/**/*.test.ts'],
-      testEnvironment: 'node',
-      testTimeout: 120000
-    },
-    {
-      displayName: 'performance',
-      testMatch: ['<rootDir>/tests/performance/**/*.test.ts'],
-      testEnvironment: 'node',
-      testTimeout: 300000
-    }
-  ],
+  // Single project configuration (projects removed to simplify ts-jest transform)
   
   // Global setup and teardown
   globalSetup: '<rootDir>/tests/global-setup.ts',
