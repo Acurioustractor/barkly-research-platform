@@ -20,9 +20,7 @@ const config = {
     'src/**/*.{ts,js}',
     '!src/**/*.d.ts',
     '!src/**/*.test.{ts,js}',
-    '!src/app/layout.tsx',
-    '!src/app/page.tsx',
-    '!src/app/globals.css'
+    '!src/app/**'
   ],
   coverageThreshold: {
     global: {
@@ -34,7 +32,7 @@ const config = {
   },
   
   // Module resolution
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@/components/(.*)$': '<rootDir>/src/components/$1',
     '^@/lib/(.*)$': '<rootDir>/src/lib/$1',
