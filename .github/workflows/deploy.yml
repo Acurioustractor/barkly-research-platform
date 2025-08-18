@@ -20,7 +20,7 @@ jobs:
       url: ${{ steps.deploy.outputs.url }}
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -67,7 +67,7 @@ jobs:
       url: https://barkly-research.vercel.app
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -117,7 +117,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Wait for deployment
         run: sleep 30
