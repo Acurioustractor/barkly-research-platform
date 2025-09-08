@@ -44,7 +44,7 @@ jobs:
           echo "url=$url" >> $GITHUB_OUTPUT
       
       - name: Comment PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         if: github.event_name == 'pull_request'
         with:
           script: |
@@ -88,7 +88,7 @@ jobs:
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
       
       - name: Create deployment record
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const deployment = await github.rest.repos.createDeployment({
