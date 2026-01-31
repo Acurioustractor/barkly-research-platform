@@ -1,6 +1,6 @@
 {
   "name": "barkly-research-platform",
-  "version": 3,
+  "version": 2,
   "build": {
     "env": {
       "NODE_ENV": "production"
@@ -41,7 +41,7 @@
           "value": "*"
         },
         {
-          "key": "Access-Control-Allow-Methods", 
+          "key": "Access-Control-Allow-Methods",
           "value": "GET, POST, PUT, DELETE, OPTIONS"
         },
         {
@@ -70,6 +70,9 @@
       "destination": "/api/upload-enhanced"
     }
   ],
-  "regions": ["syd1", "iad1"],
+  "regions": [
+    "syd1",
+    "iad1"
+  ],
   "framework": "nextjs"
 }
