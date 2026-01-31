@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     const gaps = data?.map(gap => ({
       id: gap.id,
       service: gap.service_type || 'Unknown Service',
-      location: gap.location || gap.communities?.name || 'Unknown Location',
+      location: gap.location || (Array.isArray(gap.communities) ? (gap.communities as any)[0]?.name : (gap.communities as any)?.name) || 'Unknown Location',
       gapType: gap.gap_type || 'capacity',
       severity: gap.severity_score || 0,
       impact: gap.impact_score || 0,
@@ -262,10 +262,11 @@ async function performGapAnalysis(params: {
 }
 
 function analyzeGapsByType(services: any[], needs: any[]): Record<string, any> {
-  const servicesByType = services.reduce((acc: Record<string, any>, service: any) => {
-    acc[service.category] = (acc[service.category] || 0) + 1;
+  const servicesByType = services.reduce((acc: Record<string, number>, service: any) => {
+    const type = service.type || 'other';
+    acc[type] = (acc[type] || 0) + 1;
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, number>);
 
   const needsByType = needs.reduce((acc: Record<string, any>, need: any) => {
     const type = need.need_category || 'other'; // Changed 'need_type' to 'need_category' to match existing data structure
@@ -328,7 +329,7 @@ function analyzeGapsByLocation(services: any[], needs: any[]): Record<string, an
 }
 
 function identifyPriorityGaps(services: any[], needs: any[]): any[] {
-  const priorityGaps = [];
+  const priorityGaps: any[] = [];
 
   // High-urgency needs with no corresponding services
   const highUrgencyNeeds = needs.filter(need => need.urgency_score >= 8);

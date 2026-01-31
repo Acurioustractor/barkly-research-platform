@@ -102,7 +102,8 @@ async function getServiceMapData(communityId?: string | null) {
         limited: services.filter(s => s.status === 'limited').length,
         closed: services.filter(s => s.status === 'closed').length,
         byType: services.reduce((acc: Record<string, number>, service: any) => {
-          acc[service.service_type] = (acc[service.service_type] || 0) + 1;
+          const type = service.type || 'other';
+          acc[type] = (acc[type] || 0) + 1;
           return acc;
         }, {} as Record<string, number>) as Record<string, number>
       }
