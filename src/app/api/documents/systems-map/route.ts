@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         select: { documentId: true },
         distinct: ['documentId']
       });
-      targetDocumentIds = documentsWithSystems.map(d => d.documentId);
+      targetDocumentIds = documentsWithSystems.map((d: { documentId: string }) => d.documentId);
     }
 
     if (targetDocumentIds.length === 0) {
