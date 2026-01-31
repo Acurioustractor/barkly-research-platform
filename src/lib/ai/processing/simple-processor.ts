@@ -86,8 +86,8 @@ export class SimpleProcessor {
         data: {
           documentId,
           theme: theme.name,
-          confidence: theme.confidence,
-          source: 'simple-processor'
+          confidence: theme.confidence
+          // source not in schema
         }
       });
     }
@@ -98,7 +98,8 @@ export class SimpleProcessor {
         data: {
           documentId,
           text: quote.text,
-          context: 'extracted by simple processor'
+          context: 'extracted by simple processor',
+          confidence: quote.confidence
         }
       });
     }
@@ -107,7 +108,7 @@ export class SimpleProcessor {
     await prisma.document.update({
       where: { id: documentId },
       data: {
-        processingStatus: 'completed',
+        status: 'COMPLETED',
         processedAt: new Date()
       }
     });
