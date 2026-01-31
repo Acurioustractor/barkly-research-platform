@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       reviewDate: new Date(review.review_date || review.created_at),
       status: review.status,
       urgency: review.urgency,
-      community: review.communities?.name || 'Unknown'
+      community: Array.isArray(review.communities) ? review.communities[0]?.name : (review.communities as any)?.name || 'Unknown'
     })) || [];
 
     return NextResponse.json({ reviews });
