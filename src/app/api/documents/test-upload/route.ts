@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     // Get files
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
-    
+
     if (!files || files.length === 0) {
       return NextResponse.json(
         { error: 'No files provided' },
@@ -47,9 +47,10 @@ export async function POST(request: NextRequest) {
 
         try {
           const buffer = Buffer.from(await file.arrayBuffer());
-          const pdfParse = (await import('pdf-parse')).default;
+          const pdfModule: any = await import('pdf-parse');
+          const pdfParse = pdfModule.default || pdfModule;
           const pdfData = await pdfParse(buffer);
-          
+
           extractedText = pdfData.text || '';
           pageCount = pdfData.numpages || 1;
           wordCount = extractedText.split(/\s+/).filter(w => w.length > 0).length;
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
 
       } catch (fileError) {
         console.error(`[test-upload] File processing failed:`, fileError);
-        
+
         results.push({
           documentId: '',
           filename: file.name,
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[test-upload] Fatal error:', error);
-    
+
     return NextResponse.json(
       {
         error: 'Test upload failed',

@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
     console.log('[upload] Starting upload process...');
 
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (!isDatabaseAvailable()) {
       console.error('[upload] Database not available');
       return NextResponse.json(
-        { 
+        {
           error: 'Database not available - please check configuration',
           code: 'DATABASE_UNAVAILABLE',
           details: 'DATABASE_URL may not be properly configured'
@@ -30,10 +30,10 @@ export async function POST(request: NextRequest) {
     // Parse form data
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
-    
+
     if (!files || files.length === 0) {
       return NextResponse.json(
-        { 
+        {
           error: 'No files provided',
           code: 'NO_FILES'
         },
@@ -46,10 +46,10 @@ export async function POST(request: NextRequest) {
     // Validate files
     const maxFiles = 10; // Reduced for reliability
     const maxSize = 10 * 1024 * 1024; // 10MB
-    
+
     if (files.length > maxFiles) {
       return NextResponse.json(
-        { 
+        {
           error: `Maximum ${maxFiles} files allowed per batch`,
           code: 'TOO_MANY_FILES'
         },
@@ -61,17 +61,17 @@ export async function POST(request: NextRequest) {
     for (const file of files) {
       if (file.type !== 'application/pdf') {
         return NextResponse.json(
-          { 
+          {
             error: `File ${file.name} is not a PDF`,
             code: 'INVALID_FILE_TYPE'
           },
           { status: 400 }
         );
       }
-      
+
       if (file.size > maxSize) {
         return NextResponse.json(
-          { 
+          {
             error: `File ${file.name} exceeds 10MB limit`,
             code: 'FILE_TOO_LARGE'
           },
@@ -92,11 +92,11 @@ export async function POST(request: NextRequest) {
 
     // Process files one by one for better error handling
     const results = [];
-    
+
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       console.log(`[upload] Processing file ${i + 1}/${files.length}: ${file.name}`);
-      
+
       try {
         // Create document record
         const document = await prisma!.document.create({
@@ -121,12 +121,13 @@ export async function POST(request: NextRequest) {
         let wordCount = 0;
 
         try {
-          const pdfParse = (await import('pdf-parse')).default;
+          const pdfModule: any = await import('pdf-parse');
+          const pdfParse = pdfModule.default || pdfModule;
           const pdfData = await pdfParse(buffer);
           extractedText = pdfData.text || '';
           pageCount = pdfData.numpages || 1;
           wordCount = extractedText.split(/\s+/).filter(w => w.length > 0).length;
-          
+
           console.log(`[upload] Extracted ${wordCount} words from ${pageCount} pages`);
         } catch (pdfError) {
           console.error(`[upload] PDF extraction failed for ${file.name}:`, pdfError);
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
 
         // Create basic chunks
         const chunks = createSimpleChunks(extractedText);
-        
+
         // Store chunks
         if (chunks.length > 0) {
           await prisma!.documentChunk.createMany({
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
 
       } catch (fileError) {
         console.error(`[upload] Failed to process ${file.name}:`, fileError);
-        
+
         results.push({
           documentId: '',
           status: 'FAILED' as const,
@@ -227,7 +228,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[upload] Fatal error:', error);
-    
+
     return NextResponse.json(
       {
         error: 'Upload processing failed',
@@ -246,9 +247,9 @@ function createSimpleChunks(text: string): string[] {
   const chunkSize = 1000;
   const chunks: string[] = [];
   const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  
+
   let currentChunk = '';
-  
+
   for (const sentence of sentences) {
     if (currentChunk.length + sentence.length > chunkSize && currentChunk.length > 0) {
       chunks.push(currentChunk.trim());
@@ -257,11 +258,11 @@ function createSimpleChunks(text: string): string[] {
       currentChunk += (currentChunk ? '. ' : '') + sentence;
     }
   }
-  
+
   if (currentChunk.trim()) {
     chunks.push(currentChunk.trim());
   }
-  
+
   return chunks.filter(chunk => chunk.length > 50);
 }
 
