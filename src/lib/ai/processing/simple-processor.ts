@@ -21,14 +21,14 @@ export class SimpleProcessor {
     // Get content
     const docs = await prisma.document.findMany({
       where: { id: documentId },
-      select: { content: true }
+      select: { fullText: true }
     });
 
-    if (docs.length === 0 || !docs[0].content) {
+    if (docs.length === 0 || !docs[0].fullText) {
       throw new Error('Document not found or empty');
     }
 
-    const text = docs[0].content;
+    const text = docs[0].fullText;
 
     // Simple keyword extraction
     const keywords = ['health', 'education', 'youth', 'community', 'housing', 'employment', 'justice', 'infrastructure'];
