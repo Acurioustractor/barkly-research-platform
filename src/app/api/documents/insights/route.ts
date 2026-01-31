@@ -107,12 +107,12 @@ export async function GET(request: NextRequest) {
         totalChunks: totalChunks,
         successRate: totalDocs > 0 ? (completedDocs / totalDocs * 100).toFixed(1) : 0
       },
-      themes: themes.map(t => ({
+      themes: themes.map((t: any) => ({
         name: t.theme,
         count: t._count.theme,
         avgConfidence: t._avg.confidence || 0
       })),
-      insights: insights.map(i => ({
+      insights: insights.map((i: any) => ({
         id: i.id,
         text: i.insight,
         type: i.type,
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
         documentId: i.document.id,
         documentName: i.document.originalName
       })),
-      quotes: quotes.map(q => ({
+      quotes: quotes.map((q: any) => ({
         id: q.id,
         text: q.text,
         context: q.context,
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
         documentId: q.document.id,
         documentName: q.document.originalName
       })),
-      keywords: keywords.map(k => ({
+      keywords: keywords.map((k: any) => ({
         term: k.keyword,
         category: k.category,
         frequency: k._sum.frequency || 0,
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Insights API error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch insights',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
