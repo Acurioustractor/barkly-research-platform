@@ -55,15 +55,15 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Claude processing error:', error);
-    
+
     // Mark document as failed
     if (request.body) {
       try {
         const { documentId } = await request.json();
         await DatabaseSaver.markDocumentProcessing(documentId);
         // Actually mark as failed in the database
-        if (global.prisma) {
-          await global.prisma.$queryRaw`
+        if ((global as any).prisma) {
+          await (global as any).prisma.$queryRaw`
             UPDATE documents 
             SET processing_status = 'failed'
             WHERE id = ${documentId}::uuid
