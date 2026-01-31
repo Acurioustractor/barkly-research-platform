@@ -595,7 +595,7 @@ function analyzeImpactTrends(evidence: any[]): any {
     return groups;
   }, {} as Record<string, any>);
 
-  const trends = {};
+  const trends: Record<string, any> = {};
 
   Object.entries(metricGroups).forEach(([metric, items]: [string, any]) => {
     if (items.length < 2) {
