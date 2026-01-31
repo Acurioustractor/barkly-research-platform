@@ -89,10 +89,10 @@ export async function GET(request: NextRequest) {
     // Enhance documents with category data
     const enhancedDocuments = documents.map((doc: any) => {
       const categories = categoryLookup[doc.id] || {};
-      
+
       // Generate document summary
       const summary = generateDocumentSummary(doc);
-      
+
       return {
         id: doc.id,
         title: doc.title,
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
         },
         categories: categories,
         top_categories: Object.entries(categories)
-          .sort(([,a], [,b]) => (b as number) - (a as number))
+          .sort(([, a], [, b]) => (b as number) - (a as number))
           .slice(0, 3)
           .map(([cat, count]) => ({ category: cat, count })),
         ai_analysis: doc.ai_analysis,
@@ -124,11 +124,11 @@ export async function GET(request: NextRequest) {
     // Overall statistics
     const totalStats = {
       total_documents: documents.length,
-      processed_documents: documents.filter(d => d.processing_status === 'completed').length,
-      total_themes: documents.reduce((sum, d) => sum + parseInt(d.themes_count || 0), 0),
-      total_quotes: documents.reduce((sum, d) => sum + parseInt(d.quotes_count || 0), 0),
-      average_confidence: documents.length > 0 ? 
-        documents.reduce((sum, d) => sum + (d.avg_confidence || 0), 0) / documents.length : 0
+      processed_documents: documents.filter((d: any) => d.processing_status === 'completed').length,
+      total_themes: documents.reduce((sum: number, d: any) => sum + parseInt(d.themes_count || 0), 0),
+      total_quotes: documents.reduce((sum: number, d: any) => sum + parseInt(d.quotes_count || 0), 0),
+      average_confidence: documents.length > 0 ?
+        documents.reduce((sum: number, d: any) => sum + (d.avg_confidence || 0), 0) / documents.length : 0
     };
 
     return NextResponse.json({
@@ -155,7 +155,7 @@ function generateDocumentSummary(doc: any): string {
   if (doc.processing_status === 'processing') {
     return `Document is currently being processed for community intelligence extraction.`;
   }
-  
+
   if (doc.processing_status === 'failed') {
     return `Processing failed for this document. Manual review may be required.`;
   }
@@ -164,18 +164,18 @@ function generateDocumentSummary(doc: any): string {
     return `Document processed but no significant themes or quotes extracted. May contain limited relevant content.`;
   }
 
-  const sizeDesc = contentLength > 500000 ? 'large' : 
-                   contentLength > 100000 ? 'substantial' : 
-                   contentLength > 10000 ? 'medium-sized' : 'small';
+  const sizeDesc = contentLength > 500000 ? 'large' :
+    contentLength > 100000 ? 'substantial' :
+      contentLength > 10000 ? 'medium-sized' : 'small';
 
   const qualityDesc = confidence >= 0.8 ? 'high-quality' :
-                      confidence >= 0.6 ? 'good-quality' :
-                      confidence >= 0.4 ? 'moderate-quality' : 'low-quality';
+    confidence >= 0.6 ? 'good-quality' :
+      confidence >= 0.4 ? 'moderate-quality' : 'low-quality';
 
   return `This ${sizeDesc} document has been processed with ${qualityDesc} extraction results. ` +
-         `Found ${themesCount} community themes/services and ${quotesCount} quotes. ` +
-         `Average confidence: ${Math.round(confidence * 100)}%. ` +
-         `Contains valuable community intelligence data for the Barkly region.`;
+    `Found ${themesCount} community themes/services and ${quotesCount} quotes. ` +
+    `Average confidence: ${Math.round(confidence * 100)}%. ` +
+    `Contains valuable community intelligence data for the Barkly region.`;
 }
 
 function calculateDocumentQuality(doc: any, categories: any): number {
@@ -185,18 +185,18 @@ function calculateDocumentQuality(doc: any, categories: any): number {
   const categoryCount = Object.keys(categories).length;
 
   let score = 0;
-  
+
   // Theme count (30 points)
   score += Math.min(themesCount / 20 * 30, 30);
-  
+
   // Confidence (40 points)
   score += confidence * 40;
-  
+
   // High confidence ratio (20 points)
   if (themesCount > 0) {
     score += (highConfidence / themesCount) * 20;
   }
-  
+
   // Category diversity (10 points)
   score += Math.min(categoryCount / 5 * 10, 10);
 

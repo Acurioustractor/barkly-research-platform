@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const documentId = searchParams.get('documentId');
-    
+
     if (!documentId) {
       return NextResponse.json({
         error: 'Document ID is required'
@@ -134,28 +134,28 @@ export async function GET(request: NextRequest) {
  */
 function analyzeExtractionQuality(themes: any[], document: any) {
   const totalThemes = themes.length;
-  const avgConfidence = themes.reduce((sum, t) => sum + (t.confidence_score || 0), 0) / Math.max(totalThemes, 1);
-  
+  const avgConfidence = themes.reduce((sum: number, t: any) => sum + (t.confidence_score || 0), 0) / Math.max(totalThemes, 1);
+
   // Check for expected Barkly initiatives
   const expectedKeywords = [
-    'youth centre', 'business hub', 'sports program', 'student boarding', 
+    'youth centre', 'business hub', 'sports program', 'student boarding',
     'crisis youth', 'training', 'education', 'health', 'housing'
   ];
-  
-  const foundKeywords = expectedKeywords.filter(keyword => 
-    themes.some(theme => 
+
+  const foundKeywords = expectedKeywords.filter(keyword =>
+    themes.some((theme: any) =>
       theme.theme_name.toLowerCase().includes(keyword.toLowerCase()) ||
       theme.description.toLowerCase().includes(keyword.toLowerCase())
     )
   );
 
   // Check for overly generic themes
-  const genericThemes = themes.filter(theme => {
+  const genericThemes = themes.filter((theme: any) => {
     const name = theme.theme_name.toLowerCase();
-    return name.length < 15 || 
-           name.includes('general') || 
-           name.includes('various') ||
-           name.includes('multiple');
+    return name.length < 15 ||
+      name.includes('general') ||
+      name.includes('various') ||
+      name.includes('multiple');
   });
 
   return {
@@ -176,11 +176,11 @@ function analyzeExtractionQuality(themes: any[], document: any) {
  */
 function findDuplicateServices(themes: any[]) {
   const duplicates = [];
-  
+
   for (let i = 0; i < themes.length; i++) {
     for (let j = i + 1; j < themes.length; j++) {
       const similarity = calculateSimilarity(themes[i].theme_name, themes[j].theme_name);
-      
+
       if (similarity > 0.7) {
         duplicates.push({
           theme1: {
@@ -194,13 +194,13 @@ function findDuplicateServices(themes: any[]) {
             confidence: themes[j].confidence_score
           },
           similarity: Math.round(similarity * 100),
-          recommended_action: themes[i].confidence_score >= themes[j].confidence_score ? 
+          recommended_action: themes[i].confidence_score >= themes[j].confidence_score ?
             'Keep theme1, review theme2' : 'Keep theme2, review theme1'
         });
       }
     }
   }
-  
+
   return duplicates;
 }
 
@@ -210,9 +210,9 @@ function findDuplicateServices(themes: any[]) {
 function calculateSimilarity(str1: string, str2: string): number {
   const longer = str1.length > str2.length ? str1 : str2;
   const shorter = str1.length > str2.length ? str2 : str1;
-  
+
   if (longer.length === 0) return 1.0;
-  
+
   const editDistance = levenshteinDistance(longer.toLowerCase(), shorter.toLowerCase());
   return (longer.length - editDistance) / longer.length;
 }
@@ -221,7 +221,7 @@ function calculateSimilarity(str1: string, str2: string): number {
  * Calculate Levenshtein distance
  */
 function levenshteinDistance(str1: string, str2: string): number {
-  const matrix = Array(str2.length + 1).fill(null).map(() => 
+  const matrix = Array(str2.length + 1).fill(null).map(() =>
     Array(str1.length + 1).fill(null)
   );
 
@@ -246,33 +246,33 @@ function levenshteinDistance(str1: string, str2: string): number {
  * Calculate overall quality score
  */
 function calculateQualityScore(
-  totalThemes: number, 
-  avgConfidence: number, 
-  keywordsFound: number, 
+  totalThemes: number,
+  avgConfidence: number,
+  keywordsFound: number,
   genericThemes: number
 ): number {
   let score = 0;
-  
+
   // Theme count (max 25 points)
   score += Math.min(totalThemes / 30 * 25, 25);
-  
+
   // Average confidence (max 30 points)
   score += avgConfidence * 30;
-  
+
   // Keyword coverage (max 25 points)
   score += (keywordsFound / 9) * 25;
-  
+
   // Specificity bonus (max 20 points)
   const specificityRatio = (totalThemes - genericThemes) / Math.max(totalThemes, 1);
   score += specificityRatio * 20;
-  
+
   return Math.min(Math.round(score), 100);
 }
 
 export async function POST(request: NextRequest) {
   try {
     const { action, themeId, documentId } = await request.json();
-    
+
     if (!prisma) {
       return NextResponse.json({
         error: 'Database not available'
@@ -287,7 +287,7 @@ export async function POST(request: NextRequest) {
           WHERE id = ${themeId}::uuid
         `;
         break;
-        
+
       case 'mark_duplicate':
         await prisma.$queryRaw`
           UPDATE document_themes 
@@ -296,22 +296,22 @@ export async function POST(request: NextRequest) {
           WHERE id = ${themeId}::uuid
         `;
         break;
-        
+
       case 'mark_invalid':
         await prisma.$queryRaw`
           DELETE FROM document_themes 
           WHERE id = ${themeId}::uuid
         `;
         break;
-        
+
       default:
         return NextResponse.json({
           error: 'Invalid action'
         }, { status: 400 });
     }
-    
+
     return NextResponse.json({ success: true });
-    
+
   } catch (error) {
     console.error('Verification action error:', error);
     return NextResponse.json({

@@ -29,16 +29,16 @@ export async function GET(request: NextRequest) {
         return acc;
       }, {}),
       totalProcessingResults: {
-        themes: documents.reduce((sum, doc) => sum + parseInt(doc.themes_count || '0'), 0),
-        quotes: documents.reduce((sum, doc) => sum + parseInt(doc.quotes_count || '0'), 0),
-        insights: documents.reduce((sum, doc) => sum + parseInt(doc.insights_count || '0'), 0)
+        themes: documents.reduce((sum: number, doc: any) => sum + parseInt(doc.themes_count || '0'), 0),
+        quotes: documents.reduce((sum: number, doc: any) => sum + parseInt(doc.quotes_count || '0'), 0),
+        insights: documents.reduce((sum: number, doc: any) => sum + parseInt(doc.insights_count || '0'), 0)
       }
     };
 
     return NextResponse.json({
       success: true,
       summary,
-      documents: documents.map(doc => ({
+      documents: documents.map((doc: any) => ({
         id: doc.id,
         title: doc.title,
         fileType: doc.file_type,
