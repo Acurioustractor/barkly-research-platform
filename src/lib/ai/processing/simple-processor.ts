@@ -14,14 +14,112 @@ export interface SimpleResult {
 }
 
 export class SimpleProcessor {
-  
+
+  static async processDocumentSimple(documentId: string) {
+    if (!prisma) throw new Error('Database not available');
+
+    // Get content
+    const docs = await prisma.document.findMany({
+      where: { id: documentId },
+      select: { content: true }
+    });
+
+    if (docs.length === 0 || !docs[0].content) {
+      throw new Error('Document not found or empty');
+    }
+
+    const text = docs[0].content;
+
+    // Simple keyword extraction
+    const keywords = ['health', 'education', 'youth', 'community', 'housing', 'employment', 'justice', 'infrastructure'];
+    const themes = [];
+
+    for (const keyword of keywords) {
+      const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+      if (regex.test(text)) {
+        themes.push({
+          name: keyword.charAt(0).toUpperCase() + keyword.slice(1),
+          confidence: 0.6,
+          description: `Detected mention of ${keyword}`
+        });
+      }
+    }
+
+    // Simple quote extraction (sentences with quotes)
+    const quoteRegex = /"([^"]{10,200})"/g;
+    const quotes = [];
+    let match;
+
+    while ((match = quoteRegex.exec(text)) !== null) {
+      if (quotes.length < 10) {
+        quotes.push({
+          text: match[1],
+          speaker: 'Unknown',
+          confidence: 0.7
+        });
+      }
+    }
+
+    // Simple insight generation
+    const insights = [
+      {
+        insight: `Document contains ${themes.length} key themes and ${quotes.length} direct quotes.`,
+        type: 'general_summary',
+        confidence: 0.8
+      }
+    ];
+
+    return {
+      themes,
+      quotes,
+      insights,
+      services: [] // Added for compatibility
+    };
+  }
+
+  static async saveSimpleResults(documentId: string, results: any) {
+    if (!prisma) return;
+
+    // Save themes
+    for (const theme of results.themes) {
+      await prisma.documentTheme.create({
+        data: {
+          documentId,
+          theme: theme.name,
+          confidence: theme.confidence,
+          source: 'simple-processor'
+        }
+      });
+    }
+
+    // Save quotes
+    for (const quote of results.quotes) {
+      await prisma.documentQuote.create({
+        data: {
+          documentId,
+          text: quote.text,
+          context: 'extracted by simple processor'
+        }
+      });
+    }
+
+    // Update document status
+    await prisma.document.update({
+      where: { id: documentId },
+      data: {
+        processingStatus: 'completed',
+        processedAt: new Date()
+      }
+    });
+  }
+
   async processFile(file: File): Promise<SimpleResult> {
     try {
       // 1. Basic validation
       if (!file || file.type !== 'application/pdf') {
         return { success: false, error: 'Only PDF files allowed' };
       }
-      
+
       if (file.size > 50 * 1024 * 1024) {
         return { success: false, error: 'File too large (max 50MB)' };
       }
@@ -29,7 +127,7 @@ export class SimpleProcessor {
       // 2. Extract text - keep it simple
       const buffer = Buffer.from(await file.arrayBuffer());
       const text = await this.extractText(buffer);
-      
+
       if (!text || text.length < 50) {
         return { success: false, error: 'Could not extract text from PDF' };
       }
@@ -65,9 +163,9 @@ export class SimpleProcessor {
 
     } catch (error) {
       console.error('Processing failed:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
@@ -85,7 +183,7 @@ export class SimpleProcessor {
   private simpleChunk(text: string): string[] {
     // Split by paragraphs, keep it simple
     const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 50);
-    
+
     // If paragraphs are too long, split by sentences
     const chunks: string[] = [];
     for (const para of paragraphs) {
@@ -94,7 +192,7 @@ export class SimpleProcessor {
       } else {
         const sentences = para.split(/[.!?]+/).filter(s => s.trim().length > 20);
         let currentChunk = '';
-        
+
         for (const sentence of sentences) {
           if (currentChunk.length + sentence.length > 1000 && currentChunk.length > 0) {
             chunks.push(currentChunk.trim());
@@ -103,19 +201,19 @@ export class SimpleProcessor {
             currentChunk += (currentChunk ? '. ' : '') + sentence;
           }
         }
-        
+
         if (currentChunk.trim()) {
           chunks.push(currentChunk.trim());
         }
       }
     }
-    
+
     return chunks.filter(chunk => chunk.length > 50);
   }
 
   private async storeChunks(documentId: string, chunks: string[]): Promise<void> {
     if (!prisma) return;
-    
+
     const chunkData = chunks.map((text, index) => ({
       documentId,
       chunkIndex: index,
