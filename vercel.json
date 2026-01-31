@@ -8,26 +8,21 @@
   },
   "functions": {
     "src/app/api/**/*.ts": {
-      "runtime": "nodejs@18",
       "maxDuration": 60
     },
     "src/app/api/documents/route.ts": {
-      "runtime": "nodejs@18",
       "maxDuration": 300,
       "memory": 1024
     },
     "src/app/api/documents/chunked-upload/**/*.ts": {
-      "runtime": "nodejs@18",
       "maxDuration": 60,
       "memory": 512
     },
     "src/app/api/documents/stream-process/**/*.ts": {
-      "runtime": "nodejs@18",
       "maxDuration": 60,
       "memory": 1024
     },
     "src/app/api/documents/[id]/thumbnail/route.ts": {
-      "runtime": "nodejs@18",
       "maxDuration": 30,
       "memory": 256
     }
