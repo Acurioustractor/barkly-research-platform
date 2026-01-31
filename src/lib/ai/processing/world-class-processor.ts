@@ -4,7 +4,8 @@
  */
 
 import { prisma } from '@/lib/database-safe';
-import { ProcessingStatus } from '@prisma/client';
+// Define ProcessingStatus locally as Prisma enum exports are problematic
+export type ProcessingStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'ARCHIVED';
 
 export interface ProcessingOptions {
   source?: string;
@@ -206,17 +207,18 @@ export class WorldClassProcessor {
   }> {
     try {
       // Use dynamic import to avoid build issues
-      const pdfParse = (await import('pdf-parse')).default;
-      const data = await pdfParse(buffer);
+      const pdfModule: any = await import('pdf-parse');
+      const pdfParse = pdfModule.default || pdfModule;
+      const pdfData = await pdfParse(buffer);
 
-      if (!data.text || data.text.length < 50) {
+      if (!pdfData.text || pdfData.text.length < 50) {
         throw new Error('Insufficient text extracted from PDF');
       }
 
       return {
-        text: data.text,
-        pageCount: data.numpages || 1,
-        wordCount: data.text.split(/\s+/).filter(w => w.length > 0).length
+        text: pdfData.text,
+        pageCount: pdfData.numpages || 1,
+        wordCount: pdfData.text.split(/\s+/).filter((w: string) => w.length > 0).length
       };
     } catch (error) {
       throw new Error(`PDF extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);

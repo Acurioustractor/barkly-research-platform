@@ -6,14 +6,15 @@
 import { prisma } from '@/lib/database-safe';
 import { DocumentChunker, type DocumentChunk } from './document-chunker';
 import { ImprovedPDFExtractor, type ExtractionResult } from './pdf-extractor-improved';
-import { 
-  analyzeDocumentChunk, 
+import {
+  analyzeDocumentChunk,
   generateDocumentSummary,
-  type AIAnalysisResult 
+  type AIAnalysisResult
 } from '@/lib/ai-service';
 import { EmbeddingsService } from '@/lib/ai/embeddings-service';
 import { extractSystemsFromDocument, storeSystemsData } from '@/lib/ai/processing/systems-extraction-service';
-import type { ProcessingStatus } from '@prisma/client';
+// Define ProcessingStatus locally as Prisma enum exports are problematic
+export type ProcessingStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'ARCHIVED';
 
 export interface AIProcessingOptions {
   source?: string;
@@ -70,7 +71,7 @@ export class AIEnhancedDocumentProcessor {
       bufferSize: buffer.length,
       options
     });
-    
+
     let documentId: string | undefined;
 
     try {
@@ -98,12 +99,12 @@ export class AIEnhancedDocumentProcessor {
       let text: string;
       let metadata: { pageCount: number; wordCount: number };
       let extractionResult: ExtractionResult;
-      
+
       try {
         const extractor = new ImprovedPDFExtractor(buffer);
         extractionResult = await extractor.extractText();
         const detailedMetadata = await extractor.getDetailedMetadata();
-        
+
         // Handle extraction results
         if (!extractionResult.text || extractionResult.text.length < 50) {
           if (detailedMetadata.advanced.isScanned) {
@@ -111,13 +112,13 @@ export class AIEnhancedDocumentProcessor {
           }
           throw new Error(`Insufficient text extracted. Method: ${extractionResult.method}, Warnings: ${extractionResult.warnings.join(', ')}`);
         }
-        
+
         text = extractionResult.text;
         metadata = {
           pageCount: extractionResult.pageCount,
           wordCount: text.split(/\s+/).filter(w => w.length > 0).length
         };
-        
+
         console.log('Text extraction result:', {
           method: extractionResult.method,
           confidence: extractionResult.confidence,
@@ -127,7 +128,7 @@ export class AIEnhancedDocumentProcessor {
           warnings: extractionResult.warnings,
           isScanned: detailedMetadata.advanced.isScanned
         });
-        
+
         // Log warning for low confidence
         if (extractionResult.confidence < 0.3) {
           console.warn('Low confidence extraction:', extractionResult.confidence);
@@ -140,11 +141,11 @@ export class AIEnhancedDocumentProcessor {
       // Create chunks with multiple strategies for comprehensive analysis
       const standardChunks = this.chunker.chunkDocument(text);
       const slidingChunks = this.chunker.createSlidingWindowChunks(text, 400, 200); // 50% overlap
-      
+
       // Combine chunks for maximum coverage
       const allChunks = [...standardChunks];
       const chunkTexts = new Set(standardChunks.map(c => c.text));
-      
+
       // Add unique sliding chunks
       for (const chunk of slidingChunks) {
         if (!chunkTexts.has(chunk.text)) {
@@ -152,10 +153,10 @@ export class AIEnhancedDocumentProcessor {
           chunkTexts.add(chunk.text);
         }
       }
-      
+
       // Sort by position
       const chunks = allChunks.sort((a, b) => a.startChar - b.startChar);
-      
+
       console.log('Chunking result:', {
         standardChunksCount: standardChunks.length,
         slidingChunksCount: slidingChunks.length,
@@ -170,7 +171,7 @@ export class AIEnhancedDocumentProcessor {
       // Analyze chunks with AI
       const analysisResults: AIAnalysisResult[] = [];
       const useAI = options.useAI !== false && (process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY);
-      
+
       console.log('AI Processing Debug:', {
         useAI,
         optionsUseAI: options.useAI,
@@ -182,10 +183,10 @@ export class AIEnhancedDocumentProcessor {
       if (useAI) {
         // Process chunks in parallel (with rate limiting)
         const chunkBatches = this.batchArray(chunks, 2); // Process 2 at a time for better quality
-        
+
         for (const batch of chunkBatches) {
           const batchResults = await Promise.all(
-            batch.map(chunk => 
+            batch.map(chunk =>
               analyzeDocumentChunk(chunk.text, originalName)
                 .catch(err => {
                   console.error('AI analysis failed for chunk:', err);
@@ -193,7 +194,7 @@ export class AIEnhancedDocumentProcessor {
                 })
             )
           );
-          
+
           analysisResults.push(...batchResults.filter(r => r !== null) as AIAnalysisResult[]);
         }
       }
@@ -219,9 +220,9 @@ export class AIEnhancedDocumentProcessor {
             documentId,
             storedChunks
           );
-          
+
           await storeSystemsData(documentId, entities, relationships);
-          
+
           console.log('Systems extraction complete:', {
             entitiesFound: entities.size,
             relationshipsFound: relationships.length
@@ -233,7 +234,7 @@ export class AIEnhancedDocumentProcessor {
       }
 
       // Aggregate results
-      const aggregatedResults = useAI 
+      const aggregatedResults = useAI
         ? this.aggregateAnalysisResults(analysisResults)
         : { themes: [], quotes: [], insights: [], keywords: [], summaries: [] };
 
@@ -416,7 +417,7 @@ export class AIEnhancedDocumentProcessor {
    */
   private async storeChunks(documentId: string, chunks: DocumentChunk[]): Promise<Array<{ id: string; text: string }>> {
     if (!prisma) return [];
-    
+
     const chunkData = chunks.map((chunk, idx) => ({
       documentId,
       chunkIndex: chunk.index ?? idx,
@@ -447,11 +448,11 @@ export class AIEnhancedDocumentProcessor {
    * Store themes with evidence
    */
   private async storeThemesWithEvidence(
-    documentId: string, 
+    documentId: string,
     themes: Array<{ name: string; confidence: number; evidence: string }>
   ): Promise<void> {
     if (!prisma) return;
-    
+
     const themeData = themes.map(theme => ({
       documentId,
       theme: theme.name,
@@ -472,7 +473,7 @@ export class AIEnhancedDocumentProcessor {
     quotes: Array<{ text: string; context: string; significance: string; confidence: number }>
   ): Promise<void> {
     if (!prisma) return;
-    
+
     const quoteData = quotes.map((quote) => ({
       documentId,
       text: quote.text,
@@ -496,7 +497,7 @@ export class AIEnhancedDocumentProcessor {
     insights: Array<{ text: string; category: string; importance: number }>
   ): Promise<void> {
     if (!prisma) return;
-    
+
     const insightData = insights.map(insight => ({
       documentId,
       insight: insight.text,
@@ -518,7 +519,7 @@ export class AIEnhancedDocumentProcessor {
     keywords: Array<{ term: string; frequency: number; category: string }>
   ): Promise<void> {
     if (!prisma) return;
-    
+
     const keywordData = keywords.map(keyword => ({
       documentId,
       keyword: keyword.term,

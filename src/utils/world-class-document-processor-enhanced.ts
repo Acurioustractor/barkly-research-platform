@@ -15,16 +15,17 @@ import { ImprovedPDFExtractor } from './pdf-extractor-improved';
 //   type CrossChunkAnalysisResult
 // } from '@/lib/ai/world-class-ai-service';
 import { EmbeddingsService } from '@/lib/ai/embeddings-service';
-import type { ProcessingStatus } from '@prisma/client';
-import { 
-  ErrorHandler, 
-  ErrorType, 
+// Define ProcessingStatus locally as Prisma enum exports are problematic
+export type ProcessingStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'ARCHIVED';
+import {
+  ErrorHandler,
+  ErrorType,
   DocumentProcessingError,
   RetryHandler,
-  CircuitBreaker 
+  CircuitBreaker
 } from './error-handler';
-import { 
-  GracefulDegradation, 
+import {
+  GracefulDegradation,
   FallbackStrategies,
   ProgressiveEnhancement,
   // type ProcessingCapabilities 
@@ -111,7 +112,7 @@ export class EnhancedWorldClassDocumentProcessor {
       bufferSize: buffer.length,
       options
     });
-    
+
     const degradation = new GracefulDegradation({
       allowPartialSuccess: options.allowPartialSuccess ?? true,
       minimumSuccessRate: 0.5,
@@ -131,7 +132,7 @@ export class EnhancedWorldClassDocumentProcessor {
       const dbResult = await this.initializeDatabase(
         buffer, filename, originalName, options, degradation
       );
-      
+
       if (!dbResult.success) {
         throw new DocumentProcessingError({
           type: ErrorType.DATABASE,
@@ -193,7 +194,7 @@ export class EnhancedWorldClassDocumentProcessor {
       );
 
       const finalStatus = degradation.shouldContinue() ? 'COMPLETED' : 'FAILED';
-      
+
       await prisma?.document.update({
         where: { id: documentId },
         data: {
@@ -229,7 +230,7 @@ export class EnhancedWorldClassDocumentProcessor {
 
     } catch (error) {
       console.error('Document processing error:', error);
-      
+
       // Update document status to failed
       if (documentId && prisma) {
         await prisma.document.update({
@@ -242,7 +243,7 @@ export class EnhancedWorldClassDocumentProcessor {
       }
 
       const partialResult = degradation.createPartialResult<WorldClassProcessingResult>();
-      
+
       if (partialResult.partial && options.allowPartialSuccess) {
         return {
           documentId: documentId || '',
@@ -325,7 +326,7 @@ export class EnhancedWorldClassDocumentProcessor {
       );
 
       const detailedMetadata = await extractor.getDetailedMetadata();
-      
+
       if (!extractionResult.text || extractionResult.text.length < 50) {
         if (detailedMetadata.advanced.isScanned) {
           throw new Error('Document appears to be scanned. OCR required.');
@@ -348,7 +349,7 @@ export class EnhancedWorldClassDocumentProcessor {
         ErrorHandler.createContext(undefined, undefined, 'pdf-extraction')
       );
       degradation.recordFailure('pdfExtraction', pdfError);
-      
+
       // Try basic extraction as fallback
       const fallbackText = this.basicTextExtraction(buffer);
       if (fallbackText.length > 50) {
@@ -441,7 +442,7 @@ export class EnhancedWorldClassDocumentProcessor {
     degradation: GracefulDegradation
   ): Promise<any> {
     const capabilities = degradation.getCapabilities() as any;
-    
+
     // Try AI analysis first
     if (capabilities.aiAnalysis && options.multiPassAnalysis !== false) {
       try {
@@ -460,7 +461,7 @@ export class EnhancedWorldClassDocumentProcessor {
     // Fallback to basic analysis
     const combinedText = chunks.map(c => c.text).join(' ');
     const basicAnalysis = await FallbackStrategies.basicAnalysis(combinedText);
-    
+
     return {
       themes: basicAnalysis.themes,
       keywords: basicAnalysis.keywords,
@@ -521,7 +522,7 @@ export class EnhancedWorldClassDocumentProcessor {
   private async storeChunks(documentId: string, chunks: DocumentChunk[]): Promise<any[]> {
     // Implementation from original file
     if (!prisma) return [];
-    
+
     const chunkRecords = await Promise.all(
       chunks.map((chunk, index) =>
         prisma!.documentChunk.create({
@@ -574,7 +575,7 @@ export class EnhancedWorldClassDocumentProcessor {
   private async storeThemes(documentId: string, themes: any[]): Promise<void> {
     // Implementation from original file
     if (!prisma || themes.length === 0) return;
-    
+
     await Promise.all(
       themes.map(theme =>
         prisma!.documentTheme.create({
@@ -592,7 +593,7 @@ export class EnhancedWorldClassDocumentProcessor {
   private async storeQuotes(documentId: string, quotes: any[]): Promise<void> {
     // Implementation from original file
     if (!prisma || quotes.length === 0) return;
-    
+
     await Promise.all(
       quotes.map(quote =>
         prisma!.documentQuote.create({
@@ -611,7 +612,7 @@ export class EnhancedWorldClassDocumentProcessor {
   private async storeInsights(documentId: string, insights: any[]): Promise<void> {
     // Implementation from original file
     if (!prisma || insights.length === 0) return;
-    
+
     await Promise.all(
       insights.map(insight =>
         prisma!.documentInsight.create({
@@ -630,7 +631,7 @@ export class EnhancedWorldClassDocumentProcessor {
   private async storeKeywords(documentId: string, keywords: any[]): Promise<void> {
     // Implementation from original file
     if (!prisma || keywords.length === 0) return;
-    
+
     await Promise.all(
       keywords.map(keyword =>
         prisma!.documentKeyword.create({

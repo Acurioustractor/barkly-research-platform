@@ -7,7 +7,8 @@ import { prisma } from '@/lib/database-safe';
 import { DocumentChunker, type DocumentChunk } from './document-chunker';
 import { DocumentProcessor } from './document-processor';
 import { ImprovedPDFExtractor } from './pdf-extractor-improved';
-import type { ProcessingStatus } from '@prisma/client';
+// Define ProcessingStatus locally as Prisma enum exports are problematic
+export type ProcessingStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'ARCHIVED';
 
 export interface ProcessingOptions {
   source?: string;
@@ -78,7 +79,7 @@ export class EnhancedDocumentProcessor {
       const extractor = new ImprovedPDFExtractor(buffer);
       const extractionResult = await extractor.extractText();
       const detailedMetadata = await extractor.getDetailedMetadata();
-      
+
       // Handle extraction failures
       if (!extractionResult.text || extractionResult.text.length < 50) {
         if (detailedMetadata.advanced.isScanned) {
@@ -86,7 +87,7 @@ export class EnhancedDocumentProcessor {
         }
         throw new Error(`Insufficient text extracted. Method: ${extractionResult.method}, Warnings: ${extractionResult.warnings.join(', ')}`);
       }
-      
+
       // Log extraction details
       console.log('PDF extraction details:', {
         method: extractionResult.method,
@@ -94,10 +95,10 @@ export class EnhancedDocumentProcessor {
         warnings: extractionResult.warnings,
         isScanned: detailedMetadata.advanced.isScanned
       });
-      
+
       // Fall back to basic processor for analysis (themes, quotes, etc)
       const extractedContent = await DocumentProcessor.extractTextFromPDF(buffer, filename);
-      
+
       // Use improved extracted text if better
       if (extractionResult.text.length > extractedContent.text.length) {
         extractedContent.text = extractionResult.text;
@@ -195,7 +196,7 @@ export class EnhancedDocumentProcessor {
    */
   private async storeChunks(documentId: string, chunks: DocumentChunk[]): Promise<void> {
     if (!prisma) return;
-    
+
     const chunkData = chunks.map((chunk, idx) => ({
       documentId,
       chunkIndex: chunk.index ?? idx,
@@ -218,7 +219,7 @@ export class EnhancedDocumentProcessor {
    */
   private async storeThemes(documentId: string, themes: string[]): Promise<void> {
     if (!prisma) return;
-    
+
     const themeData = themes.map(theme => ({
       documentId,
       theme,
@@ -235,7 +236,7 @@ export class EnhancedDocumentProcessor {
    */
   private async storeQuotes(documentId: string, quotes: any[]): Promise<void> {
     if (!prisma) return;
-    
+
     const quoteData = quotes.map(quote => ({
       documentId,
       text: quote.text,
@@ -256,7 +257,7 @@ export class EnhancedDocumentProcessor {
    */
   private async storeInsights(documentId: string, insights: string[]): Promise<void> {
     if (!prisma) return;
-    
+
     const insightData = insights.map(insight => ({
       documentId,
       insight,
@@ -274,7 +275,7 @@ export class EnhancedDocumentProcessor {
    */
   private async storeKeywords(documentId: string, keywords: string[]): Promise<void> {
     if (!prisma) return;
-    
+
     const keywordData = keywords.map((keyword, index) => ({
       documentId,
       keyword,
@@ -293,7 +294,7 @@ export class EnhancedDocumentProcessor {
    */
   private categorizeQuote(text: string): string {
     const lowerText = text.toLowerCase();
-    
+
     if (lowerText.includes('youth') || lowerText.includes('young') || lowerText.includes('student')) {
       return 'youth_voice';
     } else if (lowerText.includes('challenge') || lowerText.includes('problem') || lowerText.includes('difficult')) {
@@ -301,7 +302,7 @@ export class EnhancedDocumentProcessor {
     } else if (lowerText.includes('success') || lowerText.includes('achievement') || lowerText.includes('proud')) {
       return 'success_story';
     }
-    
+
     return 'general';
   }
 
@@ -310,7 +311,7 @@ export class EnhancedDocumentProcessor {
    */
   private categorizeInsight(insight: string): string {
     const lowerInsight = insight.toLowerCase();
-    
+
     if (lowerInsight.includes('gap') || lowerInsight.includes('need') || lowerInsight.includes('lack')) {
       return 'gap';
     } else if (lowerInsight.includes('pattern') || lowerInsight.includes('trend')) {
@@ -320,7 +321,7 @@ export class EnhancedDocumentProcessor {
     } else if (lowerInsight.includes('challenge') || lowerInsight.includes('barrier')) {
       return 'challenge';
     }
-    
+
     return 'observation';
   }
 
@@ -331,7 +332,7 @@ export class EnhancedDocumentProcessor {
     const communityTerms = ['youth', 'community', 'culture', 'traditional', 'elder', 'family'];
     const technicalTerms = ['program', 'service', 'intervention', 'evaluation', 'assessment'];
     const emotionalTerms = ['feel', 'emotion', 'happy', 'sad', 'angry', 'proud', 'frustrated'];
-    
+
     if (communityTerms.includes(keyword.toLowerCase())) {
       return 'community_term';
     } else if (technicalTerms.includes(keyword.toLowerCase())) {
@@ -339,7 +340,7 @@ export class EnhancedDocumentProcessor {
     } else if (emotionalTerms.includes(keyword.toLowerCase())) {
       return 'emotional_term';
     }
-    
+
     return 'general_term';
   }
 
@@ -348,7 +349,7 @@ export class EnhancedDocumentProcessor {
    */
   async getDocument(documentId: string) {
     if (!prisma) throw new Error('Database not available');
-    
+
     return await prisma.document.findUnique({
       where: { id: documentId },
       include: {
@@ -385,7 +386,7 @@ export class EnhancedDocumentProcessor {
     if (query.status) where.status = query.status;
     if (query.category) where.category = query.category;
     if (query.source) where.source = query.source;
-    
+
     if (query.text) {
       where.OR = [
         { originalName: { contains: query.text } },
@@ -402,7 +403,7 @@ export class EnhancedDocumentProcessor {
     }
 
     if (!prisma) throw new Error('Database not available');
-    
+
     return await prisma.document.findMany({
       where,
       include: {
@@ -431,9 +432,9 @@ export class EnhancedDocumentProcessor {
     contentType?: string;
   }) {
     if (!prisma) throw new Error('Database not available');
-    
+
     return await prisma.documentChunk.findMany({
-      where: { 
+      where: {
         documentId
       },
       orderBy: { chunkIndex: 'asc' },
@@ -447,7 +448,7 @@ export class EnhancedDocumentProcessor {
    */
   async createCollection(name: string, description?: string, tags?: string[], isPublic: boolean = false) {
     if (!prisma) throw new Error('Database not available');
-    
+
     return await prisma.documentCollection.create({
       data: {
         name,
@@ -463,7 +464,7 @@ export class EnhancedDocumentProcessor {
    */
   async addDocumentsToCollection(collectionId: string, documentIds: string[]) {
     if (!prisma) throw new Error('Database not available');
-    
+
     const data = documentIds.map((documentId, index) => ({
       collectionId,
       documentId,

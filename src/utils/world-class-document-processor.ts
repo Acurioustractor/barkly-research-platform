@@ -8,27 +8,28 @@ import { DocumentChunker, type DocumentChunk } from './document-chunker';
 import { AdaptiveChunker } from './adaptive-chunker';
 import { ImprovedPDFExtractor } from './pdf-extractor-improved';
 import { enhancedAIService } from '@/lib/ai-service-enhanced';
-import { 
+import {
   performDeepAnalysis,
   performCrossChunkAnalysis,
   generateComprehensiveSummary,
   type DeepAnalysisResult,
   type CrossChunkAnalysisResult
 } from '@/lib/ai/world-class-ai-service';
-import { 
-  extractEntitiesFromText, 
-  batchExtractEntities, 
-  type Entity, 
-  type EntityRelationship, 
-  type EntityExtractionResult 
+import {
+  extractEntitiesFromText,
+  batchExtractEntities,
+  type Entity,
+  type EntityRelationship,
+  type EntityExtractionResult
 } from '@/lib/ai/entity-extraction-service';
 import { EmbeddingsService } from '@/lib/ai/embeddings-service';
-import type { ProcessingStatus } from '@prisma/client';
-import { 
-  CircuitBreaker 
+// Define ProcessingStatus locally as Prisma enum exports are problematic
+export type ProcessingStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'ARCHIVED';
+import {
+  CircuitBreaker
 } from './error-handler';
-import { 
-  ProgressiveEnhancement 
+import {
+  ProgressiveEnhancement
 } from './graceful-degradation';
 
 export interface WorldClassProcessingOptions {
@@ -110,7 +111,7 @@ export class WorldClassDocumentProcessor {
       bufferSize: buffer.length,
       options
     });
-    
+
     let documentId: string | undefined;
 
     try {
@@ -138,7 +139,7 @@ export class WorldClassDocumentProcessor {
       const extractor = new ImprovedPDFExtractor(buffer);
       const extractionResult = await extractor.extractText();
       const detailedMetadata = await extractor.getDetailedMetadata();
-      
+
       console.log('Text extraction result:', {
         method: extractionResult.method,
         confidence: extractionResult.confidence,
@@ -169,7 +170,7 @@ export class WorldClassDocumentProcessor {
 
       // Create chunks using selected strategy
       const chunks = await this.createIntelligentChunks(text, options);
-      
+
       console.log('Advanced chunking result:', {
         strategy: options.chunkingStrategy || 'granular',
         chunksCount: chunks.length,
@@ -364,13 +365,13 @@ export class WorldClassDocumentProcessor {
         adaptiveOptions.strategy = 'sliding';
         adaptiveOptions.overlapPercentage = Math.max(25, overlapPct);
         break;
-      
+
       case 'semantic':
         // Use semantic boundaries
         adaptiveOptions.strategy = 'semantic';
         adaptiveOptions.preserveSections = true;
         break;
-      
+
       case 'hybrid':
         // Use hybrid approach
         adaptiveOptions.strategy = 'hybrid';
@@ -394,10 +395,10 @@ export class WorldClassDocumentProcessor {
       metadata: {
         hasHeaders: chunk.metadata.hasHeader,
         headerText: chunk.metadata.headerText,
-        contentType: chunk.metadata.contentType === 'text' ? 'narrative' : 
-                    chunk.metadata.contentType === 'list' ? 'list' : 
-                    chunk.metadata.contentType === 'code' ? 'mixed' : 
-                    chunk.metadata.contentType as any,
+        contentType: chunk.metadata.contentType === 'text' ? 'narrative' :
+          chunk.metadata.contentType === 'list' ? 'list' :
+            chunk.metadata.contentType === 'code' ? 'mixed' :
+              chunk.metadata.contentType as any,
         semanticDensity: chunk.metadata.semanticDensity,
         contextualImportance: chunk.metadata.contextualImportance,
         relatedChunks: chunk.relatedChunks
@@ -422,7 +423,7 @@ export class WorldClassDocumentProcessor {
     while (position < text.length) {
       // Find the best ending position
       let endPos = Math.min(position + maxSize, text.length);
-      
+
       // Try to end at a sentence boundary
       if (endPos < text.length) {
         const sentenceEnd = this.findSentenceBoundary(text, position, endPos);
@@ -432,7 +433,7 @@ export class WorldClassDocumentProcessor {
       }
 
       const chunkText = text.substring(position, endPos).trim();
-      
+
       if (chunkText.length >= minSize) {
         chunks.push({
           index: chunkIndex++,
@@ -526,7 +527,7 @@ export class WorldClassDocumentProcessor {
   ): DocumentChunk[] {
     // First create semantic chunks
     const semanticChunks = this.createSemanticChunks(text, maxSize * 2);
-    
+
     // Then create granular chunks within each semantic chunk
     const finalChunks: DocumentChunk[] = [];
     let globalIndex = 0;
@@ -572,7 +573,7 @@ export class WorldClassDocumentProcessor {
     const chunkBatches = this.batchArray(chunks, batchSize);
 
     for (const batch of chunkBatches) {
-      const batchPromises = batch.map(chunk => 
+      const batchPromises = batch.map(chunk =>
         performDeepAnalysis(
           chunk.text,
           documentName,
@@ -613,25 +614,25 @@ export class WorldClassDocumentProcessor {
   ) {
     // Aggregate themes with deduplication and confidence boosting
     const themes = this.aggregateThemes(analysisResults);
-    
+
     // Aggregate quotes and rank by significance
     const quotes = this.aggregateQuotes(analysisResults);
-    
+
     // Aggregate and categorize insights
     const insights = this.aggregateInsights(analysisResults, crossChunkResults);
-    
+
     // Aggregate keywords with frequency analysis
     const keywords = this.aggregateKeywords(analysisResults);
-    
+
     // Aggregate entities with relationship mapping
     const entities = this.aggregateEntities(analysisResults);
-    
+
     // Extract relationships from cross-chunk analysis
     const relationships = crossChunkResults?.relationships || [];
-    
+
     // Extract contradictions
     const contradictions = crossChunkResults?.contradictions || [];
-    
+
     // Calculate overall sentiment
     const sentimentScore = this.calculateOverallSentiment(analysisResults);
 
@@ -667,7 +668,7 @@ export class WorldClassDocumentProcessor {
       for (const theme of result.themes) {
         const key = this.normalizeThemeName(theme.name);
         const existing = themeMap.get(key);
-        
+
         if (existing) {
           existing.confidence = Math.max(existing.confidence, theme.confidence);
           existing.evidence.push(theme.evidence);
@@ -707,14 +708,14 @@ export class WorldClassDocumentProcessor {
    */
   private aggregateQuotes(results: DeepAnalysisResult[]) {
     const allQuotes = results.flatMap(r => r.quotes);
-    
+
     // Remove duplicate quotes and merge significance scores
     const uniqueQuotes = new Map<string, any>();
-    
+
     for (const quote of allQuotes) {
       const key = quote.text.toLowerCase().trim();
       const existing = uniqueQuotes.get(key);
-      
+
       if (existing) {
         existing.confidence = Math.max(existing.confidence, quote.confidence);
         existing.significance = this.mergeSignificance(existing.significance, quote.significance);
@@ -741,11 +742,11 @@ export class WorldClassDocumentProcessor {
 
     // Deduplicate and categorize insights
     const insightMap = new Map<string, any>();
-    
+
     for (const insight of allInsights) {
       const key = this.normalizeInsightText(insight.text);
       const existing = insightMap.get(key);
-      
+
       if (existing) {
         existing.importance = Math.max(existing.importance, insight.importance);
         if ('actionability' in existing && 'actionability' in insight) {
@@ -781,7 +782,7 @@ export class WorldClassDocumentProcessor {
       for (const keyword of result.keywords) {
         const key = keyword.term.toLowerCase();
         const existing = keywordMap.get(key);
-        
+
         if (existing) {
           existing.frequency += keyword.frequency;
           existing.contexts.push(keyword.context || '');
@@ -819,11 +820,11 @@ export class WorldClassDocumentProcessor {
 
     for (const result of results) {
       if (!result.entities) continue;
-      
+
       for (const entity of result.entities) {
         const key = `${entity.type}:${entity.name.toLowerCase()}`;
         const existing = entityMap.get(key);
-        
+
         if (existing) {
           existing.mentions += entity.mentions || 1;
           existing.contexts.push(...(entity.contexts || []));
@@ -857,19 +858,19 @@ export class WorldClassDocumentProcessor {
     const sentiments = results
       .map(r => r.sentiment)
       .filter(s => s !== undefined && s !== null) as number[];
-    
+
     if (sentiments.length === 0) return 0;
-    
+
     // Weighted average based on chunk importance
     const weightedSum = sentiments.reduce((sum, sentiment, index) => {
       const weight = results[index].insights.length + results[index].themes.length;
       return sum + sentiment * weight;
     }, 0);
-    
-    const totalWeight = results.reduce((sum, r) => 
+
+    const totalWeight = results.reduce((sum, r) =>
       sum + r.insights.length + r.themes.length, 0
     );
-    
+
     return totalWeight > 0 ? weightedSum / totalWeight : 0;
   }
 
@@ -902,9 +903,9 @@ export class WorldClassDocumentProcessor {
     const lastPeriod = searchText.lastIndexOf('.');
     const lastQuestion = searchText.lastIndexOf('?');
     const lastExclamation = searchText.lastIndexOf('!');
-    
+
     const lastSentence = Math.max(lastPeriod, lastQuestion, lastExclamation);
-    
+
     return lastSentence > 0 ? start + lastSentence + 1 : max;
   }
 
@@ -925,7 +926,7 @@ export class WorldClassDocumentProcessor {
     const bulletCount = (text.match(/^[\s]*[-*•]\s+/gm) || []).length;
     const lineCount = text.split('\n').length;
     const hasTable = text.includes('|') && text.split('\n').some(line => line.includes('|'));
-    
+
     if (hasTable) return 'table';
     if (bulletCount > lineCount * 0.3) return 'list';
     if (bulletCount > 0) return 'mixed';
@@ -944,7 +945,7 @@ export class WorldClassDocumentProcessor {
 
   private async storeChunks(documentId: string, chunks: DocumentChunk[]): Promise<Array<{ id: string; text: string }>> {
     if (!prisma) return [];
-    
+
     const chunkData = chunks.map(chunk => ({
       documentId,
       chunkIndex: chunk.index ?? 0,
@@ -970,7 +971,7 @@ export class WorldClassDocumentProcessor {
 
   private async storeThemesWithEvidence(documentId: string, themes: any[]): Promise<void> {
     if (!prisma) return;
-    
+
     const themeData = themes.map(theme => ({
       documentId,
       theme: theme.name,
@@ -987,7 +988,7 @@ export class WorldClassDocumentProcessor {
 
   private async storeQuotesWithContext(documentId: string, quotes: any[]): Promise<void> {
     if (!prisma) return;
-    
+
     const quoteData = quotes.map(quote => ({
       documentId,
       text: quote.text,
@@ -1007,7 +1008,7 @@ export class WorldClassDocumentProcessor {
 
   private async storeInsights(documentId: string, insights: any[]): Promise<void> {
     if (!prisma) return;
-    
+
     const insightData = insights.map(insight => ({
       documentId,
       insight: insight.text,
@@ -1025,7 +1026,7 @@ export class WorldClassDocumentProcessor {
 
   private async storeKeywords(documentId: string, keywords: any[]): Promise<void> {
     if (!prisma) return;
-    
+
     const keywordData = keywords.map(keyword => ({
       documentId,
       keyword: keyword.term,
@@ -1042,7 +1043,7 @@ export class WorldClassDocumentProcessor {
 
   private async storeEntities(documentId: string, entities: any[]): Promise<void> {
     if (!prisma || !entities || entities.length === 0) return;
-    
+
     // Store entities in the documentEntity table
     const entityData = entities.map(entity => ({
       documentId: documentId,
@@ -1052,7 +1053,7 @@ export class WorldClassDocumentProcessor {
       confidence: entity.confidence || null,
       context: entity.contexts ? entity.contexts.join(' | ') : (entity.evidence || null),
     }));
-    
+
     await prisma.documentEntity.createMany({ data: entityData });
   }
 
@@ -1070,10 +1071,10 @@ export class WorldClassDocumentProcessor {
 
     try {
       console.log('Performing enhanced entity extraction...');
-      
+
       // Extract text from chunks
       const textChunks = chunks.map(chunk => chunk.text);
-      
+
       // Use batch extraction for better performance and entity merging
       const result = await batchExtractEntities(
         textChunks,
@@ -1103,11 +1104,11 @@ export class WorldClassDocumentProcessor {
    * Store enhanced entities with relationships
    */
   private async storeEnhancedEntities(
-    documentId: string, 
+    documentId: string,
     entityResult: EntityExtractionResult
   ): Promise<void> {
     if (!prisma || entityResult.entities.length === 0) return;
-    
+
     try {
       // Store entities
       const entityData = entityResult.entities.map(entity => ({
@@ -1118,14 +1119,14 @@ export class WorldClassDocumentProcessor {
         confidence: entity.confidence,
         context: entity.contexts.join(' | '),
       }));
-      
+
       await prisma.documentEntity.createMany({ data: entityData });
-      
+
       // Store relationships if we have them
       if (entityResult.relationships.length > 0) {
         await this.storeEntityRelationships(documentId, entityResult.relationships);
       }
-      
+
       console.log('Enhanced entities stored:', {
         entities: entityResult.entities.length,
         relationships: entityResult.relationships.length
@@ -1139,7 +1140,7 @@ export class WorldClassDocumentProcessor {
    * Store entity relationships using the new relationships service
    */
   private async storeEntityRelationships(
-    documentId: string, 
+    documentId: string,
     relationships: EntityRelationship[]
   ): Promise<void> {
     if (!relationships || relationships.length === 0) return;
@@ -1147,7 +1148,7 @@ export class WorldClassDocumentProcessor {
     try {
       // Import the relationships service
       const { entityRelationshipsService } = await import('@/lib/ai/entity-relationships-service');
-      
+
       // Get entity name to ID mapping
       const entities = await prisma?.documentEntity.findMany({
         where: { documentId },
@@ -1190,14 +1191,14 @@ export class WorldClassDocumentProcessor {
 
   private async storeRelationships(_documentId: string, _relationships: any[]): Promise<void> { // eslint-disable-line @typescript-eslint/no-unused-vars
     if (!prisma) return;
-    
+
     // Store relationships between entities/themes
     // This would need a new table in the schema
   }
 
   private async storeContradictions(_documentId: string, _contradictions: any[]): Promise<void> { // eslint-disable-line @typescript-eslint/no-unused-vars
     if (!prisma) return;
-    
+
     // Store identified contradictions
     // This would need a new table in the schema
   }
