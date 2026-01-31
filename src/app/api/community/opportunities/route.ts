@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       `)
       .eq('community_id', communityId)
       .order('is_urgent', { ascending: false })
-      .order('deadline', { ascending: true, nullsLast: true });
+      .order('deadline', { ascending: true, nullsFirst: false });
 
     if (type) {
       query = query.eq('type', type);
