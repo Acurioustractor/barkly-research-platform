@@ -5,7 +5,7 @@ import {
   registerForEvent,
   getEventStatistics,
   updateEventStatus
-} from '@/lib/event-management-service';
+} from '@/lib/community/event-management-service';
 
 export async function GET(request: NextRequest) {
   try {

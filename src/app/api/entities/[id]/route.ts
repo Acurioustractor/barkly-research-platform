@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database-safe';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(
   request: NextRequest,

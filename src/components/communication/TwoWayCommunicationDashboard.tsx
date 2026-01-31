@@ -23,7 +23,7 @@ import {
   MapPin,
   Star
 } from 'lucide-react';
-import { twoWayCommunicationService, CommunityFeedback, MeetingSummary, ConsultationSession } from '../../lib/two-way-communication-service';
+import { twoWayCommunicationService, CommunityFeedback, MeetingSummary, ConsultationSession } from '@/lib/community/two-way-communication-service';
 
 interface TwoWayCommunicationDashboardProps {
   communityId?: string;

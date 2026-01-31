@@ -5,7 +5,7 @@ import {
   getCommunityThemes,
   getModerationQueue,
   moderateStory
-} from '@/lib/enhanced-story-service';
+} from '@/lib/community/enhanced-story-service';
 
 export async function GET(request: NextRequest) {
   try {

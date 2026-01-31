@@ -18,7 +18,7 @@ A community-led research platform showcasing Indigenous youth voices and insight
 - **Search & Filter**: Advanced search across documents, themes, and metadata
 
 ### 🛠️ Technical Stack
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS
 - **Backend**: Next.js API routes, Prisma ORM, PostgreSQL
 - **Processing**: PDF parsing, text analysis, document chunking
 - **Visualization**: D3.js, Recharts

@@ -5,7 +5,7 @@
 
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
-import { aiConfig } from './ai-config';
+import { aiConfig } from '@/lib/ai/config';
 
 // Initialize clients
 const openai = process.env.OPENAI_API_KEY 

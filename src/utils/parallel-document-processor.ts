@@ -9,7 +9,7 @@ import {
   generateDocumentSummary,
   type AIAnalysisResult 
 } from '@/lib/ai-service';
-import { EmbeddingsService } from '@/lib/embeddings-service';
+import { EmbeddingsService } from '@/lib/ai/embeddings-service';
 import type { DocumentChunk } from './document-chunker';
 import type { WorldClassProcessingOptions } from './world-class-document-processor';
 

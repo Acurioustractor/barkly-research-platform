@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   crossCommunityTrendAnalysisService,
   TrendAnalysis
-} from '@/lib/cross-community-trend-analysis';
+} from '@/lib/community/cross-community-trend-analysis';
 
 export async function GET(request: NextRequest) {
   try {

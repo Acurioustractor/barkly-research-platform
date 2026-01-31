@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { identifySuccessPatterns, createPatternTemplates, analyzeCrossCommunityPatterns } from '@/lib/success-pattern-service';
+import { identifySuccessPatterns, createPatternTemplates, analyzeCrossCommunityPatterns } from '@/lib/community/success-pattern-service';
 
 export async function POST(request: NextRequest) {
   try {

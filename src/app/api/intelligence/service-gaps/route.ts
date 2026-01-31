@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { serviceGapAnalysisService } from '@/lib/service-gap-analysis';
-import { prisma } from '@/lib/database';
+import { serviceGapAnalysisService } from '@/lib/community/service-gap-analysis';
+import { prisma } from '@/lib/db/database';
 
 export async function POST(request: NextRequest) {
   try {

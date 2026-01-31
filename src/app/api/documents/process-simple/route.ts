@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SimpleProcessor } from '@/lib/ai-processing/simple-processor';
+import { SimpleProcessor } from '@/lib/ai/processing/simple-processor';
 
 export async function POST(request: NextRequest) {
   try {

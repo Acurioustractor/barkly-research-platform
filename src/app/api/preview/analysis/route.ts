@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { communityPreviewService } from '@/lib/community-preview-service';
+import { communityPreviewService } from '@/lib/community/community-preview-service';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 

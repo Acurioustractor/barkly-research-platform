@@ -3,8 +3,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { entityValidationService } from '@/lib/entity-validation-service';
-import { logger } from '@/lib/logger';
+import { entityValidationService } from '@/lib/ai/entity-validation-service';
+import { logger } from '@/lib/utils/logger';
 
 // POST /api/entities/validation/manual - Add a manual entity
 export async function POST(request: NextRequest) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { intelligenceValidationService } from '@/lib/intelligence-validation-service';
+import { intelligenceValidationService } from '@/lib/ai/intelligence-validation-service';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 

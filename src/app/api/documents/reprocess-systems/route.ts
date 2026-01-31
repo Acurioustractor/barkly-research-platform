@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/database-safe';
-import { extractSystemsFromDocument, storeSystemsData } from '@/lib/systems-extraction-service';
+import { extractSystemsFromDocument, storeSystemsData } from '@/lib/ai/processing/systems-extraction-service';
 
 export async function POST(request: Request) {
   try {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { globalDocumentProcessor } from '@/lib/document-job-processor';
+import { globalDocumentProcessor } from '@/lib/ai/processing/document-job-processor';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

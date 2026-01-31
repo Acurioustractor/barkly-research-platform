@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/database';
+import { prisma } from '@/lib/db/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,13 +40,13 @@ export async function GET(request: NextRequest) {
 
     // Get documents
     const documents = await prisma.$queryRawUnsafe(`
-      SELECT 
-        id, filename, title, community_id, processing_status,
-        created_at, processed_at, ai_analysis,
-        cultural_sensitivity, file_size, file_type
-      FROM documents 
+      SELECT
+        id, title, content, cultural_sensitivity, community_id, uploaded_by,
+        cultural_metadata, file_type, file_size, created_at, updated_at,
+        processing_status, processed_at, ai_analysis, "thumbnailPath"
+      FROM documents
       ${whereSQL}
-      ORDER BY created_at DESC 
+      ORDER BY created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `, ...params, limit, offset);
 
@@ -58,28 +58,8 @@ export async function GET(request: NextRequest) {
     const total = Array.isArray(countResult) && countResult[0] ? 
       parseInt(countResult[0].total) : 0;
 
-    // Get community names for documents
-    const documentsWithCommunities = await Promise.all(
-      (documents as any[]).map(async (doc) => {
-        if (doc.community_id) {
-          try {
-            const community = await prisma.$queryRaw<Array<{ name: string }>>`
-              SELECT name FROM communities WHERE id = ${doc.community_id}::uuid
-            `;
-            return {
-              ...doc,
-              community_name: community[0]?.name || 'Unknown Community'
-            };
-          } catch (error) {
-            return {
-              ...doc,
-              community_name: 'Unknown Community'
-            };
-          }
-        }
-        return doc;
-      })
-    );
+    // Return documents as-is since they already match the expected format
+    const documentsWithCommunities = documents as any[];
 
     return NextResponse.json({
       success: true,

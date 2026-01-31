@@ -1,0 +1,49 @@
+
+// Thumbnail utility functions
+export const thumbnailMapping = {
+  "06b934e1-6cf9-4b84-823a-670ccf1d88ce": "unique-06b934e1-6cf9-4b84-823a-670ccf1d88ce.png",
+  "815852c7-15ec-4c86-a8e1-2c44ba99ff94": "unique-815852c7-15ec-4c86-a8e1-2c44ba99ff94.png",
+  "928f88f4-06d5-44a6-80b2-5d8ad4635bad": "unique-928f88f4-06d5-44a6-80b2-5d8ad4635bad.png",
+  "aa10871b-e193-4084-a112-10fcdf270dc8": "unique-aa10871b-e193-4084-a112-10fcdf270dc8.png",
+  "30fb8b1c-47d5-48fb-9d65-a10927f4949d": "unique-30fb8b1c-47d5-48fb-9d65-a10927f4949d.png",
+  "06b934e1": "preview-06b934e1.png",
+  "815852c7": "preview-815852c7.png",
+  "928f88f4": "preview-928f88f4.png",
+  "aa10871b": "preview-aa10871b.png",
+  "30fb8b1c": "preview-30fb8b1c.png"
+};
+
+export function getThumbnailPath(documentId: string): string | null {
+  // Try full ID first
+  if (thumbnailMapping[documentId]) {
+    return `/thumbnails/${thumbnailMapping[documentId]}`;
+  }
+  
+  // Try first 8 characters
+  const shortId = documentId.substring(0, 8);
+  if (thumbnailMapping[shortId]) {
+    return `/thumbnails/${thumbnailMapping[shortId]}`;
+  }
+  
+  // Try to find any unique thumbnail for this ID
+  const uniqueFile = `unique-${documentId}.png`;
+  if (Object.values(thumbnailMapping).includes(uniqueFile)) {
+    return `/thumbnails/${uniqueFile}`;
+  }
+  
+  // Try preview file
+  const previewFile = `preview-${shortId}.png`;
+  if (Object.values(thumbnailMapping).includes(previewFile)) {
+    return `/thumbnails/${previewFile}`;
+  }
+  
+  return null;
+}
+
+export function getDocumentThumbnail(doc: any): string | null {
+  // First try the new simple thumbnails we just created
+  const simpleThumb = `/thumbnails/simple-${doc.id}.svg`;
+  
+  // These are guaranteed to exist and be unique
+  return simpleThumb;
+}

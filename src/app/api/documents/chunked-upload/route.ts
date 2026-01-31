@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database-safe';
 
-// Use Edge Runtime for better timeout handling and streaming
-export const runtime = 'edge';
-export const maxDuration = 60; // Edge functions can run longer
+// Use Node.js runtime for Prisma compatibility
+export const runtime = 'nodejs';
+export const maxDuration = 60; // Functions can run longer
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
     const tags = (formData.get('tags') as string || '').trim();
 
     if (!file || !uploadId || !originalName) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: file, uploadId, originalName' 
+      return NextResponse.json({
+        error: 'Missing required fields: file, uploadId, originalName'
       }, { status: 400 });
     }
 
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Store chunk data (in production, use proper file storage like S3)
     const chunkBuffer = Buffer.from(await file.arrayBuffer());
     const chunkKey = `${uploadId}_chunk_${chunkIndex}`;
-    
+
     // For now, store chunks in a temporary location
     // In production, you'd use cloud storage like S3, GCS, or Azure Blob
     const chunkData = {
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     // If this is the last chunk, initiate assembly and processing
     if (chunkIndex === totalChunks - 1) {
       console.log(`[chunked-upload] All chunks received, initiating assembly for ${originalName}`);
-      
+
       // Create document record
       const document = await db.document.create({
         data: {
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[chunked-upload] Error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Chunked upload failed',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

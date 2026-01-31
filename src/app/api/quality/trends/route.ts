@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { qualityMonitoringService } from '@/lib/quality-monitoring-service';
+import { qualityMonitoringService } from '@/lib/community/quality-monitoring-service';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 

@@ -3,8 +3,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { entityValidationService } from '@/lib/entity-validation-service';
-import { logger } from '@/lib/logger';
+import { entityValidationService } from '@/lib/ai/entity-validation-service';
+import { logger } from '@/lib/utils/logger';
 
 // GET /api/entities/validation/duplicates/[id] - Find potential duplicates for an entity
 export async function GET(

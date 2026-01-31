@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AnthropicProcessor } from '@/lib/ai-processing/anthropic-processor';
-import { DatabaseSaver } from '@/lib/ai-processing/database-saver';
+import { AnthropicProcessor } from '@/lib/ai/processing/anthropic-processor';
+import { DatabaseSaver } from '@/lib/ai/processing/database-saver';
 
 export async function POST(request: NextRequest) {
   try {

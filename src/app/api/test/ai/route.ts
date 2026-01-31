@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { aiConfig } from '@/lib/ai-config';
+import { aiConfig } from '@/lib/ai/config';
 import { analyzeDocumentChunk, generateDocumentSummary } from '@/lib/ai-service';
-import { EmbeddingsService } from '@/lib/embeddings-service';
+import { EmbeddingsService } from '@/lib/ai/embeddings-service';
 
 export const dynamic = 'force-dynamic';
 

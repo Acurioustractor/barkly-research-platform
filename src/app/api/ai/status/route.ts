@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { enhancedAIService } from '@/lib/ai-service-enhanced';
-import { globalRateLimiter } from '@/lib/ai-rate-limiter';
+import { globalRateLimiter } from '@/lib/ai/ai-rate-limiter';
 
 export async function GET(request: NextRequest) {
   try {

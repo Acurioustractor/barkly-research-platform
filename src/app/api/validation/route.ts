@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { communityValidationService } from '../../../lib/community-validation-service';
+import { communityValidationService } from '@/lib/community/community-validation-service';
 
 export async function GET(request: NextRequest) {
   try {

@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 const prisma = new PrismaClient();
 

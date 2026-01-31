@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Anthropic } from '@anthropic-ai/sdk';
 import { prisma } from '@/lib/database-safe';
-import { OptimizedChunkingService } from '@/lib/optimized-chunking-service';
+import { OptimizedChunkingService } from '@/lib/ai/processing/optimized-chunking-service';
 import { extractTextFromPDFImproved } from '@/utils/pdf-extractor-improved';
 
 const anthropic = new Anthropic({

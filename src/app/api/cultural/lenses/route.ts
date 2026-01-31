@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   getCulturalLenses,
   updateCulturalLens
-} from '@/lib/cultural-context-service';
+} from '@/lib/community/cultural-context-service';
 
 export async function GET(request: NextRequest) {
   try {

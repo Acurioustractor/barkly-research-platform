@@ -4,8 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { entityValidationService, ValidationAction } from '@/lib/entity-validation-service';
-import { logger } from '@/lib/logger';
+import { entityValidationService, ValidationAction } from '@/lib/ai/entity-validation-service';
+import { logger } from '@/lib/utils/logger';
 
 // POST /api/entities/validation/batch - Validate multiple entities
 export async function POST(request: NextRequest) {

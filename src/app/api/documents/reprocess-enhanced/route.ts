@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database-safe';
 import { processAnyDocument } from '@/utils/unified-document-processor';
-import { AnthropicProcessor } from '@/lib/ai-processing/anthropic-processor';
+import { AnthropicProcessor } from '@/lib/ai/processing/anthropic-processor';
 
 export async function POST(request: NextRequest) {
   try {

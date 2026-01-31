@@ -4,7 +4,7 @@ import {
   getStoryExploration,
   getCommunityStoryExplorations,
   updateExplorationEngagement
-} from '@/lib/dynamic-storytelling-service';
+} from '@/lib/community/dynamic-storytelling-service';
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Get analytics data from database
-        const { supabase } = await import('@/lib/supabase');
+        const { supabase } = await import('@/lib/db/supabase');
         const { data: analytics, error: analyticsError } = await supabase
           .from('story_exploration_analytics')
           .select('*')
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const { supabase } = await import('@/lib/supabase');
+        const { supabase } = await import('@/lib/db/supabase');
         const sessionData = {
           exploration_id: sessionExplorationId,
           session_token: sessionToken,
@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const { supabase: relatedSupabase } = await import('@/lib/supabase');
+        const { supabase: relatedSupabase } = await import('@/lib/db/supabase');
         const { data: relatedStories, error: relatedError } = await relatedSupabase
           .rpc('find_related_stories', {
             p_story_id: storyId,

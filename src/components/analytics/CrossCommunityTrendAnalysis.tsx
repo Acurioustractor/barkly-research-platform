@@ -30,7 +30,7 @@ import {
   TrendInsight,
   IdentifiedPattern,
   TrendRecommendation
-} from '@/lib/cross-community-trend-analysis';
+} from '@/lib/community/cross-community-trend-analysis';
 
 interface CrossCommunityTrendAnalysisProps {
   className?: string;

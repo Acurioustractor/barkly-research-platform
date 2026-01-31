@@ -23,7 +23,7 @@ import {
   ExternalLink,
   Info
 } from 'lucide-react';
-import { accessibilityService, AccessibilityAudit as AuditType, AccessibilityIssue } from '@/lib/accessibility-service';
+import { accessibilityService, AccessibilityAudit as AuditType, AccessibilityIssue } from '@/lib/community/accessibility-service';
 
 interface AccessibilityAuditProps {
   componentId?: string;

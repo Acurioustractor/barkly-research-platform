@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { completeCulturalReview } from '@/lib/cultural-safety-service';
+import { completeCulturalReview } from '@/lib/community/cultural-safety-service';
 
 export async function POST(request: NextRequest) {
   try {

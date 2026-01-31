@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/database-safe';
 import { ImprovedPDFExtractor } from '@/utils/pdf-extractor-improved';
 import { DocumentChunker } from '@/utils/document-chunker';
-import { globalDocumentProcessor } from '@/lib/document-job-processor';
+import { globalDocumentProcessor } from '@/lib/ai/processing/document-job-processor';
 
 export const maxDuration = 300; // 5 minutes
 export const dynamic = 'force-dynamic';

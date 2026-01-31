@@ -15,8 +15,6 @@ const defaultNavItems: NavigationItem[] = [
   { label: 'Home', href: '/' },
   { label: 'Services Map', href: '/services-map', description: 'Tennant Creek services & gaps' },
   { label: 'Documents', href: '/documents', description: 'Community knowledge library' },
-  { label: 'Wiki', href: '/wiki', description: 'Curated knowledge and overviews' },
-  { label: 'Tasks', href: '/tasks', description: 'Manage and track project tasks' },
   { label: 'Community Voice', href: '/community-voice', description: 'Share priorities & stories' },
   { label: 'What\'s Working', href: '/outcomes', description: 'Success stories & progress' },
   { label: 'Platform Showcase', href: '/showcase', description: 'AI platform capabilities & ROI' },

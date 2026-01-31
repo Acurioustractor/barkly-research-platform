@@ -3,7 +3,7 @@ import {
   generateImpactReport,
   getImpactReport,
   getCommunityImpactReports
-} from '@/lib/impact-report-generator';
+} from '@/lib/community/impact-report-generator';
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 
       case 'templates':
         // Get available report templates
-        const { supabase } = await import('@/lib/supabase');
+        const { supabase } = await import('@/lib/db/supabase');
         const { data: templates, error: templatesError } = await supabase
           .from('report_templates')
           .select('*')
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const { supabase } = await import('@/lib/supabase');
+        const { supabase } = await import('@/lib/db/supabase');
         const updateData: any = { updated_at: new Date().toISOString() };
 
         if (publicationStatus) {
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const { supabase: reviewSupabase } = await import('@/lib/supabase');
+        const { supabase: reviewSupabase } = await import('@/lib/db/supabase');
         const reviewData = {
           report_id: reviewReportId,
           reviewer_name: reviewerName,
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const { supabase: shareSupabase } = await import('@/lib/supabase');
+        const { supabase: shareSupabase } = await import('@/lib/db/supabase');
         const sharingData = {
           report_id: shareReportId,
           shared_with: sharedWith,
@@ -288,7 +288,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const { supabase: impactSupabase } = await import('@/lib/supabase');
+        const { supabase: impactSupabase } = await import('@/lib/db/supabase');
         const impactData = {
           report_id: impactReportId,
           impact_type: impactType,

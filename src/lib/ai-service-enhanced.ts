@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
-import { globalRateLimiter, ProviderConfig } from './ai-rate-limiter';
+import { globalRateLimiter, ProviderConfig } from '@/lib/ai/ai-rate-limiter';
 
 export interface AIResponse {
   content: string;

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   captureKnowledge,
   getEventKnowledgeCaptures
-} from '@/lib/event-management-service';
+} from '@/lib/community/event-management-service';
 
 export async function GET(request: NextRequest) {
   try {

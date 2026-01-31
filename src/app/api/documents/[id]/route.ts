@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EnhancedDocumentProcessor } from '@/utils/enhanced-document-processor';
-import { prisma } from '@/lib/database';
+import { prisma } from '@/lib/db/database';
 
 export async function GET(
   request: NextRequest,

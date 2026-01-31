@@ -26,7 +26,7 @@ import {
   Minimize2,
   Maximize2
 } from 'lucide-react';
-import { mobileOptimizationService, SyncStatus, PWAInstallPrompt } from '@/lib/mobile-optimization-service';
+import { mobileOptimizationService, SyncStatus, PWAInstallPrompt } from '@/lib/community/mobile-optimization-service';
 
 interface MobileOptimizedLayoutProps {
   children: React.ReactNode;

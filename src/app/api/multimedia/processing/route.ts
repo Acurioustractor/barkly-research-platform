@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   processStoryMedia,
   getStoryProcessingStatus
-} from '@/lib/multimedia-processing-service';
+} from '@/lib/ai/processing/multimedia-processing-service';
 
 export async function GET(request: NextRequest) {
   try {

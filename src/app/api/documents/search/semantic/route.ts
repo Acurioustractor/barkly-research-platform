@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { EmbeddingsService } from '@/lib/embeddings-service';
+import { EmbeddingsService } from '@/lib/ai/embeddings-service';
 import { isDatabaseAvailable } from '@/lib/database-safe';
 
 export const maxDuration = 30; // 30 seconds

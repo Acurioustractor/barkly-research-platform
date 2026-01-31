@@ -15,7 +15,7 @@ import {
   Smartphone,
   Signal
 } from 'lucide-react';
-import { mobileOptimizationService, SyncStatus } from '@/lib/mobile-optimization-service';
+import { mobileOptimizationService, SyncStatus } from '@/lib/community/mobile-optimization-service';
 
 interface OfflineIndicatorProps {
   className?: string;

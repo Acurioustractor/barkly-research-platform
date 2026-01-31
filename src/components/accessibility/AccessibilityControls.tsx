@@ -28,7 +28,7 @@ import {
   Monitor,
   Smartphone
 } from 'lucide-react';
-import { accessibilityService, AccessibilityPreferences } from '@/lib/accessibility-service';
+import { accessibilityService, AccessibilityPreferences } from '@/lib/community/accessibility-service';
 
 interface AccessibilityControlsProps {
   userId: string;
@@ -571,7 +571,7 @@ export default function AccessibilityControls({
                     <SelectItem value="orca">Orca</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
-                </Select>
+                </SelectContent>
               </div>
             )}
           </TabsContent>

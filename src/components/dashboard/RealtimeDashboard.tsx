@@ -10,7 +10,7 @@ import {
   CheckCircle, Clock, Users, FileText, Activity, Bell,
   Wifi, WifiOff, Eye, BarChart3
 } from 'lucide-react';
-import { useRealtimeUpdates, RealtimeUpdate } from '@/lib/realtime-service';
+import { useRealtimeUpdates, RealtimeUpdate } from '@/lib/utils/realtime-service';
 import CommunityHealthIndicators from '@/components/intelligence/CommunityHealthIndicators';
 
 interface DashboardStats {

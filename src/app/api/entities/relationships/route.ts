@@ -4,8 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { entityRelationshipsService } from '@/lib/entity-relationships-service';
-import { logger } from '@/lib/logger';
+import { entityRelationshipsService } from '@/lib/ai/entity-relationships-service';
+import { logger } from '@/lib/utils/logger';
 
 // GET /api/entities/relationships - Get relationships with filtering and analysis
 export async function GET(request: NextRequest) {

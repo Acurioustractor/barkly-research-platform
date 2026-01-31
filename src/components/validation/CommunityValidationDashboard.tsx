@@ -24,7 +24,7 @@ import {
   ThumbsDown,
   AlertCircle
 } from 'lucide-react';
-import { communityValidationService, ValidationRequest, CommunityValidator } from '../../lib/community-validation-service';
+import { communityValidationService, ValidationRequest, CommunityValidator } from '@/lib/community-validation-service';
 
 interface CommunityValidationDashboardProps {
   communityId?: string;

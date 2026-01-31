@@ -11,8 +11,8 @@ import {
   generateDocumentSummary,
   type AIAnalysisResult 
 } from '@/lib/ai-service';
-import { EmbeddingsService } from '@/lib/embeddings-service';
-import { extractSystemsFromDocument, storeSystemsData } from '@/lib/systems-extraction-service';
+import { EmbeddingsService } from '@/lib/ai/embeddings-service';
+import { extractSystemsFromDocument, storeSystemsData } from '@/lib/ai/processing/systems-extraction-service';
 import type { ProcessingStatus } from '@prisma/client';
 
 export interface AIProcessingOptions {

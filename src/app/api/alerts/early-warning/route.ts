@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { earlyWarningSystemService } from '../../../../lib/early-warning-system';
+import { earlyWarningSystemService } from '@/lib/community/early-warning-system';
 
 export async function GET(request: NextRequest) {
   try {

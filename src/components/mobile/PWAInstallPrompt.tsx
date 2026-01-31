@@ -16,7 +16,7 @@ import {
   Bell,
   Zap
 } from 'lucide-react';
-import { mobileOptimizationService, PWAInstallPrompt as PWAStatus } from '@/lib/mobile-optimization-service';
+import { mobileOptimizationService, PWAInstallPrompt as PWAStatus } from '@/lib/community/mobile-optimization-service';
 
 interface PWAInstallPromptProps {
   onInstall?: () => void;

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { aiConfig, AI_MODELS, EMBEDDING_MODELS, PROCESSING_PROFILES } from '@/lib/ai-config';
+import { aiConfig, AI_MODELS, EMBEDDING_MODELS, PROCESSING_PROFILES } from '@/lib/ai/config';
 
 export const dynamic = 'force-dynamic';
 

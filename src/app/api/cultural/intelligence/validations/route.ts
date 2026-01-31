@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CulturalIntelligenceService } from '@/lib/cultural-intelligence-service';
+import { CulturalIntelligenceService } from '@/lib/community/cultural-intelligence-service';
 
 export async function GET(request: NextRequest) {
   try {

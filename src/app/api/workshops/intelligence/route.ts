@@ -4,7 +4,7 @@ import {
   getWorkshopIntelligenceReport,
   getWorkshopInsights,
   updateCommunityIntelligenceFromWorkshop
-} from '@/lib/workshop-intelligence-integration';
+} from '@/lib/community/workshop-intelligence-integration';
 
 export async function GET(request: NextRequest) {
   try {

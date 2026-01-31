@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateEntityAnalytics } from '@/lib/entity-analytics-service';
-import { logger } from '@/lib/logger';
+import { generateEntityAnalytics } from '@/lib/ai/entity-analytics-service';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(request: NextRequest) {
   try {

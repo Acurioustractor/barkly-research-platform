@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EnhancedDocumentProcessor } from '@/utils/enhanced-document-processor';
 import { isDatabaseAvailable } from '@/lib/database-safe';
-import { withErrorHandling, ApiErrors } from '@/lib/api-error-handler';
-import { withLogging } from '@/lib/logger';
+import { withErrorHandling, ApiErrors } from '@/lib/utils/api-error-handler';
+import { withLogging } from '@/lib/utils/logger';
 
 export const GET = withLogging(withErrorHandling(async (request: NextRequest) => {
   // Check database availability FIRST

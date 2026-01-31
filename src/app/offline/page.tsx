@@ -14,7 +14,7 @@ import {
   Clock,
   CheckCircle
 } from 'lucide-react';
-import { mobileOptimizationService } from '@/lib/mobile-optimization-service';
+import { mobileOptimizationService } from '@/lib/community/mobile-optimization-service';
 import MobileOptimizedLayout from '@/components/mobile/MobileOptimizedLayout';
 import OfflineIndicator from '@/components/mobile/OfflineIndicator';
 

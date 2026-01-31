@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database-safe';
-import { generateSystemsMapData } from '@/lib/systems-extraction-service';
+import { generateSystemsMapData } from '@/lib/ai/processing/systems-extraction-service';
 import type { SystemEntityType } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';

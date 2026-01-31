@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { IntelligenceDatabaseService } from '@/lib/intelligence-database-service';
+import { IntelligenceDatabaseService } from '@/lib/ai/intelligence-database-service';
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processDocumentWithIntelligence } from '@/lib/ai-service';
-import { prisma } from '@/lib/database';
+import { prisma } from '@/lib/db/database';
 
 export async function POST(request: NextRequest) {
   try {

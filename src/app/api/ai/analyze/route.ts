@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
-import { aiConfig } from '@/lib/ai-config';
+import { aiConfig } from '@/lib/ai/config';
 // Temporarily disable security middleware for Vercel debugging
 // import { 
 //   checkRateLimit, 

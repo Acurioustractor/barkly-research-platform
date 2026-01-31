@@ -22,7 +22,7 @@ import {
   Shield,
   UserCheck
 } from 'lucide-react';
-import { decisionTransparencyService, GovernmentDecision } from '../../lib/decision-transparency-service';
+import { decisionTransparencyService, GovernmentDecision } from '@/lib/community/decision-transparency-service';
 
 interface DecisionTransparencyDashboardProps {
   communityId?: string;

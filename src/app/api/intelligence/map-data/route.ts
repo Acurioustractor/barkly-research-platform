@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { communityHealthService } from '@/lib/community-health-service';
-import { prisma } from '@/lib/database';
+import { communityHealthService } from '@/lib/community/community-health-service';
+import { prisma } from '@/lib/db/database';
 
 export async function GET(request: NextRequest) {
   try {

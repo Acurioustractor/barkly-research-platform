@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { twoWayCommunicationService } from '../../../lib/two-way-communication-service';
+import { twoWayCommunicationService } from '@/lib/community/two-way-communication-service';
 
 export async function GET(request: NextRequest) {
   try {

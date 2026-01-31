@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
-import { getCulturalSafetyStats } from '@/lib/cultural-safety-service';
+import { supabase } from '@/lib/db/supabase';
+import { getCulturalSafetyStats } from '@/lib/community/cultural-safety-service';
 
 export async function GET(request: NextRequest) {
   try {

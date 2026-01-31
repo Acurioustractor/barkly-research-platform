@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DocumentProcessor } from '@/lib/ai-processing/document-processor';
-import { DatabaseSaver } from '@/lib/ai-processing/database-saver';
+import { DocumentProcessor } from '@/lib/ai/processing/document-processor';
+import { DatabaseSaver } from '@/lib/ai/processing/database-saver';
 
 export async function POST(request: NextRequest) {
   try {

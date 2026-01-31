@@ -14,15 +14,15 @@ import {
   generateComprehensiveSummary,
   type DeepAnalysisResult,
   type CrossChunkAnalysisResult
-} from '@/lib/world-class-ai-service';
+} from '@/lib/ai/world-class-ai-service';
 import { 
   extractEntitiesFromText, 
   batchExtractEntities, 
   type Entity, 
   type EntityRelationship, 
   type EntityExtractionResult 
-} from '@/lib/entity-extraction-service';
-import { EmbeddingsService } from '@/lib/embeddings-service';
+} from '@/lib/ai/entity-extraction-service';
+import { EmbeddingsService } from '@/lib/ai/embeddings-service';
 import type { ProcessingStatus } from '@prisma/client';
 import { 
   CircuitBreaker 
@@ -1146,7 +1146,7 @@ export class WorldClassDocumentProcessor {
 
     try {
       // Import the relationships service
-      const { entityRelationshipsService } = await import('../lib/entity-relationships-service');
+      const { entityRelationshipsService } = await import('@/lib/ai/entity-relationships-service');
       
       // Get entity name to ID mapping
       const entities = await prisma?.documentEntity.findMany({

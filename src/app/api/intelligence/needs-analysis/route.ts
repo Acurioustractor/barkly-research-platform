@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { needsAnalysisService } from '@/lib/needs-analysis-service';
-import { prisma } from '@/lib/database';
+import { needsAnalysisService } from '@/lib/community/needs-analysis-service';
+import { prisma } from '@/lib/db/database';
 
 export async function POST(request: NextRequest) {
   try {

@@ -20,7 +20,7 @@ import {
   Shield,
   Palette
 } from 'lucide-react';
-import { earlyWarningSystemService, EarlyWarningAlert } from '../../lib/early-warning-system';
+import { earlyWarningSystemService, EarlyWarningAlert } from '@/lib/community/early-warning-system';
 
 interface EarlyWarningDashboardProps {
   communityId?: string;

@@ -13,6 +13,8 @@ process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:po
 process.env.SUPPRESS_LOGS = 'true';
 process.env.DISABLE_RATE_LIMITING = 'true';
 process.env.ENABLE_TEST_MODE = 'true';
+process.env.ENABLE_PARALLEL_PROCESSING = 'false';
+process.env.ENABLE_EMBEDDINGS = 'false';
 
 // Mock external service URLs
 process.env.MOCK_AI_SERVICES = 'true';

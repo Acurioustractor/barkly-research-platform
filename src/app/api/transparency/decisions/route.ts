@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { decisionTransparencyService } from '../../../../lib/decision-transparency-service';
+import { decisionTransparencyService } from '@/lib/community/decision-transparency-service';
 
 export async function GET(request: NextRequest) {
   try {

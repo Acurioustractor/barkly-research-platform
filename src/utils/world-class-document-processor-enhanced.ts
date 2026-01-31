@@ -13,8 +13,8 @@ import { ImprovedPDFExtractor } from './pdf-extractor-improved';
 //   generateComprehensiveSummary,
 //   type DeepAnalysisResult,
 //   type CrossChunkAnalysisResult
-// } from '@/lib/world-class-ai-service';
-import { EmbeddingsService } from '@/lib/embeddings-service';
+// } from '@/lib/ai/world-class-ai-service';
+import { EmbeddingsService } from '@/lib/ai/embeddings-service';
 import type { ProcessingStatus } from '@prisma/client';
 import { 
   ErrorHandler, 
