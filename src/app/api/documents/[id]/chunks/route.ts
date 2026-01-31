@@ -9,7 +9,7 @@ export async function GET(
     const params = await context.params;
     const { id } = params;
     const { searchParams } = new URL(request.url);
-    
+
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
     const contentType = searchParams.get('contentType') || undefined;
@@ -32,7 +32,7 @@ export async function GET(
       }
     }
 
-    const results = chunks.map(chunk => ({
+    const results = chunks.map((chunk: any) => ({
       id: chunk.id,
       index: chunk.chunkIndex,
       text: chunk.text,
@@ -58,9 +58,9 @@ export async function GET(
 
   } catch (error) {
     console.error('Get document chunks error:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to retrieve document chunks',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
