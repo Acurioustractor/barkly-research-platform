@@ -305,14 +305,14 @@ function generateReportSummary(evidence: any[]): any {
 }
 
 function generateProgramSummaries(evidence: any[]): any[] {
-  const programGroups = evidence.reduce((groups: Record<string, any>, item) => {
+  const programGroups = evidence.reduce((groups, item) => {
     const programId = item.program_id;
     if (!groups[programId]) {
       groups[programId] = [];
     }
     groups[programId].push(item);
     return groups;
-  }, {});
+  }, {} as Record<string, any>);
 
   return Object.entries(programGroups).map(([programId, programEvidence]: [string, any]) => {
     const firstItem = programEvidence[0];
@@ -587,13 +587,13 @@ function calculateOverallImpact(evidence: any[]): number {
 
 function analyzeImpactTrends(evidence: any[]): any {
   // Group evidence by metric and analyze trends over time
-  const metricGroups = evidence.reduce((groups: Record<string, any>, item) => {
+  const metricGroups = evidence.reduce((groups, item) => {
     if (!groups[item.metric_name]) {
       groups[item.metric_name] = [];
     }
     groups[item.metric_name].push(item);
     return groups;
-  }, {});
+  }, {} as Record<string, any>);
 
   const trends = {};
 
