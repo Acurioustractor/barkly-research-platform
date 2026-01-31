@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Try to re-extract if it's a placeholder
     if (isPlaceholder && doc.file_type === 'application/pdf') {
-      
+
       // For now, let's just simulate better content for testing
       // In a real scenario, you'd need to access the actual PDF file
       const simulatedContent = `
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         },
         afterExtraction: {
           contentLength: simulatedContent.length,
-          wordCount: simulatedContent.split(/\s+/).filter(w => w.length > 0).length,
+          wordCount: simulatedContent.split(/\s+/).filter((w: string) => w.length > 0).length,
           preview: simulatedContent.substring(0, 200)
         }
       });
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         length: currentContent.length,
         isPlaceholder,
         preview: currentContent.substring(0, 200),
-        wordCount: currentContent.split(/\s+/).filter(w => w.length > 0).length
+        wordCount: currentContent.split(/\s+/).filter((w: any) => w.length > 0).length
       }
     });
 
