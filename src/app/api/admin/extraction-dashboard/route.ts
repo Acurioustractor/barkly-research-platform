@@ -117,20 +117,20 @@ export async function GET(request: NextRequest) {
           count: parseInt(m.count),
           avg_confidence: Math.round((m.avg_confidence || 0) * 100) / 100
         })),
-        recent_bulk_extractions: recentBulk.map(b => ({
+        recent_bulk_extractions: recentBulk.map((b: any) => ({
           document_id: b.id,
           title: b.title,
           themes_extracted: parseInt(b.themes_count),
           ai_model: b.ai_model,
           processed_at: b.last_processed
         })),
-        potential_duplicates: suspiciousDuplicates.map(d => ({
+        potential_duplicates: suspiciousDuplicates.map((d: any) => ({
           theme_name: d.theme_name,
           occurrences: parseInt(d.occurrence_count),
           avg_confidence: Math.round((d.avg_confidence || 0) * 100) / 100,
           models_used: d.models
         })),
-        category_distribution: categoryStats.map(c => ({
+        category_distribution: categoryStats.map((c: any) => ({
           category: c.category,
           count: parseInt(c.count),
           avg_confidence: Math.round((c.avg_confidence || 0) * 100) / 100
@@ -195,7 +195,7 @@ function generateRecommendations(stats: any, bulkExtractions: any[], duplicates:
 
   // Volume recommendations
   if (bulkExtractions.length > 0) {
-    const maxBulk = Math.max(...bulkExtractions.map(b => parseInt(b.themes_count)));
+    const maxBulk = Math.max(...bulkExtractions.map((b: any) => parseInt(b.themes_count)));
     if (maxBulk > 100) {
       recommendations.push(`📊 Very high extraction volume detected (${maxBulk} themes) - verify quality and implement chunked validation`);
     }
