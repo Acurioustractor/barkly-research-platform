@@ -10,7 +10,7 @@ export async function GET(
     const params = await context.params;
     const { id } = params;
     const { searchParams } = new URL(request.url);
-    
+
     const includeChunks = searchParams.get('includeChunks') === 'true';
     const chunkLimit = parseInt(searchParams.get('chunkLimit') || '10');
     const chunkOffset = parseInt(searchParams.get('chunkOffset') || '0');
@@ -40,13 +40,13 @@ export async function GET(
       wordCount: document.wordCount,
       summary: document.summary,
       fullText: document.fullText,
-      themes: document.themes.map(t => ({
+      themes: document.themes.map((t: any) => ({
         id: t.id,
         theme: t.theme,
         confidence: t.confidence,
         context: t.context
       })),
-      quotes: document.quotes.map(q => ({
+      quotes: document.quotes.map((q: any) => ({
         id: q.id,
         text: q.text,
         context: q.context,
@@ -55,21 +55,21 @@ export async function GET(
         confidence: q.confidence,
         category: q.category
       })),
-      insights: document.insights.map(i => ({
+      insights: document.insights.map((i: any) => ({
         id: i.id,
         insight: i.insight,
         type: i.type,
         confidence: i.confidence,
         evidence: i.evidence ? JSON.parse(i.evidence as string) : null
       })),
-      keywords: document.keywords.map(k => ({
+      keywords: document.keywords.map((k: any) => ({
         id: k.id,
         keyword: k.keyword,
         frequency: k.frequency,
         relevance: k.relevance,
         category: k.category
       })),
-      chunks: includeChunks ? document.chunks.slice(chunkOffset, chunkOffset + chunkLimit).map(c => ({
+      chunks: includeChunks ? document.chunks.slice(chunkOffset, chunkOffset + chunkLimit).map((c: any) => ({
         id: c.id,
         index: c.chunkIndex,
         text: c.text,
@@ -90,9 +90,9 @@ export async function GET(
 
   } catch (error) {
     console.error('Get document error:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to retrieve document',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -108,7 +108,7 @@ export async function DELETE(
   try {
     const params = await context.params;
     const { id } = params;
-    
+
     // Check if document exists without vector columns
     const document = await prisma.document.findUnique({
       where: { id },
@@ -134,9 +134,9 @@ export async function DELETE(
 
   } catch (error) {
     console.error('Delete document error:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to delete document',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -153,9 +153,9 @@ export async function PATCH(
     const params = await context.params;
     const { id } = params;
     const body = await request.json();
-    
+
     const { category, source, tags, status, originalName } = body;
-    
+
     const updatedDocument = await prisma.document.update({
       where: { id },
       data: {
@@ -181,9 +181,9 @@ export async function PATCH(
 
   } catch (error) {
     console.error('Update document error:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to update document',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
