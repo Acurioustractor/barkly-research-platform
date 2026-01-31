@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'analyzeGaps':
         const { organizationId, region, serviceTypes } = data;
-        
+
         // Trigger comprehensive gap analysis
         const analysisResults = await performGapAnalysis({
           organizationId,
@@ -103,14 +103,14 @@ export async function POST(request: NextRequest) {
           serviceTypes
         });
 
-        return NextResponse.json({ 
+        return NextResponse.json({
           analysis: analysisResults,
           message: 'Gap analysis completed successfully'
         });
 
       case 'addressGap':
         const { gapId, interventionPlan, assignedTo, timeline } = data;
-        
+
         if (!gapId || !interventionPlan) {
           return NextResponse.json(
             { error: 'Gap ID and intervention plan are required' },
@@ -147,13 +147,13 @@ export async function POST(request: NextRequest) {
           console.error('Failed to update gap status:', updateError);
         }
 
-        return NextResponse.json({ 
-          message: 'Gap intervention plan created successfully' 
+        return NextResponse.json({
+          message: 'Gap intervention plan created successfully'
         });
 
       case 'updateGapPriority':
         const { gapId: updateGapId, newPriority, reason } = data;
-        
+
         const { error: priorityError } = await supabase
           .from('service_gaps')
           .update({
@@ -167,8 +167,8 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to update gap priority: ${priorityError.message}`);
         }
 
-        return NextResponse.json({ 
-          message: 'Gap priority updated successfully' 
+        return NextResponse.json({
+          message: 'Gap priority updated successfully'
         });
 
       default:
@@ -262,24 +262,26 @@ async function performGapAnalysis(params: {
 }
 
 function analyzeGapsByType(services: any[], needs: any[]): Record<string, any> {
-  const servicesByType = services.reduce((acc, service) => {
+  const servicesByType = services.reduce((acc: Record<string, any>, service: any) => {
     acc[service.category] = (acc[service.category] || 0) + 1;
     return acc;
-  }, {});
+  }, {} as Record<string, any>);
 
-  const needsByType = needs.reduce((acc, need) => {
-    acc[need.need_category] = (acc[need.need_category] || 0) + 1;
+  const needsByType = needs.reduce((acc: Record<string, any>, need: any) => {
+    const type = need.need_category || 'other'; // Changed 'need_type' to 'need_category' to match existing data structure
+    if (!acc[type]) acc[type] = [];
+    acc[type].push(need);
     return acc;
-  }, {});
+  }, {} as Record<string, any>);
 
   const gaps: Record<string, any> = {};
-  
+
   // Identify categories with high needs but low services
   Object.keys(needsByType).forEach(category => {
-    const needCount = needsByType[category];
+    const needCount = needsByType[category].length; // Count needs from the array
     const serviceCount = servicesByType[category] || 0;
     const gapRatio = serviceCount > 0 ? needCount / serviceCount : needCount;
-    
+
     if (gapRatio > 1.5) { // Threshold for significant gap
       gaps[category] = {
         needCount,
@@ -294,25 +296,25 @@ function analyzeGapsByType(services: any[], needs: any[]): Record<string, any> {
 }
 
 function analyzeGapsByLocation(services: any[], needs: any[]): Record<string, any> {
-  const servicesByLocation = services.reduce((acc, service) => {
+  const servicesByLocation = services.reduce((acc: Record<string, any>, service: any) => {
     const location = service.communities?.name || 'Unknown';
     acc[location] = (acc[location] || 0) + 1;
     return acc;
-  }, {});
+  }, {} as Record<string, any>);
 
-  const needsByLocation = needs.reduce((acc, need) => {
+  const needsByLocation = needs.reduce((acc: Record<string, any>, need: any) => {
     const location = need.communities?.name || 'Unknown';
     acc[location] = (acc[location] || 0) + 1;
     return acc;
-  }, {});
+  }, {} as Record<string, any>);
 
   const gaps: Record<string, any> = {};
-  
+
   Object.keys(needsByLocation).forEach(location => {
     const needCount = needsByLocation[location];
     const serviceCount = servicesByLocation[location] || 0;
     const population = needs.find(n => n.communities?.name === location)?.communities?.population || 1000;
-    
+
     gaps[location] = {
       needCount,
       serviceCount,
@@ -327,16 +329,16 @@ function analyzeGapsByLocation(services: any[], needs: any[]): Record<string, an
 
 function identifyPriorityGaps(services: any[], needs: any[]): any[] {
   const priorityGaps = [];
-  
+
   // High-urgency needs with no corresponding services
   const highUrgencyNeeds = needs.filter(need => need.urgency_score >= 8);
-  
+
   highUrgencyNeeds.forEach(need => {
-    const matchingServices = services.filter(service => 
+    const matchingServices = services.filter(service =>
       service.category === need.need_category &&
       service.communities?.name === need.communities?.name
     );
-    
+
     if (matchingServices.length === 0) {
       priorityGaps.push({
         type: 'critical_service_gap',
@@ -354,30 +356,30 @@ function identifyPriorityGaps(services: any[], needs: any[]): any[] {
 
 function generateGapRecommendations(services: any[], needs: any[]): string[] {
   const recommendations = [];
-  
+
   // Generic recommendations based on analysis
   if (services.length === 0) {
     recommendations.push('Establish basic service infrastructure in the region');
   }
-  
+
   if (needs.length > services.length * 2) {
     recommendations.push('Significant service expansion needed to meet community needs');
   }
-  
+
   // Category-specific recommendations
   const healthNeeds = needs.filter(n => n.need_category === 'health').length;
   const healthServices = services.filter(s => s.category === 'health').length;
-  
+
   if (healthNeeds > healthServices * 2) {
     recommendations.push('Prioritize expansion of health services and facilities');
   }
-  
+
   const educationNeeds = needs.filter(n => n.need_category === 'education').length;
   const educationServices = services.filter(s => s.category === 'education').length;
-  
+
   if (educationNeeds > educationServices * 2) {
     recommendations.push('Develop additional educational programs and resources');
   }
-  
+
   return recommendations;
 }

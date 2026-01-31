@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Map data error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to get map data',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 async function getCommunityMapData(communityId?: string | null) {
   try {
     // Get community health data
-    const healthData = communityId 
+    const healthData = communityId
       ? [await communityHealthService.calculateCommunityHealth(communityId)]
       : await communityHealthService.calculateAllCommunityHealth();
 
@@ -93,7 +93,7 @@ async function getServiceMapData(communityId?: string | null) {
   try {
     // Get services from database or generate mock data
     const services = await generateServicePoints(communityId);
-    
+
     return {
       services,
       summary: {
@@ -101,10 +101,10 @@ async function getServiceMapData(communityId?: string | null) {
         active: services.filter(s => s.status === 'active').length,
         limited: services.filter(s => s.status === 'limited').length,
         closed: services.filter(s => s.status === 'closed').length,
-        byType: services.reduce((acc, service) => {
-          acc[service.type] = (acc[service.type] || 0) + 1;
+        byType: services.reduce((acc: Record<string, number>, service: any) => {
+          acc[service.service_type] = (acc[service.service_type] || 0) + 1;
           return acc;
-        }, {} as Record<string, number>)
+        }, {} as Record<string, number>) as Record<string, number>
       }
     };
 
@@ -118,7 +118,7 @@ async function getStoryMapData(communityId?: string | null) {
   try {
     // Get stories from database or generate mock data
     const stories = await generateStoryMarkers(communityId);
-    
+
     return {
       stories,
       summary: {
@@ -202,8 +202,8 @@ function getMockCoordinates(communityId: string, communityName?: string): [numbe
   };
 
   // Try to match by ID or name
-  const key = Object.keys(mockCoords).find(k => 
-    k === communityId.toLowerCase() || 
+  const key = Object.keys(mockCoords).find(k =>
+    k === communityId.toLowerCase() ||
     (communityName && k.includes(communityName.toLowerCase().replace(/\s+/g, '-')))
   );
 
@@ -216,14 +216,14 @@ function getMockCoordinates(communityId: string, communityName?: string): [numbe
   const hash = communityId.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
   const latOffset = ((hash % 200) - 100) / 1000; // ±0.1 degrees
   const lngOffset = (((hash * 7) % 200) - 100) / 1000; // ±0.1 degrees
-  
+
   return [baseCoords[0] + latOffset, baseCoords[1] + lngOffset];
 }
 
 function calculateNeedIntensity(community: any): 'low' | 'medium' | 'high' | 'critical' {
   const criticalNeeds = community.insights?.topNeeds?.filter((n: any) => n.urgency === 'critical').length || 0;
   const highNeeds = community.insights?.topNeeds?.filter((n: any) => n.urgency === 'high').length || 0;
-  
+
   if (criticalNeeds > 0) return 'critical';
   if (highNeeds > 1) return 'high';
   if (community.healthScore < 50) return 'medium';
@@ -408,15 +408,15 @@ export async function POST(request: NextRequest) {
       case 'refresh-communities':
         result = await getCommunityMapData(communityId);
         break;
-      
+
       case 'refresh-services':
         result = await getServiceMapData(communityId);
         break;
-      
+
       case 'refresh-all':
         result = await getAllMapData(communityId);
         break;
-      
+
       default:
         return NextResponse.json(
           { error: 'Invalid action' },
@@ -434,7 +434,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Map data POST error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to update map data',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

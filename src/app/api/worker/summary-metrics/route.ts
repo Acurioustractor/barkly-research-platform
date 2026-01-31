@@ -34,13 +34,13 @@ export async function GET(request: NextRequest) {
       criticalGaps: gapData.criticalGaps,
       activePartnerships: partnershipData.activePartnerships,
       evidenceItems: evidenceData.evidenceItems,
-      
+
       // Additional metrics
       programsByType: programData.byType,
       gapsByType: gapData.byType,
       partnershipsByType: partnershipData.byType,
       evidenceByType: evidenceData.byType,
-      
+
       // Performance indicators
       programEfficiencyScore: calculateProgramEfficiency(programData),
       gapResolutionRate: calculateGapResolutionRate(gapData),
@@ -93,7 +93,7 @@ async function fetchProgramMetrics(organizationId: string, region?: string | nul
 
     const programs = data || [];
     const totalPrograms = programs.length;
-    
+
     const averageEffectiveness = programs.length > 0
       ? Math.round(programs.reduce((sum, p) => sum + (p.effectiveness_score || 0), 0) / programs.length)
       : 0;
@@ -101,11 +101,10 @@ async function fetchProgramMetrics(organizationId: string, region?: string | nul
     const totalReach = programs.reduce((sum, p) => sum + (p.reach_count || 0), 0);
 
     // Programs by type
-    const byType = programs.reduce((acc, p) => {
-      const type = p.program_type || 'other';
-      acc[type] = (acc[type] || 0) + 1;
+    const byType = programs.reduce((acc: Record<string, number>, p: any) => {
+      acc[p.program_type] = (acc[p.program_type] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
 
     return {
       totalPrograms,
@@ -156,11 +155,10 @@ async function fetchGapMetrics(organizationId: string, region?: string | null): 
     const criticalGaps = gaps.filter(g => g.priority_level === 'critical' || g.severity_score >= 8).length;
 
     // Gaps by type
-    const byType = gaps.reduce((acc, g) => {
-      const type = g.gap_type || 'other';
-      acc[type] = (acc[type] || 0) + 1;
+    const byType = gaps.reduce((acc: Record<string, number>, g: any) => {
+      acc[g.gap_type] = (acc[g.gap_type] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
 
     return {
       criticalGaps,
@@ -209,11 +207,10 @@ async function fetchPartnershipMetrics(organizationId: string, region?: string |
     const activePartnerships = partnerships.length;
 
     // Partnerships by type
-    const byType = partnerships.reduce((acc, p) => {
-      const type = p.partner_type || 'other';
-      acc[type] = (acc[type] || 0) + 1;
+    const byType = partnerships.reduce((acc: Record<string, number>, p: any) => {
+      acc[p.partner_type] = (acc[p.partner_type] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
 
     return {
       activePartnerships,
@@ -260,11 +257,10 @@ async function fetchEvidenceMetrics(organizationId: string, region?: string | nu
     const evidenceItems = evidence.length;
 
     // Evidence by type
-    const byType = evidence.reduce((acc, e) => {
-      const type = e.evidence_type || 'other';
-      acc[type] = (acc[type] || 0) + 1;
+    const byType = evidence.reduce((acc: Record<string, number>, e: any) => {
+      acc[e.evidence_type] = (acc[e.evidence_type] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
 
     return {
       evidenceItems,
@@ -282,72 +278,72 @@ async function fetchEvidenceMetrics(organizationId: string, region?: string | nu
 
 function calculateProgramEfficiency(programData: any): number {
   if (!programData.programs || programData.programs.length === 0) return 0;
-  
+
   const programs = programData.programs;
   let efficiencyScore = 0;
   let scoredPrograms = 0;
-  
+
   programs.forEach((program: any) => {
     if (program.effectiveness_score && program.budget && program.reach_count) {
       // Efficiency = (Effectiveness * Reach) / Budget (normalized)
       const costPerPerson = program.budget / Math.max(program.reach_count, 1);
       const efficiency = program.effectiveness_score / Math.max(costPerPerson / 1000, 1); // Normalize cost
-      
+
       efficiencyScore += Math.min(efficiency, 100); // Cap at 100
       scoredPrograms++;
     }
   });
-  
+
   return scoredPrograms > 0 ? Math.round(efficiencyScore / scoredPrograms) : 0;
 }
 
 function calculateGapResolutionRate(gapData: any): number {
   if (!gapData.gaps || gapData.gaps.length === 0) return 0;
-  
+
   const gaps = gapData.gaps;
-  const resolvedGaps = gaps.filter((gap: any) => 
+  const resolvedGaps = gaps.filter((gap: any) =>
     gap.status === 'resolved' || gap.status === 'being_addressed'
   ).length;
-  
+
   return Math.round((resolvedGaps / gaps.length) * 100);
 }
 
 function calculatePartnershipSuccessRate(partnershipData: any): number {
   if (!partnershipData.partnerships || partnershipData.partnerships.length === 0) return 0;
-  
+
   const partnerships = partnershipData.partnerships;
-  
+
   // Success based on high impact and feasibility scores
-  const successfulPartnerships = partnerships.filter((partnership: any) => 
+  const successfulPartnerships = partnerships.filter((partnership: any) =>
     (partnership.potential_impact || 0) >= 7 && (partnership.feasibility_score || 0) >= 7
   ).length;
-  
+
   return Math.round((successfulPartnerships / partnerships.length) * 100);
 }
 
 function calculateEvidenceQuality(evidenceData: any): number {
   if (!evidenceData.evidence || evidenceData.evidence.length === 0) return 0;
-  
+
   const evidence = evidenceData.evidence;
   let qualityScore = 0;
-  
+
   evidence.forEach((item: any) => {
     let itemScore = 0;
-    
+
     // Verification adds 30 points
     if (item.verified) itemScore += 30;
-    
+
     // Reliability score adds up to 50 points
     itemScore += Math.min((item.reliability_score || 0) * 5, 50);
-    
+
     // Evidence type diversity adds 20 points (if both types exist)
     const hasQuantitative = evidence.some((e: any) => e.evidence_type === 'quantitative');
     const hasQualitative = evidence.some((e: any) => e.evidence_type === 'qualitative');
     if (hasQuantitative && hasQualitative) itemScore += 20;
-    
+
     qualityScore += itemScore;
   });
-  
+
   return Math.round(qualityScore / evidence.length);
 }
 
@@ -359,7 +355,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'refresh':
         const { organizationId, region } = data;
-        
+
         // Trigger refresh of summary metrics
         // This could involve recalculating cached metrics
         return NextResponse.json({
@@ -369,7 +365,7 @@ export async function POST(request: NextRequest) {
 
       case 'export':
         const { organizationId: exportOrgId, format, includeDetails } = data;
-        
+
         // Generate export of summary metrics
         return NextResponse.json({
           message: 'Summary metrics export generation initiated',
@@ -379,7 +375,7 @@ export async function POST(request: NextRequest) {
 
       case 'benchmark':
         const { organizationId: benchmarkOrgId, compareWith } = data;
-        
+
         // Generate benchmark comparison
         const benchmark = await generateBenchmarkComparison(benchmarkOrgId, compareWith);
         return NextResponse.json({ benchmark });
@@ -400,13 +396,13 @@ export async function POST(request: NextRequest) {
 }
 
 async function generateBenchmarkComparison(
-  organizationId: string, 
+  organizationId: string,
   compareWith: string[] = []
 ): Promise<any> {
   try {
     // Get metrics for the organization and comparison organizations
     const organizationMetrics = await fetchAllMetrics(organizationId);
-    
+
     const comparisonMetrics = await Promise.all(
       compareWith.map(id => fetchAllMetrics(id))
     );
@@ -418,7 +414,7 @@ async function generateBenchmarkComparison(
       benchmarks: {
         programEffectiveness: {
           organization: organizationMetrics.averageEffectiveness,
-          average: comparisonMetrics.length > 0 
+          average: comparisonMetrics.length > 0
             ? Math.round(comparisonMetrics.reduce((sum, m) => sum + m.averageEffectiveness, 0) / comparisonMetrics.length)
             : 0,
           percentile: calculatePercentile(
@@ -489,19 +485,19 @@ async function fetchAllMetrics(organizationId: string): Promise<any> {
 
 function calculatePercentile(value: number, comparisonValues: number[]): number {
   if (comparisonValues.length === 0) return 50; // Default to 50th percentile
-  
+
   const sortedValues = [...comparisonValues, value].sort((a, b) => a - b);
   const index = sortedValues.indexOf(value);
-  
+
   return Math.round((index / (sortedValues.length - 1)) * 100);
 }
 
 function generateBenchmarkInsights(
-  organizationMetrics: any, 
+  organizationMetrics: any,
   comparisonMetrics: any[]
 ): string[] {
   const insights = [];
-  
+
   if (comparisonMetrics.length === 0) {
     insights.push('No comparison data available for benchmarking');
     return insights;
@@ -533,11 +529,11 @@ function generateBenchmarkInsights(
 }
 
 function generateBenchmarkRecommendations(
-  organizationMetrics: any, 
+  organizationMetrics: any,
   comparisonMetrics: any[]
 ): string[] {
   const recommendations = [];
-  
+
   if (comparisonMetrics.length === 0) {
     recommendations.push('Establish benchmarking relationships with similar organizations');
     return recommendations;

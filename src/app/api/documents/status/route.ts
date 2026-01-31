@@ -23,11 +23,11 @@ export async function GET(request: NextRequest) {
 
     const summary = {
       total: documents.length,
-      byStatus: documents.reduce((acc: any, doc) => {
+      byStatus: documents.reduce((acc: Record<string, number>, doc: any) => {
         const status = doc.processing_status || 'unset';
         acc[status] = (acc[status] || 0) + 1;
         return acc;
-      }, {}),
+      }, {} as Record<string, number>),
       totalProcessingResults: {
         themes: documents.reduce((sum: number, doc: any) => sum + parseInt(doc.themes_count || '0'), 0),
         quotes: documents.reduce((sum: number, doc: any) => sum + parseInt(doc.quotes_count || '0'), 0),
