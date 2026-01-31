@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     // Get cultural safety statistics
     const safetyStats = await getCulturalSafetyStats(
       { start: startDate, end: endDate },
-      communityId
+      communityId || undefined
     );
 
     // Get additional dashboard stats
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       elderReviewsNeeded: elderStats.pending,
       averageReviewTime: safetyStats.averageReviewTime,
       protocolViolations: safetyStats.protocolViolations,
-      
+
       // Additional stats if details requested
       ...(includeDetails && {
         totalReviews: safetyStats.totalReviews,
@@ -83,7 +83,7 @@ async function getQueueStats(communityId?: string | null): Promise<any> {
     const items = data || [];
     const pending = items.filter(item => item.status === 'queued' || item.status === 'in_review').length;
     const urgent = items.filter(item => item.priority === 'urgent').length;
-    
+
     const distribution = items.reduce((acc, item) => {
       acc[item.priority] = (acc[item.priority] || 0) + 1;
       return acc;
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'generateReport':
         const { userId, communityId, reportType, timeRange } = data;
-        
+
         // Generate comprehensive cultural safety report
         const report = await generateCulturalSafetyReport({
           userId,
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
 
       case 'exportStats':
         const { userId: exportUserId, format, includeDetails } = data;
-        
+
         // Generate export of cultural safety statistics
         return NextResponse.json({
           message: 'Cultural safety stats export generation initiated',
@@ -282,7 +282,7 @@ function generateReportInsights(
   if (safetyStats.reviewsByLevel) {
     const publicCount = safetyStats.reviewsByLevel.public || 0;
     const restrictedCount = (safetyStats.reviewsByLevel.restricted || 0) + (safetyStats.reviewsByLevel.sacred || 0);
-    
+
     if (restrictedCount > publicCount) {
       insights.push('Majority of content requires cultural safety restrictions');
     } else if (publicCount > restrictedCount * 3) {
