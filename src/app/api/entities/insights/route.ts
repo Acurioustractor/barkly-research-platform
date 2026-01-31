@@ -5,7 +5,7 @@ import { logger } from '@/lib/utils/logger';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // Query parameters
     const documentId = searchParams.get('documentId');
     const entityType = searchParams.get('type');
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     // Filter results based on analysis depth
     let filteredAnalytics = analytics;
-    
+
     if (analysisDepth === 'standard') {
       // Return core insights only
       filteredAnalytics = {
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Support batch analysis for multiple documents or entities
     const {
       documentIds,
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
         entityTypes,
         analysisOptions
       );
-      
+
       return NextResponse.json({
         type: 'comparative',
         results: comparativeResults,
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
               entityType: entityTypes?.[0], // Use first entity type if provided
               ...analysisOptions
             });
-            
+
             return {
               documentId,
               success: true,
@@ -163,8 +163,8 @@ export async function POST(request: NextRequest) {
         results: batchResults,
         metadata: {
           documentCount: documentIds.length,
-          successCount: batchResults.filter(r => r.success).length,
-          failureCount: batchResults.filter(r => !r.success).length,
+          successCount: batchResults.filter((r: any) => r.success).length,
+          failureCount: batchResults.filter((r: any) => r.success).length, // Fixed implicit any, but wait, error showed this line too
           generatedAt: new Date().toISOString()
         }
       });
@@ -211,7 +211,7 @@ async function generateComparativeAnalysis(
 
     // Find common entities across documents
     const allEntities = new Map<string, { count: number; documents: string[] }>();
-    
+
     documentAnalytics.forEach(({ documentId, analytics }) => {
       analytics.patterns
         .filter(p => p.type === 'frequency')
@@ -311,9 +311,9 @@ function generateComparativeInsights(
   }
 
   // Insight 2: Confidence variation analysis
-  const confidenceScores = entityDistributions.map(d => d.avgConfidence);
+  const confidenceScores = entityDistributions.map((d: any) => d.avgConfidence);
   const confidenceVariation = Math.max(...confidenceScores) - Math.min(...confidenceScores);
-  
+
   if (confidenceVariation > 0.3) {
     insights.push({
       id: 'confidence_variation',
@@ -332,9 +332,9 @@ function generateComparativeInsights(
   }
 
   // Insight 3: Entity density analysis
-  const entityDensities = entityDistributions.map(d => d.totalEntities / Math.max(d.uniqueEntities, 1));
+  const entityDensities = entityDistributions.map((d: any) => d.totalEntities / Math.max(d.uniqueEntities, 1));
   const avgDensity = entityDensities.reduce((sum, d) => sum + d, 0) / entityDensities.length;
-  
+
   if (avgDensity > 3) {
     insights.push({
       id: 'high_entity_density',

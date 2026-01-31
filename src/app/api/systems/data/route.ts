@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const minConfidence = parseFloat(searchParams.get('minConfidence') || '0.5');
-    
+
     // Check if prisma is available
     if (!prisma) {
       return NextResponse.json(
@@ -40,13 +40,13 @@ export async function GET(request: Request) {
         { status: 500 }
       );
     }
-    
+
     // Get basic document count first
     let documentsWithSystems: any[] = [];
     try {
       const documentCount = await prisma.document.count();
       console.log('Document count:', documentCount);
-      
+
       if (documentCount > 0) {
         documentsWithSystems = await prisma.document.findMany({
           select: {
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
     }
 
     // Create document references
-    const documentRefs: DocumentReference[] = documentsWithSystems.map(doc => ({
+    const documentRefs: DocumentReference[] = documentsWithSystems.map((doc: any) => ({
       id: doc.id,
       title: doc.originalName,
       originalName: doc.originalName,
@@ -115,13 +115,13 @@ export async function GET(request: Request) {
 
 function findNodeId(label: string, nodeMap: Map<string, SystemNode>): string | null {
   const cleanLabel = label.toLowerCase().replace(/\s+/g, '-');
-  
+
   // Try exact matches first
   for (const [id, node] of nodeMap) {
     if (id.includes(cleanLabel) || node.label.toLowerCase().includes(label.toLowerCase())) {
       return id;
     }
   }
-  
+
   return null;
 }

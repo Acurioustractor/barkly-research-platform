@@ -5,7 +5,7 @@ import { logger } from '@/lib/utils/logger';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // Query parameters
     const documentId = searchParams.get('documentId');
     const entityType = searchParams.get('type');
@@ -23,26 +23,26 @@ export async function GET(request: NextRequest) {
 
     // Build where clause
     const where: any = {};
-    
+
     if (documentId) {
       where.documentId = documentId;
     }
-    
+
     if (entityType) {
       where.type = entityType;
     }
-    
+
     if (category) {
       where.category = category;
     }
-    
+
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
         { context: { contains: search, mode: 'insensitive' } }
       ];
     }
-    
+
     if (minConfidence) {
       where.confidence = { gte: parseFloat(minConfidence) };
     }
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
         hasMore: offset + entities.length < total
       },
       stats: {
-        typeDistribution: typeDistribution.map(t => ({
+        typeDistribution: typeDistribution.map((t: any) => ({
           type: t.type,
           count: t._count.type
         })),

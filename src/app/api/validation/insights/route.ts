@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         .select('community_id')
         .eq('id', session.user.id)
         .single();
-      
+
       targetCommunityId = user?.community_id;
     }
 
@@ -49,12 +49,12 @@ export async function GET(request: NextRequest) {
 
       // Filter by type if specified
       if (type) {
-        insights = insights.filter(insight => insight.type === type);
+        insights = insights.filter((insight: any) => insight.type === type);
       }
 
       // Filter by status if specified
       if (status) {
-        insights = insights.filter(insight => insight.validation_status === status);
+        insights = insights.filter((insight: any) => insight.validation_status === status);
       }
     }
 
@@ -77,17 +77,17 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    
+
     // Validate required fields
     const requiredFields = ['type', 'title', 'description', 'content', 'community_id', 'ai_confidence'];
-    const missingFields = requiredFields.filter(field => !body[field]);
-    
+    const missingFields = requiredFields.filter((field: any) => !body[field]);
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         { error: `Missing required fields: ${missingFields.join(', ')}` },
@@ -123,8 +123,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const canSubmitInsight = 
-      user.role === 'admin' || 
+    const canSubmitInsight =
+      user.role === 'admin' ||
       user.role === 'moderator' ||
       user.community_id === body.community_id;
 
@@ -142,7 +142,9 @@ export async function POST(request: NextRequest) {
       content: body.content,
       community_id: body.community_id,
       source_documents: body.source_documents || [],
-      ai_confidence: body.ai_confidence
+      ai_confidence: body.ai_confidence,
+      validation_status: 'pending' as 'pending',
+      cultural_appropriateness: 'pending' as 'pending'
     };
 
     const newInsight = await intelligenceValidationService.submitInsightForValidation(insightData);

@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!validations || !Array.isArray(validations) || !userId) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Missing required fields: validations (array), userId' 
+        {
+          success: false,
+          error: 'Missing required fields: validations (array), userId'
         },
         { status: 400 }
       );
@@ -27,9 +27,9 @@ export async function POST(request: NextRequest) {
     // Validate batch size
     if (validations.length > 100) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Batch size cannot exceed 100 entities' 
+        {
+          success: false,
+          error: 'Batch size cannot exceed 100 entities'
         },
         { status: 400 }
       );
@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
     for (const validation of validations) {
       if (!validation.entityId || !validation.action) {
         return NextResponse.json(
-          { 
-            success: false, 
-            error: 'Each validation must have entityId and action' 
+          {
+            success: false,
+            error: 'Each validation must have entityId and action'
           },
           { status: 400 }
         );
@@ -49,9 +49,9 @@ export async function POST(request: NextRequest) {
 
       if (!Object.values(ValidationAction).includes(validation.action)) {
         return NextResponse.json(
-          { 
-            success: false, 
-            error: `Invalid action: ${validation.action}. Must be one of: ${Object.values(ValidationAction).join(', ')}` 
+          {
+            success: false,
+            error: `Invalid action: ${validation.action}. Must be one of: ${Object.values(ValidationAction).join(', ')}`
           },
           { status: 400 }
         );
@@ -59,9 +59,9 @@ export async function POST(request: NextRequest) {
 
       if (validation.action === ValidationAction.MERGE && !validation.mergeWithEntityId) {
         return NextResponse.json(
-          { 
-            success: false, 
-            error: `mergeWithEntityId is required for merge action on entity ${validation.entityId}` 
+          {
+            success: false,
+            error: `mergeWithEntityId is required for merge action on entity ${validation.entityId}`
           },
           { status: 400 }
         );
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Add userId to each validation
-    const validationsWithUser = validations.map(v => ({
+    const validationsWithUser = validations.map((v: any) => ({
       ...v,
       userId
     }));
@@ -92,8 +92,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('Error in batch entity validation', error as Error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to process batch validation',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -110,9 +110,9 @@ export async function GET(request: NextRequest) {
 
     if (!batchId) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Missing required parameter: batchId' 
+        {
+          success: false,
+          error: 'Missing required parameter: batchId'
         },
         { status: 400 }
       );
@@ -132,8 +132,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('Error getting batch validation status', error as Error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to get batch validation status',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

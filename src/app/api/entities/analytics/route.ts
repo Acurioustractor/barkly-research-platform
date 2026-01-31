@@ -5,7 +5,7 @@ import { logger } from '@/lib/utils/logger';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // Query parameters
     const documentId = searchParams.get('documentId');
     const entityType = searchParams.get('type');
@@ -165,9 +165,9 @@ export async function GET(request: NextRequest) {
           }
         }
       },
-      orderBy: { 
-        document: { 
-          uploadedAt: 'desc' 
+      orderBy: {
+        document: {
+          uploadedAt: 'desc'
         }
       },
       take: 10
@@ -200,13 +200,13 @@ export async function GET(request: NextRequest) {
         avgConfidence: typeDistribution.reduce((sum, t) => sum + (t._avg.confidence || 0), 0) / typeDistribution.length,
         entityTypes: typeDistribution.length
       },
-      typeDistribution: typeDistribution.map(t => ({
+      typeDistribution: typeDistribution.map((t: any) => ({
         type: t.type,
         count: t._count.type,
         avgConfidence: t._avg.confidence
       })),
       topEntities,
-      entityFrequency: entityFrequency.map(e => ({
+      entityFrequency: entityFrequency.map((e: any) => ({
         name: e.name,
         type: e.type,
         occurrences: e._count.name,
@@ -238,19 +238,19 @@ export async function GET(request: NextRequest) {
  */
 function extractContextPatterns(contextData: any[]): any[] {
   const patterns: { [key: string]: number } = {};
-  
+
   contextData.forEach(item => {
     if (item.context) {
       // Simple pattern extraction - look for common phrases
       const words = item.context.toLowerCase().split(/\s+/);
-      
+
       // Extract 2-3 word phrases
       for (let i = 0; i < words.length - 1; i++) {
         const phrase = words.slice(i, i + 2).join(' ');
         if (phrase.length > 5) {
           patterns[phrase] = (patterns[phrase] || 0) + 1;
         }
-        
+
         if (i < words.length - 2) {
           const longerPhrase = words.slice(i, i + 3).join(' ');
           if (longerPhrase.length > 10) {
@@ -260,7 +260,7 @@ function extractContextPatterns(contextData: any[]): any[] {
       }
     }
   });
-  
+
   // Return top patterns
   return Object.entries(patterns)
     .filter(([, count]) => count > 1)

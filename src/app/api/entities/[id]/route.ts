@@ -9,7 +9,7 @@ export async function GET(
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
-    
+
     const includeRelated = searchParams.get('includeRelated') === 'true';
     const includeSimilar = searchParams.get('includeSimilar') === 'true';
     const includeDocuments = searchParams.get('includeDocuments') === 'true';
@@ -211,12 +211,12 @@ async function getEntityStatistics(entityName: string, entityType: string) {
         max: confidenceStats._max.confidence,
         min: confidenceStats._min.confidence
       },
-      typeDistribution: typeDistribution.map(t => ({
+      typeDistribution: typeDistribution.map((t: any) => ({
         type: t.type,
         count: t._count.type
       })),
       recentOccurrences,
-      similarTypeEntities: similarTypeEntities.map(e => e.name)
+      similarTypeEntities: similarTypeEntities.map((e: any) => e.name)
     };
   } catch (error) {
     console.error('Error getting entity statistics:', error);

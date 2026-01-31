@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -39,17 +39,17 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    
+
     // Validate required fields
     const requiredFields = ['request_id', 'accuracy_score', 'relevance_score', 'completeness_score', 'cultural_appropriateness_score', 'overall_rating', 'recommendation', 'confidence_level'];
-    const missingFields = requiredFields.filter(field => body[field] === undefined);
-    
+    const missingFields = requiredFields.filter((field: any) => body[field] === undefined);
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         { error: `Missing required fields: ${missingFields.join(', ')}` },

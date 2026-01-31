@@ -5,7 +5,7 @@ import { logger } from '@/lib/utils/logger';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // Query parameters
     const query = searchParams.get('q');
     const entityType = searchParams.get('type');
@@ -112,8 +112,8 @@ export async function GET(request: NextRequest) {
               }
             } : undefined
           });
-          
-          return results.map(entity => ({
+
+          return results.map((entity: any) => ({
             ...entity,
             searchPriority: searchQuery.priority,
             relevanceScore: calculateRelevanceScore(entity, query, searchQuery.priority)
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
       // Combine and deduplicate results
       const allResults = searchResults.flat();
       const uniqueResults = new Map();
-      
+
       allResults.forEach(entity => {
         const key = entity.id;
         if (!uniqueResults.has(key) || uniqueResults.get(key).relevanceScore < entity.relevanceScore) {
@@ -140,13 +140,13 @@ export async function GET(request: NextRequest) {
       // Semantic search (placeholder for future vector search)
       // For now, use enhanced fuzzy search with keyword extraction
       const keywords = extractKeywords(query);
-      
+
       const semanticWhere = {
         ...baseWhere,
         OR: [
           { name: { contains: query, mode: 'insensitive' } },
           { context: { contains: query, mode: 'insensitive' } },
-          ...keywords.map(keyword => ({
+          ...keywords.map((keyword: any) => ({
             OR: [
               { name: { contains: keyword, mode: 'insensitive' } },
               { context: { contains: keyword, mode: 'insensitive' } }
@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
 
       // Calculate semantic relevance scores
       entities = semanticResults
-        .map(entity => ({
+        .map((entity: any) => ({
           ...entity,
           relevanceScore: calculateSemanticRelevance(entity, query, keywords)
         }))
@@ -183,7 +183,7 @@ export async function GET(request: NextRequest) {
     // Get related entities if we have results
     let relatedEntities: any[] = [];
     if (entities.length > 0) {
-      const entityNames = entities.map(e => e.name);
+      const entityNames = entities.map((e: any) => e.name);
       relatedEntities = await findRelatedEntities(entityNames, baseWhere, 5);
     }
 
@@ -230,9 +230,9 @@ function calculateRelevanceScore(entity: any, query: string, priority: number): 
   const queryLower = query.toLowerCase();
   const nameLower = entity.name.toLowerCase();
   const contextLower = (entity.context || '').toLowerCase();
-  
+
   let score = priority * entity.confidence;
-  
+
   // Boost score based on match quality
   if (nameLower === queryLower) {
     score += 0.5;
@@ -241,17 +241,17 @@ function calculateRelevanceScore(entity: any, query: string, priority: number): 
   } else if (nameLower.includes(queryLower)) {
     score += 0.2;
   }
-  
+
   // Boost for context matches
   if (contextLower.includes(queryLower)) {
     score += 0.1;
   }
-  
+
   // Boost for shorter names (more specific matches)
   if (entity.name.length < 20) {
     score += 0.05;
   }
-  
+
   return Math.min(score, 2.0); // Cap at 2.0
 }
 
@@ -262,9 +262,9 @@ function calculateSemanticRelevance(entity: any, query: string, keywords: string
   const queryLower = query.toLowerCase();
   const nameLower = entity.name.toLowerCase();
   const contextLower = (entity.context || '').toLowerCase();
-  
+
   let score = entity.confidence;
-  
+
   // Direct query matches
   if (nameLower.includes(queryLower)) {
     score += 0.4;
@@ -272,7 +272,7 @@ function calculateSemanticRelevance(entity: any, query: string, keywords: string
   if (contextLower.includes(queryLower)) {
     score += 0.2;
   }
-  
+
   // Keyword matches
   keywords.forEach(keyword => {
     if (nameLower.includes(keyword)) {
@@ -282,7 +282,7 @@ function calculateSemanticRelevance(entity: any, query: string, keywords: string
       score += 0.05;
     }
   });
-  
+
   return score;
 }
 
@@ -292,9 +292,9 @@ function calculateSemanticRelevance(entity: any, query: string, keywords: string
 function extractKeywords(query: string): string[] {
   const words = query.toLowerCase().split(/\s+/);
   const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should']);
-  
+
   return words
-    .filter(word => word.length > 2 && !stopWords.has(word))
+    .filter((word: any) => word.length > 2 && !stopWords.has(word))
     .slice(0, 5); // Limit to top 5 keywords
 }
 
@@ -303,7 +303,7 @@ function extractKeywords(query: string): string[] {
  */
 async function findRelatedEntities(entityNames: string[], baseWhere: any, limit: number): Promise<any[]> {
   if (!prisma) return [];
-  
+
   try {
     // Find entities that appear in the same documents
     const relatedQuery = `
@@ -316,10 +316,10 @@ async function findRelatedEntities(entityNames: string[], baseWhere: any, limit:
       ORDER BY e2.confidence DESC
       LIMIT ?
     `;
-    
+
     const params = [...entityNames, ...entityNames, baseWhere.confidence?.gte || 0.3, limit];
     const related = await prisma.$queryRawUnsafe(relatedQuery, ...params);
-    
+
     return related as any[];
   } catch (error) {
     console.error('Error finding related entities:', error);
@@ -332,16 +332,16 @@ async function findRelatedEntities(entityNames: string[], baseWhere: any, limit:
  */
 async function generateSearchSuggestions(query: string, entityType?: string, limit: number = 5): Promise<string[]> {
   if (!prisma || query.length < 2) return [];
-  
+
   try {
     const where: any = {
       name: { startsWith: query, mode: 'insensitive' }
     };
-    
+
     if (entityType) {
       where.type = entityType;
     }
-    
+
     const suggestions = await prisma!.documentEntity.findMany({
       where,
       select: { name: true },
@@ -349,8 +349,8 @@ async function generateSearchSuggestions(query: string, entityType?: string, lim
       orderBy: { confidence: 'desc' },
       take: limit
     });
-    
-    return suggestions.map(s => s.name);
+
+    return suggestions.map((s: any) => s.name);
   } catch (error) {
     console.error('Error generating suggestions:', error);
     return [];

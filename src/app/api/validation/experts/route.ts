@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -64,17 +64,17 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    
+
     // Validate required fields
     const requiredFields = ['community_id', 'expertise_areas', 'cultural_role'];
-    const missingFields = requiredFields.filter(field => !body[field]);
-    
+    const missingFields = requiredFields.filter((field: any) => !body[field]);
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         { error: `Missing required fields: ${missingFields.join(', ')}` },
@@ -110,8 +110,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const canRegisterAsExpert = 
-      user.role === 'admin' || 
+    const canRegisterAsExpert =
+      user.role === 'admin' ||
       user.role === 'moderator' ||
       user.community_id === body.community_id;
 
@@ -148,6 +148,11 @@ export async function POST(request: NextRequest) {
         elder_consultation_required: false,
         traditional_knowledge_areas: [],
         cultural_sensitivity_level: 'medium'
+      },
+      validation_history: {
+        total_validations: 0,
+        accuracy_rating: 0,
+        response_time_avg: 0
       }
     };
 
@@ -172,7 +177,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

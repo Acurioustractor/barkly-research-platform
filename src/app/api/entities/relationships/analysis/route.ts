@@ -11,7 +11,7 @@ import { logger } from '@/lib/utils/logger';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     const documentId = searchParams.get('documentId');
     const entityIds = searchParams.get('entityIds')?.split(',').filter(Boolean);
     const includeInsights = searchParams.get('includeInsights') !== 'false'; // Default true
@@ -62,14 +62,14 @@ export async function GET(request: NextRequest) {
     // Add summary statistics
     result.summary = {
       totalEntities: analysis.entityConnections.length,
-      averageConnectionsPerEntity: analysis.entityConnections.length > 0 ? 
+      averageConnectionsPerEntity: analysis.entityConnections.length > 0 ?
         analysis.entityConnections.reduce((sum, entity) => sum + entity.connectionCount, 0) / analysis.entityConnections.length : 0,
-      strongRelationshipsCount: analysis.strongestRelationships.filter(rel => rel.strength >= 0.7).length,
+      strongRelationshipsCount: analysis.strongestRelationships.filter((rel: any) => rel.strength >= 0.7).length,
       relationshipTypeDistribution: analysis.relationshipTypes,
       topConnectedEntities: analysis.entityConnections
         .sort((a, b) => b.connectionCount - a.connectionCount)
         .slice(0, 5)
-        .map(entity => ({
+        .map((entity: any) => ({
           id: entity.entityId,
           name: entity.entityName,
           type: entity.entityType,
