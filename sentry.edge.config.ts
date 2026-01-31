@@ -3,15 +3,15 @@
 // Note that this config is unrelated to the Vercel Edge Runtime and is also required when running locally.
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-let Sentry: any;
+let SentryModule: any;
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  Sentry = require('@sentry/nextjs');
+  SentryModule = require('@sentry/nextjs');
 } catch {
-  Sentry = { init: () => {} };
+  SentryModule = { init: () => { } };
 }
 
-Sentry.init({
+SentryModule.init({
   dsn: "https://e5a3314ef798a555a2cbf725f22fea96@o4509619774947328.ingest.de.sentry.io/4509619781369936",
 
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.

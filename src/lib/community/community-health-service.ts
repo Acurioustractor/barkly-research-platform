@@ -26,7 +26,7 @@ export interface CommunityHealthWithMetrics extends CommunityHealth {
 
 // Community health calculation service
 export class CommunityHealthService {
-  
+
   /**
    * Calculate comprehensive health for a specific community
    */
@@ -151,7 +151,7 @@ export class CommunityHealthService {
       // This would require historical health data storage
       // For now, return current health as single point
       const currentHealth = await this.calculateCommunityHealth(communityId);
-      
+
       return [{
         date: new Date(),
         healthScore: currentHealth.healthScore,
@@ -168,7 +168,7 @@ export class CommunityHealthService {
    * Calculate additional health metrics
    */
   private async calculateHealthMetrics(
-    communityId: string, 
+    communityId: string,
     documents: Array<{ id: string; ai_analysis: any; created_at: Date; processing_status: string }>
   ) {
     const totalDocuments = documents.length;
@@ -184,7 +184,7 @@ export class CommunityHealthService {
     const analysisCompleteness = totalAllDocuments > 0 ? (totalDocuments / totalAllDocuments) * 100 : 0;
 
     // Data freshness (average age of analyzed documents)
-    const avgAge = documents.length > 0 
+    const avgAge = documents.length > 0
       ? documents.reduce((sum, doc) => sum + (Date.now() - new Date(doc.created_at).getTime()), 0) / documents.length
       : 0;
     const dataFreshness = Math.max(0, 100 - (avgAge / (30 * 24 * 60 * 60 * 1000)) * 100); // 30 days = 0% freshness
@@ -426,3 +426,24 @@ export class CommunityHealthService {
 
 // Export singleton instance
 export const communityHealthService = new CommunityHealthService();
+
+/**
+ * Get community health indicators (helper for impact report generator)
+ */
+export async function getCommunityHealthIndicators(communityId: string) {
+  try {
+    const health = await communityHealthService.calculateCommunityHealth(communityId);
+    return {
+      overallScore: health.healthScore,
+      trend: health.trends.direction,
+      trendPercentage: Math.round(health.trends.velocity * 100) // Convert velocity to percentage if applicable
+    };
+  } catch (error) {
+    console.warn('Error fetching community health indicators:', error);
+    return {
+      overallScore: 0,
+      trend: 'unknown',
+      trendPercentage: 0
+    };
+  }
+}
