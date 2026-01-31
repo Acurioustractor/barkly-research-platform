@@ -69,8 +69,8 @@ export async function GET(request: NextRequest) {
     const reviews = data?.map(review => ({
       id: review.id,
       contentId: review.content_id,
-      elderName: review.elders?.name || 'Unknown Elder',
-      elderRole: review.elders?.role || 'Elder',
+      elderName: Array.isArray(review.elders) ? review.elders[0]?.name : (review.elders as any)?.name || 'Unknown Elder',
+      elderRole: Array.isArray(review.elders) ? review.elders[0]?.role : (review.elders as any)?.role || 'Elder',
       reviewDecision: review.review_decision,
       culturalConcerns: review.cultural_concerns || [],
       recommendations: review.recommendations || [],
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'submitForElderReview':
         const { contentId, contentType, elderIds, culturalConcerns, urgency } = data;
-        
+
         if (!contentId || !contentType || !elderIds || !Array.isArray(elderIds)) {
           return NextResponse.json(
             { error: 'Content ID, type, and elder IDs array are required' },
@@ -115,21 +115,21 @@ export async function POST(request: NextRequest) {
           urgency || 'medium'
         );
 
-        return NextResponse.json({ 
+        return NextResponse.json({
           reviewIds,
-          message: `Content submitted to ${reviewIds.length} elders for review` 
+          message: `Content submitted to ${reviewIds.length} elders for review`
         });
 
       case 'completeElderReview':
-        const { 
-          reviewId, 
-          elderDecision, 
-          culturalConcerns: concerns, 
-          recommendations, 
+        const {
+          reviewId,
+          elderDecision,
+          culturalConcerns: concerns,
+          recommendations,
           protocolViolations,
-          reviewNotes 
+          reviewNotes
         } = data;
-        
+
         if (!reviewId || !elderDecision) {
           return NextResponse.json(
             { error: 'Review ID and elder decision are required' },
@@ -155,13 +155,13 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to complete elder review: ${updateError.message}`);
         }
 
-        return NextResponse.json({ 
-          message: 'Elder review completed successfully' 
+        return NextResponse.json({
+          message: 'Elder review completed successfully'
         });
 
       case 'escalateReview':
         const { reviewId: escalateId, escalationReason, escalateTo } = data;
-        
+
         if (!escalateId || !escalationReason) {
           return NextResponse.json(
             { error: 'Review ID and escalation reason are required' },
@@ -197,8 +197,8 @@ export async function POST(request: NextRequest) {
           console.error('Failed to update review status:', reviewUpdateError);
         }
 
-        return NextResponse.json({ 
-          message: 'Review escalated successfully' 
+        return NextResponse.json({
+          message: 'Review escalated successfully'
         });
 
       default:
