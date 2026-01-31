@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database-safe';
+import { Prisma } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
     console.log('[ADMIN] Starting database cleanup...');
 
     // Clear all data in the correct order (respecting foreign key constraints)
-    const deletionResults = await prisma.$transaction(async (tx) => {
+    const deletionResults = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Delete all child records first (they reference documents)
       const chunksDeleted = await tx.documentChunk.deleteMany({});
       console.log(`[ADMIN] Deleted ${chunksDeleted.count} document chunks`);
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[ADMIN] Database cleanup error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to clear database',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -121,7 +122,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('[ADMIN] Data count error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to get data counts',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
