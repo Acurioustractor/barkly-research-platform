@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     const options = {
       source: (formData.get('source') as string) || 'upload',
       category: (formData.get('category') as string) || 'general',
-      tags: formData.get('tags') ? (formData.get('tags') as string).split(',').map(t => t.trim()) : [],
+      tags: formData.get('tags') ? (formData.get('tags') as string).split(',').map((t: string) => t.trim()) : [],
       enableAI: formData.get('enableAI') !== 'false'
     };
 
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
           const pdfData = await pdfParse(buffer);
           extractedText = pdfData.text || '';
           pageCount = pdfData.numpages || 1;
-          wordCount = extractedText.split(/\s+/).filter(w => w.length > 0).length;
+          wordCount = extractedText.split(/\s+/).filter((w: string) => w.length > 0).length;
 
           console.log(`[upload] Extracted ${wordCount} words from ${pageCount} pages`);
         } catch (pdfError) {
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
         // Store chunks
         if (chunks.length > 0) {
           await prisma!.documentChunk.createMany({
-            data: chunks.map((chunk, index) => ({
+            data: chunks.map((chunk: string, index: number) => ({
               documentId: document.id,
               chunkIndex: index,
               text: chunk,
@@ -206,14 +206,14 @@ export async function POST(request: NextRequest) {
     // Calculate summary
     const summary = {
       totalFiles: files.length,
-      successful: results.filter(r => r.status === 'COMPLETED').length,
-      failed: results.filter(r => r.status === 'FAILED').length,
+      successful: results.filter((r: any) => r.status === 'COMPLETED').length,
+      failed: results.filter((r: any) => r.status === 'FAILED').length,
       totalProcessingTime: Date.now() - startTime,
       metrics: {
-        totalChunks: results.reduce((sum, r) => sum + r.metrics.chunks, 0),
-        totalThemes: results.reduce((sum, r) => sum + r.metrics.themes, 0),
-        totalQuotes: results.reduce((sum, r) => sum + r.metrics.quotes, 0),
-        totalInsights: results.reduce((sum, r) => sum + r.metrics.insights, 0)
+        totalChunks: results.reduce((sum: number, r: any) => sum + r.metrics.chunks, 0),
+        totalThemes: results.reduce((sum: number, r: any) => sum + r.metrics.themes, 0),
+        totalQuotes: results.reduce((sum: number, r: any) => sum + r.metrics.quotes, 0),
+        totalInsights: results.reduce((sum: number, r: any) => sum + r.metrics.insights, 0)
       }
     };
 
@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
 function createSimpleChunks(text: string): string[] {
   const chunkSize = 1000;
   const chunks: string[] = [];
-  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const sentences = text.split(/[.!?]+/).filter((s: string) => s.trim().length > 0);
 
   let currentChunk = '';
 
@@ -263,7 +263,7 @@ function createSimpleChunks(text: string): string[] {
     chunks.push(currentChunk.trim());
   }
 
-  return chunks.filter(chunk => chunk.length > 50);
+  return chunks.filter((chunk: string) => chunk.length > 50);
 }
 
 /**

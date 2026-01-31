@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -37,11 +37,11 @@ export async function GET(request: NextRequest) {
 
     // Apply additional filters
     if (category) {
-      feedback = feedback.filter(f => f.feedback_category === category);
+      feedback = feedback.filter((f: any) => f.feedback_category === category);
     }
 
     if (priority) {
-      feedback = feedback.filter(f => f.priority_level === priority);
+      feedback = feedback.filter((f: any) => f.priority_level === priority);
     }
 
     return NextResponse.json({
@@ -63,17 +63,17 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    
+
     // Validate required fields
     const requiredFields = ['stakeholder_type', 'organization', 'contact_person', 'feedback_category', 'detailed_feedback'];
-    const missingFields = requiredFields.filter(field => !body[field]);
-    
+    const missingFields = requiredFields.filter((field: string) => !body[field]);
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         { error: `Missing required fields: ${missingFields.join(', ')}` },

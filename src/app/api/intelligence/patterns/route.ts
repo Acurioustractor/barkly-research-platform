@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db/database';
+import { prisma } from '@/lib/database-safe';
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Pattern recognition error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to analyze patterns',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -46,23 +46,28 @@ export async function GET(request: NextRequest) {
 
 async function getCrossCommunityTrends(communityId?: string | null) {
   try {
-    // Get all documents with AI analysis
-    const whereClause = communityId ? { community_id: communityId } : {};
-    
-    const documents = await prisma.document.findMany({
-      where: {
-        ...whereClause,
-        ai_analysis: { not: null }
-      },
-      select: {
-        id: true,
-        community_id: true,
-        ai_analysis: true,
-        community: {
-          select: { name: true }
-        }
-      }
-    });
+    if (!prisma) {
+      throw new Error('Database service unavailable');
+    }
+    // Get all documents with AI analysis via raw SQL
+    let documents: any[];
+
+    if (communityId) {
+      documents = await prisma.$queryRaw`
+        SELECT d.id, d.community_id, d.ai_analysis, c.name as community_name
+        FROM documents d
+        LEFT JOIN communities c ON d.community_id = c.id
+        WHERE d.community_id = ${communityId}::uuid
+        AND d.ai_analysis IS NOT NULL
+      ` as any[];
+    } else {
+      documents = await prisma.$queryRaw`
+        SELECT d.id, d.community_id, d.ai_analysis, c.name as community_name
+        FROM documents d
+        LEFT JOIN communities c ON d.community_id = c.id
+        WHERE d.ai_analysis IS NOT NULL
+      ` as any[];
+    }
 
     // Extract themes and needs across communities
     const themeMap = new Map<string, { communities: Set<string>; count: number; evidence: string[] }>();
@@ -70,7 +75,7 @@ async function getCrossCommunityTrends(communityId?: string | null) {
 
     documents.forEach(doc => {
       const intelligence = doc.ai_analysis?.intelligence;
-      const communityName = doc.community?.name || 'Unknown';
+      const communityName = doc.community_name || 'Unknown';
 
       if (intelligence) {
         // Process themes
@@ -81,7 +86,9 @@ async function getCrossCommunityTrends(communityId?: string | null) {
           const themeData = themeMap.get(theme.name)!;
           themeData.communities.add(communityName);
           themeData.count++;
-          themeData.evidence.push(theme.evidence);
+          if (theme.evidence) {
+            themeData.evidence.push(theme.evidence);
+          }
         });
 
         // Process community needs
@@ -116,7 +123,7 @@ async function getCrossCommunityTrends(communityId?: string | null) {
       .map(([need, data]) => {
         const criticalCount = data.urgency.filter(u => u === 'critical').length;
         const highCount = data.urgency.filter(u => u === 'high').length;
-        
+
         return {
           trend: `${need} needs`,
           communities: Array.from(data.communities),
@@ -136,7 +143,7 @@ async function getCrossCommunityTrends(communityId?: string | null) {
       needTrends: needTrends,
       summary: {
         total_documents: documents.length,
-        communities_analyzed: new Set(documents.map(d => d.community?.name).filter(Boolean)).size,
+        communities_analyzed: new Set(documents.map((d: any) => d.community_name).filter(Boolean)).size,
         trends_identified: trends.length + needTrends.length
       }
     };
@@ -149,24 +156,33 @@ async function getCrossCommunityTrends(communityId?: string | null) {
 
 async function getServiceGapPatterns(communityId?: string | null) {
   try {
-    const whereClause = communityId ? { community_id: communityId } : {};
-    
-    const documents = await prisma.document.findMany({
-      where: {
-        ...whereClause,
-        ai_analysis: { not: null }
-      },
-      select: {
-        ai_analysis: true,
-        community: { select: { name: true } }
-      }
-    });
+    if (!prisma) {
+      throw new Error('Database service unavailable');
+    }
+    let documents: any[];
+
+    if (communityId) {
+      documents = await prisma.$queryRaw`
+        SELECT d.ai_analysis, c.name as community_name
+        FROM documents d
+        LEFT JOIN communities c ON d.community_id = c.id
+        WHERE d.community_id = ${communityId}::uuid
+        AND d.ai_analysis IS NOT NULL
+      ` as any[];
+    } else {
+      documents = await prisma.$queryRaw`
+        SELECT d.ai_analysis, c.name as community_name
+        FROM documents d
+        LEFT JOIN communities c ON d.community_id = c.id
+        WHERE d.ai_analysis IS NOT NULL
+      ` as any[];
+    }
 
     const gapMap = new Map<string, { locations: Set<string>; impact: number[]; urgency: string[] }>();
 
     documents.forEach(doc => {
       const intelligence = doc.ai_analysis?.intelligence;
-      const communityName = doc.community?.name || 'Unknown';
+      const communityName = doc.community_name || 'Unknown';
 
       intelligence?.serviceGaps?.forEach((gap: any) => {
         if (!gapMap.has(gap.service)) {
@@ -183,7 +199,7 @@ async function getServiceGapPatterns(communityId?: string | null) {
       .map(([service, data]) => {
         const avgImpact = data.impact.reduce((a, b) => a + b, 0) / data.impact.length;
         const criticalCount = data.urgency.filter(u => u === 'critical').length;
-        
+
         return {
           service,
           locations: Array.from(data.locations),
@@ -216,24 +232,33 @@ async function getServiceGapPatterns(communityId?: string | null) {
 
 async function getOpportunityPatterns(communityId?: string | null) {
   try {
-    const whereClause = communityId ? { community_id: communityId } : {};
-    
-    const documents = await prisma.document.findMany({
-      where: {
-        ...whereClause,
-        ai_analysis: { not: null }
-      },
-      select: {
-        ai_analysis: true,
-        community: { select: { name: true } }
-      }
-    });
+    if (!prisma) {
+      throw new Error('Database service unavailable');
+    }
+    let documents: any[];
+
+    if (communityId) {
+      documents = await prisma.$queryRaw`
+        SELECT d.ai_analysis, c.name as community_name
+        FROM documents d
+        LEFT JOIN communities c ON d.community_id = c.id
+        WHERE d.community_id = ${communityId}::uuid
+        AND d.ai_analysis IS NOT NULL
+      ` as any[];
+    } else {
+      documents = await prisma.$queryRaw`
+        SELECT d.ai_analysis, c.name as community_name
+        FROM documents d
+        LEFT JOIN communities c ON d.community_id = c.id
+        WHERE d.ai_analysis IS NOT NULL
+      ` as any[];
+    }
 
     const opportunityMap = new Map<string, { communities: Set<string>; potential: number[]; timelines: string[] }>();
 
     documents.forEach(doc => {
       const intelligence = doc.ai_analysis?.intelligence;
-      const communityName = doc.community?.name || 'Unknown';
+      const communityName = doc.community_name || 'Unknown';
 
       intelligence?.opportunities?.forEach((opp: any) => {
         const oppKey = opp.opportunity;
@@ -250,7 +275,7 @@ async function getOpportunityPatterns(communityId?: string | null) {
     const opportunities = Array.from(opportunityMap.entries())
       .map(([opportunity, data]) => {
         const avgPotential = data.potential.reduce((a, b) => a + b, 0) / data.potential.length;
-        
+
         return {
           opportunity,
           communities: Array.from(data.communities),
@@ -278,24 +303,33 @@ async function getOpportunityPatterns(communityId?: string | null) {
 
 async function getRiskPatterns(communityId?: string | null) {
   try {
-    const whereClause = communityId ? { community_id: communityId } : {};
-    
-    const documents = await prisma.document.findMany({
-      where: {
-        ...whereClause,
-        ai_analysis: { not: null }
-      },
-      select: {
-        ai_analysis: true,
-        community: { select: { name: true } }
-      }
-    });
+    if (!prisma) {
+      throw new Error('Database service unavailable');
+    }
+    let documents: any[];
+
+    if (communityId) {
+      documents = await prisma.$queryRaw`
+        SELECT d.ai_analysis, c.name as community_name
+        FROM documents d
+        LEFT JOIN communities c ON d.community_id = c.id
+        WHERE d.community_id = ${communityId}::uuid
+        AND d.ai_analysis IS NOT NULL
+      ` as any[];
+    } else {
+      documents = await prisma.$queryRaw`
+        SELECT d.ai_analysis, c.name as community_name
+        FROM documents d
+        LEFT JOIN communities c ON d.community_id = c.id
+        WHERE d.ai_analysis IS NOT NULL
+      ` as any[];
+    }
 
     const riskMap = new Map<string, { communities: Set<string>; probability: number[]; impact: number[] }>();
 
     documents.forEach(doc => {
       const intelligence = doc.ai_analysis?.intelligence;
-      const communityName = doc.community?.name || 'Unknown';
+      const communityName = doc.community_name || 'Unknown';
 
       intelligence?.riskFactors?.forEach((risk: any) => {
         if (!riskMap.has(risk.risk)) {
@@ -313,7 +347,7 @@ async function getRiskPatterns(communityId?: string | null) {
         const avgProbability = data.probability.reduce((a, b) => a + b, 0) / data.probability.length;
         const avgImpact = data.impact.reduce((a, b) => a + b, 0) / data.impact.length;
         const riskScore = avgProbability * avgImpact;
-        
+
         return {
           risk,
           communities: Array.from(data.communities),

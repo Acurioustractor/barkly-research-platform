@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         totalQuotes: quotes.length,
         totalInsights: insights.length
       },
-      themes: themes.map(theme => ({
+      themes: themes.map((theme: any) => ({
         id: theme.id,
         name: theme.theme_name,
         description: theme.description,
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         documentTitle: theme.document_title,
         createdAt: theme.created_at
       })),
-      quotes: quotes.map(quote => ({
+      quotes: quotes.map((quote: any) => ({
         id: quote.id,
         text: quote.quote_text,
         knowledgeHolder: quote.knowledge_holder,
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         documentTitle: quote.document_title,
         createdAt: quote.created_at
       })),
-      insights: insights.map(insight => ({
+      insights: insights.map((insight: any) => ({
         id: insight.id,
         insight: insight.insight,
         type: insight.type,

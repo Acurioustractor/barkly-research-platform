@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match frontend interface
-    const partnerships = data?.map(partnership => ({
+    const partnerships = data?.map((partnership: any) => ({
       id: partnership.id,
       partnerName: partnership.partner_name,
       partnerType: partnership.partner_type,
@@ -148,14 +148,14 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to create partnership: ${createError.message}`);
         }
 
-        return NextResponse.json({ 
+        return NextResponse.json({
           partnership: newPartnership,
-          message: 'Partnership opportunity created successfully' 
+          message: 'Partnership opportunity created successfully'
         }, { status: 201 });
 
       case 'initiatePartnership':
         const { partnershipId, initiatedBy, message, proposedTimeline } = data;
-        
+
         if (!partnershipId || !initiatedBy) {
           return NextResponse.json(
             { error: 'Partnership ID and initiator are required' },
@@ -192,13 +192,13 @@ export async function POST(request: NextRequest) {
           console.error('Failed to update partnership status:', updateError);
         }
 
-        return NextResponse.json({ 
-          message: 'Partnership initiation successful' 
+        return NextResponse.json({
+          message: 'Partnership initiation successful'
         });
 
       case 'findPartners':
         const { organizationId, serviceType, location, partnershipType } = data;
-        
+
         const potentialPartners = await findPotentialPartners({
           organizationId,
           serviceType,
@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
 
       case 'analyzeCollaboration':
         const { organizationIds, analysisType } = data;
-        
+
         if (!organizationIds || !Array.isArray(organizationIds)) {
           return NextResponse.json(
             { error: 'Organization IDs array is required' },
@@ -276,10 +276,10 @@ async function findPotentialPartners(params: {
     }
 
     // Score and rank potential partners
-    const potentialPartners = organizations?.map(org => {
+    const potentialPartners = organizations?.map((org: any) => {
       const compatibilityScore = calculateCompatibilityScore(org, params);
       const collaborationPotential = assessCollaborationPotential(org, params);
-      
+
       return {
         id: org.id,
         name: org.name,
@@ -295,7 +295,7 @@ async function findPotentialPartners(params: {
         region: org.communities?.region || 'Unknown',
         contactInfo: org.contact_info
       };
-    }).filter(partner => partner.compatibilityScore > 0.3) // Filter out low compatibility
+    }).filter((partner: any) => partner.compatibilityScore > 0.3) // Filter out low compatibility
       .sort((a, b) => b.compatibilityScore - a.compatibilityScore) || [];
 
     return potentialPartners.slice(0, 10); // Return top 10 matches
@@ -307,7 +307,7 @@ async function findPotentialPartners(params: {
 
 function calculateCompatibilityScore(organization: any, params: any): number {
   let score = 0;
-  
+
   // Service type compatibility
   if (params.serviceType && organization.services_offered) {
     const hasCompatibleService = organization.services_offered.some((service: string) =>
@@ -316,12 +316,12 @@ function calculateCompatibilityScore(organization: any, params: any): number {
     );
     if (hasCompatibleService) score += 0.3;
   }
-  
+
   // Location compatibility
   if (params.location && organization.location === params.location) {
     score += 0.2;
   }
-  
+
   // Organization type compatibility
   const compatibleTypes = {
     'resource_sharing': ['ngo', 'community', 'government'],
@@ -329,25 +329,25 @@ function calculateCompatibilityScore(organization: any, params: any): number {
     'knowledge_exchange': ['academic', 'ngo', 'government'],
     'funding': ['government', 'business', 'foundation']
   };
-  
+
   if (params.partnershipType && compatibleTypes[params.partnershipType as keyof typeof compatibleTypes]) {
     const compatibleTypesList = compatibleTypes[params.partnershipType as keyof typeof compatibleTypes];
     if (compatibleTypesList.includes(organization.organization_type)) {
       score += 0.2;
     }
   }
-  
+
   // Experience and capacity
   if (organization.active_programs > 0) score += 0.1;
   if (organization.partnership_history > 0) score += 0.1;
   if (organization.expertise_areas && organization.expertise_areas.length > 0) score += 0.1;
-  
+
   return Math.min(score, 1.0);
 }
 
 function assessCollaborationPotential(organization: any, params: any): string {
   const score = calculateCompatibilityScore(organization, params);
-  
+
   if (score >= 0.8) return 'high';
   if (score >= 0.6) return 'medium';
   if (score >= 0.4) return 'low';
@@ -379,7 +379,7 @@ async function analyzeCollaborationPotential(
     }
 
     const analysis = {
-      organizations: organizations.map(org => ({
+      organizations: organizations.map((org: any) => ({
         id: org.id,
         name: org.name,
         type: org.organization_type,
@@ -413,66 +413,66 @@ async function analyzeCollaborationPotential(
 
 function identifyCollaborationStrengths(organizations: any[]): string[] {
   const strengths = [];
-  
+
   // Diverse organization types
-  const types = [...new Set(organizations.map(org => org.organization_type))];
+  const types = [...new Set(organizations.map((org: any) => org.organization_type))];
   if (types.length >= 3) {
     strengths.push('Diverse organizational perspectives and capabilities');
   }
-  
+
   // Complementary expertise
   const allExpertise = organizations.flatMap(org => org.expertise_areas || []);
   const uniqueExpertise = [...new Set(allExpertise)];
   if (uniqueExpertise.length >= 5) {
     strengths.push('Broad range of complementary expertise areas');
   }
-  
+
   // Strong program experience
-  const totalPrograms = organizations.reduce((sum, org) => sum + (org.active_programs || 0), 0);
+  const totalPrograms = organizations.reduce((sum: number, org: any) => sum + (org.active_programs || 0), 0);
   if (totalPrograms >= 10) {
     strengths.push('Extensive collective program implementation experience');
   }
-  
+
   // Geographic coverage
-  const communities = [...new Set(organizations.map(org => org.communities?.name).filter(Boolean))];
+  const communities = [...new Set(organizations.map((org: any) => org.communities?.name).filter(Boolean))];
   if (communities.length >= 3) {
     strengths.push('Good geographic coverage across multiple communities');
   }
-  
+
   return strengths;
 }
 
 function identifyPotentialSynergies(organizations: any[]): string[] {
   const synergies = [];
-  
+
   // Service complementarity
   const allServices = organizations.flatMap(org => org.services_offered || []);
   const serviceCategories = categorizeServices(allServices);
-  
+
   if (serviceCategories.length >= 3) {
     synergies.push('Complementary service offerings enable comprehensive program delivery');
   }
-  
+
   // NGO + Government collaboration
   const hasNGO = organizations.some(org => org.organization_type === 'ngo');
   const hasGovernment = organizations.some(org => org.organization_type === 'government');
   if (hasNGO && hasGovernment) {
     synergies.push('NGO-Government partnership enables policy influence and grassroots implementation');
   }
-  
+
   // Academic + Practice collaboration
   const hasAcademic = organizations.some(org => org.organization_type === 'academic');
   const hasPractitioner = organizations.some(org => ['ngo', 'community'].includes(org.organization_type));
   if (hasAcademic && hasPractitioner) {
     synergies.push('Academic-Practitioner collaboration enables evidence-based program development');
   }
-  
+
   return synergies;
 }
 
 function categorizeServices(services: string[]): string[] {
   const categories = new Set();
-  
+
   services.forEach(service => {
     const lowerService = service.toLowerCase();
     if (lowerService.includes('health') || lowerService.includes('medical')) {
@@ -489,8 +489,8 @@ function categorizeServices(services: string[]): string[] {
       categories.add('other');
     }
   });
-  
-  return Array.from(categories);
+
+  return Array.from(categories) as string[];
 }
 
 function analyzeResourceComplementarity(organizations: any[]): any {
@@ -499,14 +499,14 @@ function analyzeResourceComplementarity(organizations: any[]): any {
     expertiseGaps: identifyExpertiseGaps(organizations),
     resourceSharing: identifyResourceSharingOpportunities(organizations)
   };
-  
+
   return analysis;
 }
 
 function analyzeBudgetDiversity(organizations: any[]): any {
-  const budgetRanges = organizations.map(org => org.budget_range).filter(Boolean);
+  const budgetRanges = organizations.map((org: any) => org.budget_range).filter(Boolean);
   const uniqueRanges = [...new Set(budgetRanges)];
-  
+
   return {
     diversity: uniqueRanges.length,
     ranges: uniqueRanges,
@@ -521,46 +521,46 @@ function identifyExpertiseGaps(organizations: any[]): string[] {
     'youth_development', 'health_services', 'education', 'employment',
     'housing', 'mental_health', 'substance_abuse'
   ];
-  
-  const gaps = commonExpertiseAreas.filter(area => 
-    !allExpertise.some(expertise => 
+
+  const gaps = commonExpertiseAreas.filter((area: string) =>
+    !allExpertise.some((expertise: string) =>
       expertise.toLowerCase().includes(area.replace('_', ' '))
     )
   );
-  
+
   return gaps;
 }
 
 function identifyResourceSharingOpportunities(organizations: any[]): string[] {
   const opportunities = [];
-  
+
   // Infrastructure sharing
-  const hasInfrastructure = organizations.some(org => 
-    org.services_offered?.some((service: string) => 
+  const hasInfrastructure = organizations.some(org =>
+    org.services_offered?.some((service: string) =>
       service.toLowerCase().includes('facility') || service.toLowerCase().includes('space')
     )
   );
-  
+
   if (hasInfrastructure) {
     opportunities.push('Shared use of facilities and infrastructure');
   }
-  
+
   // Staff and expertise sharing
   opportunities.push('Cross-organization staff secondments and expertise sharing');
-  
+
   // Equipment and technology sharing
   opportunities.push('Shared procurement and use of specialized equipment');
-  
+
   // Training and capacity building
   opportunities.push('Joint training programs and capacity building initiatives');
-  
+
   return opportunities;
 }
 
 function analyzeGeographicCoverage(organizations: any[]): any {
-  const communities = organizations.map(org => org.communities?.name).filter(Boolean);
-  const regions = organizations.map(org => org.communities?.region).filter(Boolean);
-  
+  const communities = organizations.map((org: any) => org.communities?.name).filter(Boolean);
+  const regions = organizations.map((org: any) => org.communities?.region).filter(Boolean);
+
   return {
     communities: [...new Set(communities)],
     regions: [...new Set(regions)],
@@ -571,59 +571,59 @@ function analyzeGeographicCoverage(organizations: any[]): any {
 
 function generateCollaborationRecommendations(organizations: any[]): string[] {
   const recommendations = [];
-  
+
   // Based on organization types
-  const types = [...new Set(organizations.map(org => org.organization_type))];
+  const types = [...new Set(organizations.map((org: any) => org.organization_type))];
   if (types.includes('government') && types.includes('ngo')) {
     recommendations.push('Leverage government policy influence and NGO community connections');
   }
-  
+
   if (types.includes('academic')) {
     recommendations.push('Incorporate research and evaluation components into collaborative programs');
   }
-  
+
   // Based on expertise
   const allExpertise = organizations.flatMap(org => org.expertise_areas || []);
   if (allExpertise.length >= 5) {
     recommendations.push('Create cross-functional teams utilizing diverse expertise areas');
   }
-  
+
   // General recommendations
   recommendations.push('Establish clear governance structure and communication protocols');
   recommendations.push('Develop shared measurement and evaluation framework');
   recommendations.push('Create resource sharing agreements and protocols');
-  
+
   return recommendations;
 }
 
 function identifyCollaborationRisks(organizations: any[]): string[] {
   const risks = [];
-  
+
   // Size imbalance
-  const programCounts = organizations.map(org => org.active_programs || 0);
+  const programCounts = organizations.map((org: any) => org.active_programs || 0);
   const maxPrograms = Math.max(...programCounts);
   const minPrograms = Math.min(...programCounts);
-  
+
   if (maxPrograms > minPrograms * 3) {
     risks.push('Significant capacity imbalance between organizations');
   }
-  
+
   // Geographic dispersion
-  const regions = [...new Set(organizations.map(org => org.communities?.region).filter(Boolean))];
+  const regions = [...new Set(organizations.map((org: any) => org.communities?.region).filter(Boolean))];
   if (regions.length > 2) {
     risks.push('Geographic dispersion may complicate coordination');
   }
-  
+
   // Organizational culture differences
-  const types = [...new Set(organizations.map(org => org.organization_type))];
+  const types = [...new Set(organizations.map((org: any) => org.organization_type))];
   if (types.length >= 3) {
     risks.push('Different organizational cultures may create coordination challenges');
   }
-  
+
   // General risks
   risks.push('Potential for mission drift or conflicting priorities');
   risks.push('Resource allocation disputes');
   risks.push('Communication and coordination overhead');
-  
+
   return risks;
 }

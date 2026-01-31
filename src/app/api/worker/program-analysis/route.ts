@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match frontend interface
-    const programs = data?.map(program => ({
+    const programs = data?.map((program: any) => ({
       id: program.id,
       programName: program.program_name,
       organization: program.organization_name,
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'comparePrograms':
         const { programIds, comparisonType } = data;
-        
+
         if (!programIds || !Array.isArray(programIds) || programIds.length < 2) {
           return NextResponse.json(
             { error: 'At least 2 program IDs are required for comparison' },
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
 
       case 'generateBestPractices':
         const { organizationId, category, minEffectiveness } = data;
-        
+
         const bestPractices = await identifyBestPractices({
           organizationId,
           category,
@@ -133,10 +133,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ bestPractices });
 
       case 'updateProgram':
-        const { 
-          programId, 
-          effectivenessScore, 
-          reachCount, 
+        const {
+          programId,
+          effectivenessScore,
+          reachCount,
           satisfactionScore,
           outcomes,
           challenges,
@@ -167,13 +167,13 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to update program: ${updateError.message}`);
         }
 
-        return NextResponse.json({ 
-          message: 'Program updated successfully' 
+        return NextResponse.json({
+          message: 'Program updated successfully'
         });
 
       case 'analyzeEffectiveness':
         const { programId: analyzeId, analysisType } = data;
-        
+
         const analysis = await analyzeProgram(analyzeId, analysisType);
         return NextResponse.json({ analysis });
 
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function performProgramComparison(
-  programIds: string[], 
+  programIds: string[],
   comparisonType: string = 'effectiveness'
 ): Promise<any> {
   try {
@@ -221,7 +221,7 @@ async function performProgramComparison(
     }
 
     const comparison = {
-      programs: programs.map(p => ({
+      programs: programs.map((p: any) => ({
         id: p.id,
         name: p.program_name,
         organization: p.organization_name,
@@ -251,15 +251,15 @@ async function performProgramComparison(
 }
 
 function generateComparisonInsights(programs: any[], comparisonType: string): string[] {
-  const insights = [];
-  
+  const insights: string[] = [];
+
   if (programs.length < 2) return insights;
 
   // Effectiveness comparison
-  const effectivenessScores = programs.map(p => p.effectiveness_score || 0);
+  const effectivenessScores = programs.map((p: any) => p.effectiveness_score || 0);
   const maxEffectiveness = Math.max(...effectivenessScores);
   const minEffectiveness = Math.min(...effectivenessScores);
-  const avgEffectiveness = effectivenessScores.reduce((a, b) => a + b, 0) / effectivenessScores.length;
+  const avgEffectiveness = effectivenessScores.reduce((a: number, b: number) => a + b, 0) / effectivenessScores.length;
 
   if (maxEffectiveness - minEffectiveness > 20) {
     const bestProgram = programs.find(p => p.effectiveness_score === maxEffectiveness);
@@ -267,23 +267,23 @@ function generateComparisonInsights(programs: any[], comparisonType: string): st
   }
 
   // Cost efficiency comparison
-  const costPerBeneficiary = programs.map(p => p.cost_per_beneficiary || 0).filter(c => c > 0);
+  const costPerBeneficiary = programs.map((p: any) => p.cost_per_beneficiary || 0).filter((c: number) => c > 0);
   if (costPerBeneficiary.length > 1) {
     const minCost = Math.min(...costPerBeneficiary);
     const maxCost = Math.max(...costPerBeneficiary);
     const mostEfficient = programs.find(p => p.cost_per_beneficiary === minCost);
-    
+
     if (maxCost > minCost * 2) {
       insights.push(`${mostEfficient?.program_name} is most cost-efficient at $${minCost} per beneficiary`);
     }
   }
 
   // Reach comparison
-  const reachCounts = programs.map(p => p.reach_count || 0);
-  const totalReach = reachCounts.reduce((a, b) => a + b, 0);
+  const reachCounts = programs.map((p: any) => p.reach_count || 0);
+  const totalReach = reachCounts.reduce((a: number, b: number) => a + b, 0);
   const maxReach = Math.max(...reachCounts);
   const programWithMaxReach = programs.find(p => p.reach_count === maxReach);
-  
+
   if (maxReach > totalReach * 0.5) {
     insights.push(`${programWithMaxReach?.program_name} reaches ${maxReach} people, more than half of total program reach`);
   }
@@ -293,9 +293,9 @@ function generateComparisonInsights(programs: any[], comparisonType: string): st
 
 function generateComparisonRecommendations(programs: any[]): string[] {
   const recommendations = [];
-  
+
   // Find best performing program
-  const bestProgram = programs.reduce((best, current) => 
+  const bestProgram = programs.reduce((best: any, current: any) =>
     (current.effectiveness_score || 0) > (best.effectiveness_score || 0) ? current : best
   );
 
@@ -305,16 +305,16 @@ function generateComparisonRecommendations(programs: any[]): string[] {
   }
 
   // Find programs needing improvement
-  const underperforming = programs.filter(p => (p.effectiveness_score || 0) < 60);
+  const underperforming = programs.filter((p: any) => (p.effectiveness_score || 0) < 60);
   if (underperforming.length > 0) {
     recommendations.push(`Review and improve programs with effectiveness below 60%`);
     recommendations.push(`Consider adopting successful strategies from higher-performing programs`);
   }
 
   // Cost efficiency recommendations
-  const costEfficient = programs.filter(p => p.cost_per_beneficiary > 0)
-    .sort((a, b) => a.cost_per_beneficiary - b.cost_per_beneficiary)[0];
-  
+  const costEfficient = programs.filter((p: any) => p.cost_per_beneficiary > 0)
+    .sort((a: any, b: any) => a.cost_per_beneficiary - b.cost_per_beneficiary)[0];
+
   if (costEfficient) {
     recommendations.push(`Analyze cost-saving strategies from ${costEfficient.program_name}`);
   }
@@ -358,7 +358,7 @@ async function identifyBestPractices(params: {
       throw new Error(`Failed to fetch best practices: ${error.message}`);
     }
 
-    const bestPractices = programs?.map(program => ({
+    const bestPractices = programs?.map((program: any) => ({
       id: program.id,
       programName: program.program_name,
       organization: program.organization_name,
@@ -382,29 +382,29 @@ async function identifyBestPractices(params: {
 
 function calculateReplicability(program: any): number {
   let score = 0;
-  
+
   // High effectiveness increases replicability
   if (program.effectiveness_score >= 80) score += 30;
   else if (program.effectiveness_score >= 70) score += 20;
   else if (program.effectiveness_score >= 60) score += 10;
-  
+
   // High satisfaction increases replicability
   if (program.satisfaction_score >= 80) score += 20;
   else if (program.satisfaction_score >= 70) score += 15;
   else if (program.satisfaction_score >= 60) score += 10;
-  
+
   // Clear success factors increase replicability
   if (program.success_factors && program.success_factors.length >= 3) score += 20;
   else if (program.success_factors && program.success_factors.length >= 1) score += 10;
-  
+
   // Clear implementation approach increases replicability
   if (program.implementation_approach && program.implementation_approach.length > 100) score += 15;
   else if (program.implementation_approach && program.implementation_approach.length > 50) score += 10;
-  
+
   // Multiple outcomes increase replicability
   if (program.outcomes && program.outcomes.length >= 3) score += 15;
   else if (program.outcomes && program.outcomes.length >= 1) score += 10;
-  
+
   return Math.min(score, 100);
 }
 
@@ -461,119 +461,119 @@ async function analyzeProgram(programId: string, analysisType: string): Promise<
 
 function identifyProgramStrengths(program: any): string[] {
   const strengths = [];
-  
+
   if (program.effectiveness_score >= 80) {
     strengths.push('High program effectiveness score');
   }
-  
+
   if (program.satisfaction_score >= 80) {
     strengths.push('High participant satisfaction');
   }
-  
+
   if (program.reach_count >= program.target_reach * 0.9) {
     strengths.push('Meeting or exceeding reach targets');
   }
-  
+
   if (program.cost_per_beneficiary < 500) { // Arbitrary threshold
     strengths.push('Cost-effective service delivery');
   }
-  
+
   if (program.outcomes && program.outcomes.length >= 3) {
     strengths.push('Multiple documented positive outcomes');
   }
-  
+
   return strengths;
 }
 
 function identifyProgramWeaknesses(program: any): string[] {
   const weaknesses = [];
-  
+
   if (program.effectiveness_score < 60) {
     weaknesses.push('Below-average effectiveness score');
   }
-  
+
   if (program.satisfaction_score < 60) {
     weaknesses.push('Low participant satisfaction');
   }
-  
+
   if (program.reach_count < program.target_reach * 0.7) {
     weaknesses.push('Not meeting reach targets');
   }
-  
+
   if (program.cost_per_beneficiary > 1000) { // Arbitrary threshold
     weaknesses.push('High cost per beneficiary');
   }
-  
+
   if (program.challenges && program.challenges.length >= 3) {
     weaknesses.push('Multiple ongoing challenges');
   }
-  
+
   return weaknesses;
 }
 
 function identifyProgramOpportunities(program: any): string[] {
   const opportunities = [];
-  
+
   if (program.satisfaction_score >= 70 && program.reach_count < program.target_reach) {
     opportunities.push('Scale up successful program to reach more beneficiaries');
   }
-  
+
   if (program.effectiveness_score >= 70) {
     opportunities.push('Replicate successful model in other communities');
   }
-  
+
   if (program.improvement_suggestions && program.improvement_suggestions.length > 0) {
     opportunities.push('Implement identified improvement suggestions');
   }
-  
+
   opportunities.push('Develop partnerships to enhance program delivery');
   opportunities.push('Seek additional funding for program expansion');
-  
+
   return opportunities;
 }
 
 function identifyProgramThreats(program: any): string[] {
   const threats = [];
-  
+
   if (program.budget < 50000) { // Arbitrary threshold
     threats.push('Limited budget may constrain program activities');
   }
-  
+
   if (program.challenges && program.challenges.some((c: string) => c.toLowerCase().includes('funding'))) {
     threats.push('Funding challenges may impact sustainability');
   }
-  
+
   if (program.challenges && program.challenges.some((c: string) => c.toLowerCase().includes('staff'))) {
     threats.push('Staffing issues may affect program delivery');
   }
-  
+
   threats.push('Changes in community needs may require program adaptation');
   threats.push('Competition for resources with other programs');
-  
+
   return threats;
 }
 
 function generateProgramRecommendations(program: any): string[] {
   const recommendations = [];
-  
+
   if (program.effectiveness_score < 70) {
     recommendations.push('Conduct detailed program review to identify improvement areas');
     recommendations.push('Implement monitoring and evaluation framework');
   }
-  
+
   if (program.satisfaction_score < 70) {
     recommendations.push('Gather detailed participant feedback');
     recommendations.push('Adjust program delivery based on participant needs');
   }
-  
+
   if (program.reach_count < program.target_reach * 0.8) {
     recommendations.push('Review and improve outreach strategies');
     recommendations.push('Address barriers to program participation');
   }
-  
+
   recommendations.push('Document and share successful practices');
   recommendations.push('Develop sustainability plan for long-term impact');
-  
+
   return recommendations;
 }
 
@@ -581,29 +581,29 @@ function analyzeProgramTrends(metrics: any[]): any {
   if (metrics.length === 0) {
     return { trend: 'insufficient_data', message: 'Not enough data for trend analysis' };
   }
-  
+
   // Simple trend analysis based on metrics over time
-  const sortedMetrics = metrics.sort((a, b) => 
+  const sortedMetrics = metrics.sort((a, b) =>
     new Date(a.measurement_date).getTime() - new Date(b.measurement_date).getTime()
   );
-  
+
   if (sortedMetrics.length < 2) {
     return { trend: 'insufficient_data', message: 'Need at least 2 data points for trend analysis' };
   }
-  
+
   const firstValue = parseFloat(sortedMetrics[0].metric_value);
   const lastValue = parseFloat(sortedMetrics[sortedMetrics.length - 1].metric_value);
-  
+
   if (isNaN(firstValue) || isNaN(lastValue)) {
     return { trend: 'invalid_data', message: 'Unable to analyze non-numeric metrics' };
   }
-  
+
   const change = ((lastValue - firstValue) / firstValue) * 100;
-  
+
   let trend = 'stable';
   if (change > 10) trend = 'improving';
   else if (change < -10) trend = 'declining';
-  
+
   return {
     trend,
     change: Math.round(change * 100) / 100,

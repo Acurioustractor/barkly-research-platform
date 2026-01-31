@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
     // Get unprocessed documents
     const unprocessedDocs = await DatabaseSaver.getUnprocessedDocuments();
-    
+
     if (unprocessedDocs.length === 0) {
       return NextResponse.json({
         success: true,
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
       } catch (error) {
         console.error(`Error processing document ${doc.id}:`, error);
-        
+
         results.push({
           documentId: doc.id,
           title: doc.title,
@@ -102,12 +102,12 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const unprocessedDocs = await DatabaseSaver.getUnprocessedDocuments();
-    
+
     return NextResponse.json({
       success: true,
       queue: {
         unprocessed: unprocessedDocs.length,
-        documents: unprocessedDocs.map(doc => ({
+        documents: unprocessedDocs.map((doc: any) => ({
           id: doc.id,
           title: doc.title,
           fileType: doc.file_type,

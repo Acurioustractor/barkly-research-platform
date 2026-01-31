@@ -624,7 +624,7 @@ Respond with valid JSON only.`;
 export async function getSuccessPatterns(communityId: string): Promise<SuccessPattern[]> {
   try {
     const patterns = await getSuccessPatternsByCommunity(parseInt(communityId));
-    return patterns.map(p => ({
+    return patterns.map((p: any) => ({
       pattern: p.pattern_text,
       communities: [communityId],
       replicability: p.replicability,

@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     // Filter by status if provided
     if (status) {
-      sessions = sessions.filter(session => session.status === status);
+      sessions = sessions.filter((session: any) => session.status === status);
     }
 
     return NextResponse.json({
@@ -44,17 +44,17 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    
+
     // Validate required fields
     const requiredFields = ['title', 'community_id', 'scheduled_date', 'feature_areas'];
-    const missingFields = requiredFields.filter(field => !body[field]);
-    
+    const missingFields = requiredFields.filter((field: string) => !body[field]);
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         { error: `Missing required fields: ${missingFields.join(', ')}` },
@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user can create sessions for this community
-    const canCreateSession = 
-      user.role === 'admin' || 
+    const canCreateSession =
+      user.role === 'admin' ||
       user.role === 'moderator' ||
       (user.role === 'community_leader' && user.community_id === body.community_id);
 
@@ -104,7 +104,9 @@ export async function POST(request: NextRequest) {
         story_ids: [],
         feature_areas: body.feature_areas,
         intelligence_samples: []
-      }
+      },
+      status: 'scheduled' as const,
+      feedback_collected: false
     };
 
     const newSession = await communityPreviewService.createPreviewSession(sessionData);

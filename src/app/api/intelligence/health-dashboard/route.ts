@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Health dashboard error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to get health dashboard data',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -85,7 +85,7 @@ async function getHealthSummary() {
     const communities = await prisma.$queryRaw<Array<{ count: number }>>`
       SELECT COUNT(*)::int as count FROM communities
     `;
-    
+
     return {
       total_communities: communities[0]?.count || 0,
       thriving_communities: 0,
@@ -141,8 +141,8 @@ async function getTopPerformers(limit: number = 10) {
     }>>`
       SELECT id, name FROM communities ORDER BY name LIMIT ${limit}
     `;
-    
-    return communities.map(c => ({
+
+    return communities.map((c: any) => ({
       community_id: c.id,
       community_name: c.name,
       health_score: 50,
@@ -270,7 +270,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Health dashboard POST error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to process health dashboard request',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

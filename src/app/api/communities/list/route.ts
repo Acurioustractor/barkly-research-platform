@@ -7,7 +7,7 @@ export async function GET() {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
-    
+
     // Get all communities with document counts
     const { data: communities, error } = await supabase
       .from('communities')
@@ -19,25 +19,25 @@ export async function GET() {
         documents (count)
       `)
       .order('name', { ascending: true })
-    
+
     if (error) {
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
       )
     }
-    
+
     // Transform the data to include document counts
-    const communitiesWithCounts = communities?.map(community => ({
+    const communitiesWithCounts = communities?.map((community: any) => ({
       ...community,
       document_count: community.documents?.[0]?.count || 0
     })) || []
-    
+
     return NextResponse.json({
       success: true,
       communities: communitiesWithCounts
     })
-    
+
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },

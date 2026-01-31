@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 // Increase body size limit to 50MB
 export async function POST(request: NextRequest) {
   console.log('[bulk-upload] Request received at:', new Date().toISOString());
-  
+
   try {
     // Check if database is available
     const dbAvailable = isDatabaseAvailable();
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const source = formData.get('source') as string || 'bulk_upload';
     const category = formData.get('category') as string || 'general';
     const tags = formData.get('tags') as string;
-    
+
     if (!files || files.length === 0) {
       return NextResponse.json(
         { error: 'No files provided' },
@@ -43,15 +43,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const invalidFiles = files.filter(file => 
+    const invalidFiles = files.filter(file =>
       file.type !== 'application/pdf' || file.size > maxSize
     );
 
     if (invalidFiles.length > 0) {
       return NextResponse.json(
-        { 
+        {
           error: `${invalidFiles.length} files rejected. Only PDF files under 10MB are allowed.`,
-          rejectedFiles: invalidFiles.map(f => ({ name: f.name, size: f.size, type: f.type }))
+          rejectedFiles: invalidFiles.map((f: any) => ({ name: f.name, size: f.size, type: f.type }))
         },
         { status: 400 }
       );
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     // Prepare documents for processing
     const documents = await Promise.all(
-      files.map(async (file, index) => ({
+      files.map(async (file: File, index: number) => ({
         buffer: Buffer.from(await file.arrayBuffer()),
         filename: `bulk_${Date.now()}_${index}_${file.name}`,
         originalName: file.name
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const useAI = formData.get('useAI') !== 'false'; // Default to true
     const generateSummary = formData.get('generateSummary') === 'true';
     const generateEmbeddings = formData.get('generateEmbeddings') === 'true';
-    
+
     const processingOptions = {
       source,
       category,
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     // Enable AI processing based on form parameters
     console.log(`[bulk-upload] Processing ${documents.length} documents (AI ${processingOptions.useAI ? 'enabled' : 'disabled'})...`);
-    
+
     // Process documents with timeout and better error handling
     const results: Array<{
       documentId: string;
@@ -97,11 +97,11 @@ export async function POST(request: NextRequest) {
     }> = [];
     const processingTimeout = 240000; // 4 minutes total (under Vercel's 5 min limit)
     const startTime = Date.now();
-    
+
     for (let i = 0; i < documents.length; i++) {
       const doc = documents[i];
       const elapsed = Date.now() - startTime;
-      
+
       // Check if we're running out of time
       if (elapsed > processingTimeout) {
         console.log(`[bulk-upload] Timeout approaching, stopping at document ${i}/${documents.length}`);
@@ -120,9 +120,9 @@ export async function POST(request: NextRequest) {
         }
         break;
       }
-      
+
       console.log(`[bulk-upload] Processing document ${i + 1}/${documents.length}: ${doc.originalName}`);
-      
+
       try {
         // Set a timeout for individual document processing
         const documentPromise = processor.processAndStoreDocument(
@@ -131,18 +131,18 @@ export async function POST(request: NextRequest) {
           doc.originalName,
           processingOptions
         );
-        
+
         // Timeout after 5 minutes per document (AI analysis takes time)
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Document processing timeout')), 300000)
         );
-        
+
         const result = await Promise.race([documentPromise, timeoutPromise]) as any;
         results.push(result);
         console.log(`[bulk-upload] Document ${i + 1} processed successfully`);
       } catch (docError) {
         console.error(`[bulk-upload] Document ${i + 1} failed:`, docError);
-        
+
         // Add failed result for this document
         results.push({
           documentId: doc.filename,
@@ -175,21 +175,21 @@ export async function POST(request: NextRequest) {
       results,
       message: `Successfully processed ${summary.successful} of ${summary.totalFiles} documents`
     };
-    
+
     console.log(`[bulk-upload] Request completed successfully at:`, new Date().toISOString());
     console.log(`[bulk-upload] Summary:`, summary);
-    
+
     return NextResponse.json(response);
 
   } catch (error) {
     console.error('Bulk upload error:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to process bulk upload',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
-      { 
+      {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       }

@@ -26,8 +26,7 @@ export async function GET(
         filename: true,
         originalName: true,
         mimeType: true,
-        size: true,
-        filePath: true // This field needs to be added to schema
+        size: true
       }
     });
 
@@ -42,12 +41,12 @@ export async function GET(
     let filename = document.filename;
     let mimeType = document.mimeType;
 
-    // If we have a stored file path, try to read it
-    if (document.filePath) {
-      fileBuffer = await fileStorage.getFile(path.basename(document.filePath));
-    } else {
-      // For backward compatibility, try to find file by document filename
-      fileBuffer = await fileStorage.getFile(document.filename);
+    // For backward compatibility, try to find file by document filename or check subfolders
+    fileBuffer = await fileStorage.getFile(document.filename);
+
+    if (!fileBuffer) {
+      // Try again with just the basename just in case
+      fileBuffer = await fileStorage.getFile(path.basename(document.filename));
     }
 
     if (!fileBuffer) {
@@ -56,18 +55,18 @@ export async function GET(
       try {
         const fs = await import('fs/promises');
         const testFiles = await fs.readdir(testDocPath);
-        
+
         // Try to find a matching file
-        const matchingFile = testFiles.find(file => 
+        const matchingFile = testFiles.find(file =>
           file.includes(document.originalName.replace(/[^a-zA-Z0-9.-]/g, '')) ||
           document.originalName.includes(file.replace(/[^a-zA-Z0-9.-]/g, ''))
         );
-        
+
         if (matchingFile) {
           const testFilePath = path.join(testDocPath, matchingFile);
           fileBuffer = await fs.readFile(testFilePath);
           filename = matchingFile;
-          
+
           // Update mime type based on file extension
           if (matchingFile.endsWith('.pdf')) {
             mimeType = 'application/pdf';
@@ -98,8 +97,8 @@ export async function GET(
     headers.set('Content-Length', fileBuffer.length.toString());
     headers.set('Content-Disposition', `${forceDownload ? 'attachment' : 'inline'}; filename="${document.originalName}"`);
     headers.set('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-    
-    return new NextResponse(fileBuffer, {
+
+    return new NextResponse(fileBuffer as any, {
       status: 200,
       headers
     });

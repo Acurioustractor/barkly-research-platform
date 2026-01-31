@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
 
     // This would typically fetch from database
     // For now, return empty array as placeholder
-    const patterns = [];
+    const patterns: any[] = [];
 
     return NextResponse.json({ patterns });
   } catch (error) {

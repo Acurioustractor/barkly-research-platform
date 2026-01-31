@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match frontend interface
-    const gaps = data?.map(gap => ({
+    const gaps = data?.map((gap: any) => ({
       id: gap.id,
       service: gap.service_type || 'Unknown Service',
       location: gap.location || (Array.isArray(gap.communities) ? (gap.communities as any)[0]?.name : (gap.communities as any)?.name) || 'Unknown Location',
@@ -332,10 +332,10 @@ function identifyPriorityGaps(services: any[], needs: any[]): any[] {
   const priorityGaps: any[] = [];
 
   // High-urgency needs with no corresponding services
-  const highUrgencyNeeds = needs.filter(need => need.urgency_score >= 8);
+  const highUrgencyNeeds = needs.filter((need: any) => need.urgency_score >= 8);
 
   highUrgencyNeeds.forEach(need => {
-    const matchingServices = services.filter(service =>
+    const matchingServices = services.filter((service: any) =>
       service.category === need.need_category &&
       service.communities?.name === need.communities?.name
     );
@@ -368,15 +368,15 @@ function generateGapRecommendations(services: any[], needs: any[]): string[] {
   }
 
   // Category-specific recommendations
-  const healthNeeds = needs.filter(n => n.need_category === 'health').length;
-  const healthServices = services.filter(s => s.category === 'health').length;
+  const healthNeeds = needs.filter((n: any) => n.need_category === 'health').length;
+  const healthServices = services.filter((s: any) => s.category === 'health').length;
 
   if (healthNeeds > healthServices * 2) {
     recommendations.push('Prioritize expansion of health services and facilities');
   }
 
-  const educationNeeds = needs.filter(n => n.need_category === 'education').length;
-  const educationServices = services.filter(s => s.category === 'education').length;
+  const educationNeeds = needs.filter((n: any) => n.need_category === 'education').length;
+  const educationServices = services.filter((s: any) => s.category === 'education').length;
 
   if (educationNeeds > educationServices * 2) {
     recommendations.push('Develop additional educational programs and resources');

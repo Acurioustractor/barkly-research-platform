@@ -238,8 +238,8 @@ export async function submitForCulturalReview(
         content_id: contentId,
         content_type: contentType,
         submitted_by: submittedBy,
-        priority: safetyAnalysis.safetyLevel === 'sacred' ? 'urgent' : 
-                 safetyAnalysis.safetyLevel === 'restricted' ? 'high' : 'medium',
+        priority: safetyAnalysis.safetyLevel === 'sacred' ? 'urgent' :
+          safetyAnalysis.safetyLevel === 'restricted' ? 'high' : 'medium',
         cultural_flags: safetyAnalysis.flags,
         automatic_flags: [`Safety level: ${safetyAnalysis.safetyLevel}`, `Confidence: ${safetyAnalysis.confidence}`],
         estimated_review_time: getEstimatedReviewTime(safetyAnalysis.safetyLevel),
@@ -324,7 +324,7 @@ export async function getPendingReviews(
       throw new Error(`Failed to fetch pending reviews: ${error.message}`);
     }
 
-    return data?.map(item => ({
+    return data?.map((item: any) => ({
       id: item.id,
       contentId: item.content_id,
       contentType: item.content_type,
@@ -602,11 +602,11 @@ export async function getCulturalSafetyStats(
         return acc;
       }, {});
 
-      stats.elderReviews = reviews.filter(r => r.review_type === 'elder').length;
-      stats.protocolViolations = reviews.filter(r => r.escalation_required).length;
+      stats.elderReviews = reviews.filter((r: any) => r.review_type === 'elder').length;
+      stats.protocolViolations = reviews.filter((r: any) => r.escalation_required).length;
 
       // Calculate average review time for completed reviews
-      const completedReviews = reviews.filter(r => r.reviewed_at);
+      const completedReviews = reviews.filter((r: any) => r.reviewed_at);
       if (completedReviews.length > 0) {
         const totalTime = completedReviews.reduce((sum, review) => {
           const created = new Date(review.created_at);

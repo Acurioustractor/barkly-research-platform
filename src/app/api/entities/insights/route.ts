@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
         metadata: {
           documentCount: documentIds.length,
           successCount: batchResults.filter((r: any) => r.success).length,
-          failureCount: batchResults.filter((r: any) => r.success).length, // Fixed implicit any, but wait, error showed this line too
+          failureCount: batchResults.filter((r: any) => !r.success).length, // Also fixed logic error (was successCount again)
           generatedAt: new Date().toISOString()
         }
       });
@@ -190,7 +190,7 @@ async function generateComparativeAnalysis(
   try {
     // Generate analytics for each document
     const documentAnalytics = await Promise.all(
-      documentIds.map(async (documentId) => {
+      documentIds.map(async (documentId: string) => {
         const analytics = await generateEntityAnalytics({
           documentId,
           entityType: entityTypes?.[0],
@@ -201,7 +201,7 @@ async function generateComparativeAnalysis(
     );
 
     // Compare entity distributions
-    const entityDistributions = documentAnalytics.map(({ documentId, analytics }) => ({
+    const entityDistributions = documentAnalytics.map(({ documentId, analytics }: any) => ({
       documentId,
       totalEntities: analytics.summary.totalEntities,
       uniqueEntities: analytics.summary.uniqueEntityNames,
@@ -212,11 +212,11 @@ async function generateComparativeAnalysis(
     // Find common entities across documents
     const allEntities = new Map<string, { count: number; documents: string[] }>();
 
-    documentAnalytics.forEach(({ documentId, analytics }) => {
+    documentAnalytics.forEach(({ documentId, analytics }: any) => {
       analytics.patterns
-        .filter(p => p.type === 'frequency')
-        .forEach(pattern => {
-          pattern.entities.forEach(entity => {
+        .filter((p: any) => p.type === 'frequency')
+        .forEach((pattern: any) => {
+          pattern.entities.forEach((entity: string) => {
             if (!allEntities.has(entity)) {
               allEntities.set(entity, { count: 0, documents: [] });
             }
@@ -229,7 +229,7 @@ async function generateComparativeAnalysis(
 
     // Find entities that appear in multiple documents
     const commonEntities = Array.from(allEntities.entries())
-      .filter(([, data]) => data.count > 1)
+      .filter(([, data]: [string, any]) => data.count > 1)
       .map(([entity, data]) => ({
         entity,
         documentCount: data.count,
@@ -239,16 +239,16 @@ async function generateComparativeAnalysis(
       .sort((a, b) => b.documentCount - a.documentCount);
 
     // Compare pattern types across documents
-    const patternComparison = documentAnalytics.map(({ documentId, analytics }) => ({
+    const patternComparison = documentAnalytics.map(({ documentId, analytics }: any) => ({
       documentId,
       patternCounts: {
-        coOccurrence: analytics.patterns.filter(p => p.type === 'co_occurrence').length,
-        frequency: analytics.patterns.filter(p => p.type === 'frequency').length,
-        distribution: analytics.patterns.filter(p => p.type === 'distribution').length,
-        contextual: analytics.patterns.filter(p => p.type === 'contextual').length
+        coOccurrence: analytics.patterns.filter((p: any) => p.type === 'co_occurrence').length,
+        frequency: analytics.patterns.filter((p: any) => p.type === 'frequency').length,
+        distribution: analytics.patterns.filter((p: any) => p.type === 'distribution').length,
+        contextual: analytics.patterns.filter((p: any) => p.type === 'contextual').length
       },
       totalPatterns: analytics.patterns.length,
-      highSignificancePatterns: analytics.patterns.filter(p => p.significance === 'high').length
+      highSignificancePatterns: analytics.patterns.filter((p: any) => p.significance === 'high').length
     }));
 
     // Generate comparative insights
@@ -259,7 +259,7 @@ async function generateComparativeAnalysis(
     );
 
     return {
-      documentAnalytics: documentAnalytics.map(({ documentId, analytics }) => ({
+      documentAnalytics: documentAnalytics.map(({ documentId, analytics }: any) => ({
         documentId,
         summary: analytics.summary,
         topPatterns: analytics.patterns.slice(0, 3),
@@ -291,7 +291,7 @@ function generateComparativeInsights(
 
   // Insight 1: Entity overlap analysis
   if (commonEntities.length > 0) {
-    const highOverlapEntities = commonEntities.filter(e => e.coverage > 50);
+    const highOverlapEntities = commonEntities.filter((e: any) => e.coverage > 50);
     if (highOverlapEntities.length > 0) {
       insights.push({
         id: 'high_entity_overlap',
@@ -333,7 +333,7 @@ function generateComparativeInsights(
 
   // Insight 3: Entity density analysis
   const entityDensities = entityDistributions.map((d: any) => d.totalEntities / Math.max(d.uniqueEntities, 1));
-  const avgDensity = entityDensities.reduce((sum, d) => sum + d, 0) / entityDensities.length;
+  const avgDensity = entityDensities.reduce((sum: number, d: number) => sum + d, 0) / entityDensities.length;
 
   if (avgDensity > 3) {
     insights.push({

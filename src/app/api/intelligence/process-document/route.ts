@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processDocumentWithIntelligence } from '@/lib/ai-service';
-import { prisma } from '@/lib/db/database';
+import { prisma } from '@/lib/database-safe';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,26 +21,25 @@ export async function POST(request: NextRequest) {
     );
 
     // If documentId is provided, save the analysis to the database
-    if (documentId) {
+    if (documentId && prisma) {
       try {
-        // Update the document with analysis results
-        await prisma.document.update({
-          where: { id: documentId },
-          data: {
-            ai_analysis: {
-              basic: analysis.basicAnalysis,
-              intelligence: analysis.communityIntelligence,
-              summary: analysis.summary,
-              processed_at: new Date().toISOString(),
-              version: '1.0'
-            },
-            processing_status: 'analyzed'
-          }
-        });
+        // Update the document with analysis results using raw SQL
+        await prisma.$executeRaw`
+          UPDATE documents 
+          SET ai_analysis = ${JSON.stringify({
+          basic: analysis.basicAnalysis,
+          intelligence: analysis.communityIntelligence,
+          summary: analysis.summary,
+          processed_at: new Date().toISOString(),
+          version: '1.0'
+        })}::jsonb,
+          status = 'COMPLETED'
+          WHERE id = ${documentId}::uuid
+        `;
 
         // Store intelligence insights as separate records for querying
-        const insights = [
-          ...analysis.communityIntelligence.communityNeeds.map(need => ({
+        const insights: any[] = [
+          ...analysis.communityIntelligence.communityNeeds.map((need: any) => ({
             document_id: documentId,
             type: 'community_need' as const,
             title: need.need,
@@ -53,7 +52,7 @@ export async function POST(request: NextRequest) {
               community: need.community
             }
           })),
-          ...analysis.communityIntelligence.serviceGaps.map(gap => ({
+          ...analysis.communityIntelligence.serviceGaps.map((gap: any) => ({
             document_id: documentId,
             type: 'service_gap' as const,
             title: gap.service,
@@ -67,7 +66,7 @@ export async function POST(request: NextRequest) {
               recommendations: gap.recommendations
             }
           })),
-          ...analysis.communityIntelligence.opportunities.map(opp => ({
+          ...analysis.communityIntelligence.opportunities.map((opp: any) => ({
             document_id: documentId,
             type: 'opportunity' as const,
             title: opp.opportunity,
@@ -90,9 +89,9 @@ export async function POST(request: NextRequest) {
             // Note: This assumes an insights table exists - we'll create it if needed
             await prisma.$executeRaw`
               INSERT INTO intelligence_insights (document_id, type, title, description, urgency, confidence, evidence, metadata, created_at)
-              VALUES ${insights.map(insight => 
-                `(${insight.document_id}, '${insight.type}', '${insight.title}', '${insight.description}', '${insight.urgency}', ${insight.confidence}, '${JSON.stringify(insight.evidence)}', '${JSON.stringify(insight.metadata)}', NOW())`
-              ).join(', ')}
+              VALUES ${insights.map((insight: any) =>
+              `(${insight.document_id}, '${insight.type}', '${insight.title}', '${insight.description}', '${insight.urgency}', ${insight.confidence}, '${JSON.stringify(insight.evidence)}', '${JSON.stringify(insight.metadata)}', NOW())`
+            ).join(', ')}
               ON CONFLICT (document_id, type, title) DO UPDATE SET
                 description = EXCLUDED.description,
                 urgency = EXCLUDED.urgency,
@@ -101,15 +100,12 @@ export async function POST(request: NextRequest) {
                 metadata = EXCLUDED.metadata,
                 updated_at = NOW()
             `;
-          } catch (dbError) {
-            console.warn('Could not store insights in database (table may not exist yet):', dbError);
-            // Continue without failing - insights are still returned in response
+          } catch (insightError) {
+            console.warn('Could not store insights in database:', insightError);
           }
         }
-
       } catch (dbError) {
         console.error('Database update error:', dbError);
-        // Continue and return analysis even if DB update fails
       }
     }
 
@@ -133,7 +129,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Document processing error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to process document with community intelligence',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

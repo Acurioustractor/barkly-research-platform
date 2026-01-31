@@ -85,26 +85,25 @@ export async function calculateCommunityHealth(
 // Helper functions for calculating specific indicators
 function calculateYouthEngagement(needs: any[], assets: any[], patterns: any[]): number {
   // Look for youth-related needs, assets, and success patterns
-  const youthNeeds = needs.filter(n =>
-    n.category === 'youth_development' ||
-    n.need.toLowerCase().includes('youth') ||
-    n.need.toLowerCase().includes('young')
+  const youthNeeds = needs.filter((n: any) =>
+  (n.need_category?.toLowerCase().includes('youth') ||
+    n.need_description?.toLowerCase().includes('youth'))
   );
 
-  const youthAssets = assets.filter(a =>
-    a.asset.toLowerCase().includes('youth') ||
-    a.asset.toLowerCase().includes('young') ||
-    a.type === 'cultural' // Cultural assets often engage youth
+  const youthAssets = assets.filter((a: any) =>
+  (a.community_asset?.toLowerCase().includes('youth') ||
+    a.asset_description?.toLowerCase().includes('youth') ||
+    a.type === 'cultural') // Cultural assets often engage youth
   );
 
-  const youthPatterns = patterns.filter(p =>
+  const youthPatterns = patterns.filter((p: any) =>
     p.pattern.toLowerCase().includes('youth') ||
     p.pattern.toLowerCase().includes('young')
   );
 
   // Higher assets and patterns = higher engagement
   // Higher critical needs = lower engagement
-  const criticalNeeds = youthNeeds.filter(n => n.urgency === 'critical').length;
+  const criticalNeeds = youthNeeds.filter((n: any) => n.urgency === 'critical').length;
   const totalAssets = youthAssets.length;
   const successPatterns = youthPatterns.length;
 
@@ -119,9 +118,9 @@ function calculateYouthEngagement(needs: any[], assets: any[], patterns: any[]):
 
 function calculateServiceAccess(gaps: any[], assets: any[]): number {
   // Service gaps reduce access, service assets improve access
-  const criticalGaps = gaps.filter(g => g.urgency === 'critical').length;
-  const highGaps = gaps.filter(g => g.urgency === 'high').length;
-  const serviceAssets = assets.filter(a => a.type === 'physical' || a.type === 'social').length;
+  const criticalGaps = gaps.filter((g: any) => g.urgency === 'critical').length;
+  const highGaps = gaps.filter((g: any) => g.urgency === 'high').length;
+  const serviceAssets = assets.filter((a: any) => a.type === 'physical' || a.type === 'social').length;
 
   let score = 70; // Base score (assuming some services exist)
   score -= (criticalGaps * 25); // Critical gaps heavily impact
@@ -133,11 +132,12 @@ function calculateServiceAccess(gaps: any[], assets: any[]): number {
 
 function calculateCulturalConnection(assets: any[], patterns: any[]): number {
   // Cultural assets and patterns indicate strong cultural connection
-  const culturalAssets = assets.filter(a => a.type === 'cultural').length;
-  const culturalPatterns = patterns.filter(p =>
-    p.pattern.toLowerCase().includes('cultural') ||
+  const culturalAssets = assets.filter((a: any) => a.type === 'cultural').length;
+  const culturalPatterns = patterns.filter((p: any) =>
+  (p.theme_name?.toLowerCase().includes('cultural') ||
+    p.description?.toLowerCase().includes('cultural') ||
     p.pattern.toLowerCase().includes('elder') ||
-    p.pattern.toLowerCase().includes('traditional')
+    p.pattern.toLowerCase().includes('traditional'))
   ).length;
 
   let score = 60; // Base score
@@ -149,23 +149,23 @@ function calculateCulturalConnection(assets: any[], patterns: any[]): number {
 
 function calculateEconomicOpportunity(needs: any[], opportunities: any[], assets: any[]): number {
   // Employment needs reduce score, economic opportunities and assets improve it
-  const employmentNeeds = needs.filter(n =>
-    n.category === 'employment' ||
-    n.need.toLowerCase().includes('job') ||
+  const employmentNeeds = needs.filter((n: any) =>
+  (n.need_category?.toLowerCase().includes('employment') ||
+    n.need_description?.toLowerCase().includes('job') ||
     n.need.toLowerCase().includes('work') ||
-    n.need.toLowerCase().includes('employment')
+    n.need.toLowerCase().includes('employment'))
   );
 
-  const economicOpportunities = opportunities.filter(o =>
-    o.opportunity.toLowerCase().includes('job') ||
-    o.opportunity.toLowerCase().includes('employment') ||
+  const economicOpportunities = opportunities.filter((o: any) =>
+  (o.opportunity_type?.toLowerCase().includes('economic') ||
+    o.description?.toLowerCase().includes('income') ||
     o.opportunity.toLowerCase().includes('economic') ||
-    o.opportunity.toLowerCase().includes('business')
+    o.opportunity.toLowerCase().includes('business'))
   );
 
-  const economicAssets = assets.filter(a => a.type === 'economic').length;
+  const economicAssets = assets.filter((a: any) => a.type === 'economic').length;
 
-  const criticalEmploymentNeeds = employmentNeeds.filter(n => n.urgency === 'critical').length;
+  const criticalEmploymentNeeds = employmentNeeds.filter((n: any) => n.urgency === 'critical').length;
 
   let score = 45; // Lower base score (economic opportunity often challenging)
   score += (economicOpportunities.length * 15); // Opportunities boost score
@@ -177,7 +177,7 @@ function calculateEconomicOpportunity(needs: any[], opportunities: any[], assets
 
 function calculateSafetyWellbeing(needs: any[], assets: any[]): number {
   // Safety and health needs reduce score, relevant assets improve it
-  const safetyNeeds = needs.filter(n =>
+  const safetyNeeds = needs.filter((n: any) =>
     n.category === 'health' ||
     n.category === 'justice' ||
     n.need.toLowerCase().includes('safe') ||
@@ -185,15 +185,15 @@ function calculateSafetyWellbeing(needs: any[], assets: any[]): number {
     n.need.toLowerCase().includes('mental')
   );
 
-  const wellbeingAssets = assets.filter(a =>
-    a.asset.toLowerCase().includes('health') ||
-    a.asset.toLowerCase().includes('safe') ||
+  const wellbeingAssets = assets.filter((a: any) =>
+  (a.community_asset?.toLowerCase().includes('wellbeing') ||
+    a.asset_description?.toLowerCase().includes('support') ||
     a.asset.toLowerCase().includes('support') ||
-    a.type === 'social'
+    a.type === 'social')
   );
 
-  const criticalSafetyNeeds = safetyNeeds.filter(n => n.urgency === 'critical').length;
-  const highSafetyNeeds = safetyNeeds.filter(n => n.urgency === 'high').length;
+  const criticalSafetyNeeds = safetyNeeds.filter((n: any) => n.urgency === 'critical').length;
+  const highSafetyNeeds = safetyNeeds.filter((n: any) => n.urgency === 'high').length;
 
   let score = 65; // Base score
   score += (wellbeingAssets.length * 10); // Wellbeing assets boost score

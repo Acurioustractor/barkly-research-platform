@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { serviceGapAnalysisService } from '@/lib/community/service-gap-analysis';
-import { prisma } from '@/lib/db/database';
+import { prisma } from '@/lib/database-safe';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Service gap analysis error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to analyze service gaps',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -55,6 +55,9 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     // Get documents for analysis
+    if (!prisma) {
+      throw new Error('Database service unavailable');
+    }
     let whereClause = 'ai_analysis IS NOT NULL';
     const params: any[] = [];
     let paramIndex = 1;
@@ -101,6 +104,7 @@ export async function GET(request: NextRequest) {
         let communityContext = '';
         if (doc.community_id) {
           try {
+            if (!prisma) throw new Error('Database service unavailable');
             const community = await prisma.$queryRaw<Array<{ name: string; description?: string }>>`
               SELECT name, description FROM communities WHERE id = ${doc.community_id}::uuid
             `;
@@ -125,7 +129,7 @@ export async function GET(request: NextRequest) {
 
     // Filter results if specific filters are requested
     let filteredResult = result;
-    
+
     if (serviceType || urgency || gapType || location) {
       const filteredGaps = result.gaps.filter(gap => {
         if (serviceType && gap.serviceType !== serviceType) return false;
@@ -169,7 +173,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Service gap analysis GET error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to get service gap analysis',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -180,6 +184,9 @@ export async function GET(request: NextRequest) {
 
 async function getDocumentsContent(documentIds: string[]) {
   try {
+    if (!prisma) {
+      throw new Error('Database service unavailable');
+    }
     const documents = await prisma.$queryRaw<Array<{
       id: string;
       title: string;
@@ -197,6 +204,7 @@ async function getDocumentsContent(documentIds: string[]) {
         let communityContext = '';
         if (doc.community_id) {
           try {
+            if (!prisma) throw new Error('Database service unavailable');
             const community = await prisma.$queryRaw<Array<{ name: string; description?: string }>>`
               SELECT name, description FROM communities WHERE id = ${doc.community_id}::uuid
             `;

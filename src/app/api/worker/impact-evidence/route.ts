@@ -282,14 +282,14 @@ async function generateImpactReport(params: {
 function generateReportSummary(evidence: any[]): any {
   const programs = [...new Set(evidence.map((e: any) => e.program_id))];
   const communities = [...new Set(evidence.map((e: any) => e.communities?.name).filter(Boolean))];
-  const verifiedEvidence = evidence.filter(e => e.verified);
+  const verifiedEvidence = evidence.filter((e: any) => e.verified);
 
   // Calculate aggregate metrics
-  const quantitativeEvidence = evidence.filter(e => e.evidence_type === 'quantitative');
-  const qualitativeEvidence = evidence.filter(e => e.evidence_type === 'qualitative');
+  const quantitativeEvidence = evidence.filter((e: any) => e.evidence_type === 'quantitative');
+  const qualitativeEvidence = evidence.filter((e: any) => e.evidence_type === 'qualitative');
 
   const avgReliability = evidence.length > 0
-    ? evidence.reduce((sum, e) => sum + (e.reliability_score || 0), 0) / evidence.length
+    ? evidence.reduce((sum: number, e: any) => sum + (e.reliability_score || 0), 0) / evidence.length
     : 0;
 
   return {
@@ -336,8 +336,8 @@ function generateProgramSummaries(evidence: any[]): any[] {
 
 function extractKeyMetrics(evidence: any[]): any[] {
   return evidence
-    .filter(e => e.evidence_type === 'quantitative')
-    .map(e => ({
+    .filter((e: any) => e.evidence_type === 'quantitative')
+    .map((e: any) => ({
       metric: e.metric_name,
       value: e.metric_value,
       baseline: e.baseline_value,
@@ -355,10 +355,10 @@ function extractImpactStories(evidence: any[]): string[] {
 }
 
 function assessProgramDataQuality(evidence: any[]): any {
-  const verified = evidence.filter(e => e.verified).length;
-  const withBaseline = evidence.filter(e => e.baseline_value).length;
-  const withTarget = evidence.filter(e => e.target_value).length;
-  const highReliability = evidence.filter(e => (e.reliability_score || 0) >= 7).length;
+  const verified = evidence.filter((e: any) => e.verified).length;
+  const withBaseline = evidence.filter((e: any) => e.baseline_value).length;
+  const withTarget = evidence.filter((e: any) => e.target_value).length;
+  const highReliability = evidence.filter((e: any) => (e.reliability_score || 0) >= 7).length;
 
   const total = evidence.length;
 
@@ -375,14 +375,14 @@ function generateKeyFindings(evidence: any[]): string[] {
   const findings = [];
 
   // Data coverage findings
-  const programs = [...new Set(evidence.map(e => e.program_id))];
-  const communities = [...new Set(evidence.map(e => e.communities?.name).filter(Boolean))];
+  const programs = [...new Set(evidence.map((e: any) => e.program_id))];
+  const communities = [...new Set(evidence.map((e: any) => e.communities?.name).filter(Boolean))];
 
   findings.push(`Impact data collected across ${programs.length} programs in ${communities.length} communities`);
 
   // Data quality findings
   const verifiedRate = evidence.length > 0
-    ? (evidence.filter(e => e.verified).length / evidence.length) * 100
+    ? (evidence.filter((e: any) => e.verified).length / evidence.length) * 100
     : 0;
 
   if (verifiedRate >= 80) {
@@ -392,8 +392,8 @@ function generateKeyFindings(evidence: any[]): string[] {
   }
 
   // Evidence type findings
-  const quantitative = evidence.filter(e => e.evidence_type === 'quantitative').length;
-  const qualitative = evidence.filter(e => e.evidence_type === 'qualitative').length;
+  const quantitative = evidence.filter((e: any) => e.evidence_type === 'quantitative').length;
+  const qualitative = evidence.filter((e: any) => e.evidence_type === 'qualitative').length;
 
   if (quantitative > qualitative * 2) {
     findings.push('Strong quantitative evidence base with opportunities to enhance qualitative insights');
@@ -405,7 +405,7 @@ function generateKeyFindings(evidence: any[]): string[] {
 
   // Reliability findings
   const avgReliability = evidence.length > 0
-    ? evidence.reduce((sum, e) => sum + (e.reliability_score || 0), 0) / evidence.length
+    ? evidence.reduce((sum: number, e: any) => sum + (e.reliability_score || 0), 0) / evidence.length
     : 0;
 
   if (avgReliability >= 7) {
@@ -421,24 +421,24 @@ function generateRecommendations(evidence: any[]): string[] {
   const recommendations = [];
 
   // Data quality recommendations
-  const unverified = evidence.filter(e => !e.verified).length;
+  const unverified = evidence.filter((e: any) => !e.verified).length;
   if (unverified > 0) {
     recommendations.push(`Verify ${unverified} unverified evidence items to improve data credibility`);
   }
 
-  const withoutBaseline = evidence.filter(e => !e.baseline_value).length;
+  const withoutBaseline = evidence.filter((e: any) => !e.baseline_value).length;
   if (withoutBaseline > evidence.length * 0.3) {
     recommendations.push('Establish baseline measurements for better impact assessment');
   }
 
-  const withoutTargets = evidence.filter(e => !e.target_value).length;
+  const withoutTargets = evidence.filter((e: any) => !e.target_value).length;
   if (withoutTargets > evidence.length * 0.3) {
     recommendations.push('Set clear targets for all metrics to enable progress tracking');
   }
 
   // Evidence type recommendations
-  const quantitative = evidence.filter(e => e.evidence_type === 'quantitative').length;
-  const qualitative = evidence.filter(e => e.evidence_type === 'qualitative').length;
+  const quantitative = evidence.filter((e: any) => e.evidence_type === 'quantitative').length;
+  const qualitative = evidence.filter((e: any) => e.evidence_type === 'qualitative').length;
 
   if (quantitative < qualitative * 0.5) {
     recommendations.push('Strengthen quantitative measurement to complement qualitative insights');
@@ -457,17 +457,17 @@ function generateRecommendations(evidence: any[]): string[] {
 }
 
 function generateMethodologySection(evidence: any[]): any {
-  const methodologies = [...new Set(evidence.map(e => e.methodology).filter(Boolean))];
-  const dataSources = [...new Set(evidence.map(e => e.data_source).filter(Boolean))];
-  const evidenceTypes = [...new Set(evidence.map(e => e.evidence_type))];
+  const methodologies = [...new Set(evidence.map((e: any) => e.methodology).filter(Boolean))];
+  const dataSources = [...new Set(evidence.map((e: any) => e.data_source).filter(Boolean))];
+  const evidenceTypes = [...new Set(evidence.map((e: any) => e.evidence_type))];
 
   return {
     dataCollectionMethods: methodologies,
     dataSources: dataSources,
     evidenceTypes: evidenceTypes,
     collectionPeriod: {
-      start: evidence.length > 0 ? Math.min(...evidence.map(e => new Date(e.collection_date).getTime())) : null,
-      end: evidence.length > 0 ? Math.max(...evidence.map(e => new Date(e.collection_date).getTime())) : null
+      start: evidence.length > 0 ? Math.min(...evidence.map((e: any) => new Date(e.collection_date).getTime())) : null,
+      end: evidence.length > 0 ? Math.max(...evidence.map((e: any) => new Date(e.collection_date).getTime())) : null
     },
     qualityAssurance: {
       verificationProcess: 'Evidence items undergo verification by program managers',
@@ -480,11 +480,11 @@ function generateMethodologySection(evidence: any[]): any {
 function calculateDataQualityScore(evidence: any[]): number {
   if (evidence.length === 0) return 0;
 
-  const verified = evidence.filter(e => e.verified).length;
-  const withBaseline = evidence.filter(e => e.baseline_value).length;
-  const withTarget = evidence.filter(e => e.target_value).length;
-  const withMethodology = evidence.filter(e => e.methodology).length;
-  const highReliability = evidence.filter(e => (e.reliability_score || 0) >= 7).length;
+  const verified = evidence.filter((e: any) => e.verified).length;
+  const withBaseline = evidence.filter((e: any) => e.baseline_value).length;
+  const withTarget = evidence.filter((e: any) => e.target_value).length;
+  const withMethodology = evidence.filter((e: any) => e.methodology).length;
+  const highReliability = evidence.filter((e: any) => (e.reliability_score || 0) >= 7).length;
 
   const total = evidence.length;
   const maxScore = total * 5; // 5 quality criteria
@@ -497,17 +497,17 @@ function assessDataQuality(evidence: any[]): any {
   return {
     totalItems: evidence.length,
     qualityScore: calculateDataQualityScore(evidence),
-    verificationRate: evidence.length > 0 ? Math.round((evidence.filter(e => e.verified).length / evidence.length) * 100) : 0,
+    verificationRate: evidence.length > 0 ? Math.round((evidence.filter((e: any) => e.verified).length / evidence.length) * 100) : 0,
     reliabilityDistribution: {
-      high: evidence.filter(e => (e.reliability_score || 0) >= 7).length,
-      medium: evidence.filter(e => (e.reliability_score || 0) >= 4 && (e.reliability_score || 0) < 7).length,
-      low: evidence.filter(e => (e.reliability_score || 0) < 4).length
+      high: evidence.filter((e: any) => (e.reliability_score || 0) >= 7).length,
+      medium: evidence.filter((e: any) => (e.reliability_score || 0) >= 4 && (e.reliability_score || 0) < 7).length,
+      low: evidence.filter((e: any) => (e.reliability_score || 0) < 4).length
     },
     completeness: {
-      withBaseline: evidence.filter(e => e.baseline_value).length,
-      withTarget: evidence.filter(e => e.target_value).length,
-      withMethodology: evidence.filter(e => e.methodology).length,
-      withStories: evidence.filter(e => e.supporting_stories && e.supporting_stories.length > 0).length
+      withBaseline: evidence.filter((e: any) => e.baseline_value).length,
+      withTarget: evidence.filter((e: any) => e.target_value).length,
+      withMethodology: evidence.filter((e: any) => e.methodology).length,
+      withStories: evidence.filter((e: any) => e.supporting_stories && e.supporting_stories.length > 0).length
     }
   };
 }
@@ -569,11 +569,11 @@ async function analyzeProgram(programId: string, analysisType: string): Promise<
 
 function calculateOverallImpact(evidence: any[]): number {
   // Simple impact calculation based on target achievement
-  const withTargets = evidence.filter(e => e.target_value && e.metric_value);
+  const withTargets = evidence.filter((e: any) => e.target_value && e.metric_value);
 
   if (withTargets.length === 0) return 0;
 
-  const achievements = withTargets.map(e => {
+  const achievements = withTargets.map((e: any) => {
     const target = parseFloat(e.target_value);
     const actual = parseFloat(e.metric_value);
 
@@ -634,7 +634,7 @@ function analyzeImpactTrends(evidence: any[]): any {
 }
 
 function analyzeOutcomeAchievement(evidence: any[]): any {
-  const withTargets = evidence.filter(e => e.target_value && e.metric_value);
+  const withTargets = evidence.filter((e: any) => e.target_value && e.metric_value);
 
   if (withTargets.length === 0) {
     return {
@@ -729,13 +729,13 @@ function generateBenchmarks(evidence: any[]): any {
     },
     verificationRate: {
       target: 90,
-      actual: evidence.length > 0 ? Math.round((evidence.filter(e => e.verified).length / evidence.length) * 100) : 0,
-      status: evidence.length > 0 && (evidence.filter(e => e.verified).length / evidence.length) >= 0.9 ? 'meeting' : 'below'
+      actual: evidence.length > 0 ? Math.round((evidence.filter((e: any) => e.verified).length / evidence.length) * 100) : 0,
+      status: evidence.length > 0 && (evidence.filter((e: any) => e.verified).length / evidence.length) >= 0.9 ? 'meeting' : 'below'
     },
     evidenceDiversity: {
       target: 2, // Both quantitative and qualitative
-      actual: [...new Set(evidence.map(e => e.evidence_type))].length,
-      status: [...new Set(evidence.map(e => e.evidence_type))].length >= 2 ? 'meeting' : 'below'
+      actual: [...new Set(evidence.map((e: any) => e.evidence_type))].length,
+      status: [...new Set(evidence.map((e: any) => e.evidence_type))].length >= 2 ? 'meeting' : 'below'
     }
   };
 

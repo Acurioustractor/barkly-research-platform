@@ -112,9 +112,7 @@ export async function POST(request: NextRequest) {
             source: options.source,
             category: options.category,
             tags: options.tags.length > 0 ? JSON.stringify(options.tags) : undefined,
-            status: 'PROCESSING',
-            // Store file path for serving original files
-            ...(storedFile && { filePath: storedFile.filepath })
+            status: 'PROCESSING'
           }
         });
 
@@ -156,7 +154,7 @@ export async function POST(request: NextRequest) {
 
           if (chunks.length > 0) {
             await prisma!.documentChunk.createMany({
-              data: chunks.map((chunk, index) => ({
+              data: chunks.map((chunk: string, index: number) => ({
                 documentId: document.id,
                 chunkIndex: index,
                 text: chunk,

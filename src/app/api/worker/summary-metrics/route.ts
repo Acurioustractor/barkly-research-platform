@@ -95,10 +95,10 @@ async function fetchProgramMetrics(organizationId: string, region?: string | nul
     const totalPrograms = programs.length;
 
     const averageEffectiveness = programs.length > 0
-      ? Math.round(programs.reduce((sum, p) => sum + (p.effectiveness_score || 0), 0) / programs.length)
+      ? Math.round(programs.reduce((sum: number, p: any) => sum + (p.effectiveness_score || 0), 0) / programs.length)
       : 0;
 
-    const totalReach = programs.reduce((sum, p) => sum + (p.reach_count || 0), 0);
+    const totalReach = programs.reduce((sum: number, p: any) => sum + (p.reach_count || 0), 0);
 
     // Programs by type
     const byType = programs.reduce((acc: Record<string, number>, p: any) => {
@@ -152,7 +152,7 @@ async function fetchGapMetrics(organizationId: string, region?: string | null): 
     }
 
     const gaps = data || [];
-    const criticalGaps = gaps.filter(g => g.priority_level === 'critical' || g.severity_score >= 8).length;
+    const criticalGaps = gaps.filter((g: any) => g.priority_level === 'critical' || g.severity_score >= 8).length;
 
     // Gaps by type
     const byType = gaps.reduce((acc: Record<string, number>, g: any) => {
@@ -404,7 +404,7 @@ async function generateBenchmarkComparison(
     const organizationMetrics = await fetchAllMetrics(organizationId);
 
     const comparisonMetrics = await Promise.all(
-      compareWith.map(id => fetchAllMetrics(id))
+      compareWith.map((id: string) => fetchAllMetrics(id))
     );
 
     // Calculate benchmarks
@@ -419,7 +419,7 @@ async function generateBenchmarkComparison(
             : 0,
           percentile: calculatePercentile(
             organizationMetrics.averageEffectiveness,
-            comparisonMetrics.map(m => m.averageEffectiveness)
+            comparisonMetrics.map((m: any) => m.averageEffectiveness)
           )
         },
         programReach: {
@@ -429,7 +429,7 @@ async function generateBenchmarkComparison(
             : 0,
           percentile: calculatePercentile(
             organizationMetrics.totalReach,
-            comparisonMetrics.map(m => m.totalReach)
+            comparisonMetrics.map((m: any) => m.totalReach)
           )
         },
         gapResolution: {
@@ -439,7 +439,7 @@ async function generateBenchmarkComparison(
             : 0,
           percentile: calculatePercentile(
             organizationMetrics.gapResolutionRate,
-            comparisonMetrics.map(m => m.gapResolutionRate)
+            comparisonMetrics.map((m: any) => m.gapResolutionRate)
           )
         }
       },
@@ -486,7 +486,7 @@ async function fetchAllMetrics(organizationId: string): Promise<any> {
 function calculatePercentile(value: number, comparisonValues: number[]): number {
   if (comparisonValues.length === 0) return 50; // Default to 50th percentile
 
-  const sortedValues = [...comparisonValues, value].sort((a, b) => a - b);
+  const sortedValues = [...comparisonValues, value].sort((a: number, b: number) => a - b);
   const index = sortedValues.indexOf(value);
 
   return Math.round((index / (sortedValues.length - 1)) * 100);
@@ -504,7 +504,7 @@ function generateBenchmarkInsights(
   }
 
   // Program effectiveness insights
-  const avgEffectiveness = comparisonMetrics.reduce((sum, m) => sum + m.averageEffectiveness, 0) / comparisonMetrics.length;
+  const avgEffectiveness = comparisonMetrics.reduce((sum: number, m: any) => sum + m.averageEffectiveness, 0) / comparisonMetrics.length;
   if (organizationMetrics.averageEffectiveness > avgEffectiveness + 10) {
     insights.push(`Program effectiveness (${organizationMetrics.averageEffectiveness}%) significantly above average (${Math.round(avgEffectiveness)}%)`);
   } else if (organizationMetrics.averageEffectiveness < avgEffectiveness - 10) {
@@ -512,7 +512,7 @@ function generateBenchmarkInsights(
   }
 
   // Reach insights
-  const avgReach = comparisonMetrics.reduce((sum, m) => sum + m.totalReach, 0) / comparisonMetrics.length;
+  const avgReach = comparisonMetrics.reduce((sum: number, m: any) => sum + m.totalReach, 0) / comparisonMetrics.length;
   if (organizationMetrics.totalReach > avgReach * 1.5) {
     insights.push(`Program reach (${organizationMetrics.totalReach}) significantly above average (${Math.round(avgReach)})`);
   } else if (organizationMetrics.totalReach < avgReach * 0.5) {
@@ -520,7 +520,7 @@ function generateBenchmarkInsights(
   }
 
   // Gap resolution insights
-  const avgGapResolution = comparisonMetrics.reduce((sum, m) => sum + m.gapResolutionRate, 0) / comparisonMetrics.length;
+  const avgGapResolution = comparisonMetrics.reduce((sum: number, m: any) => sum + m.gapResolutionRate, 0) / comparisonMetrics.length;
   if (organizationMetrics.gapResolutionRate > avgGapResolution + 15) {
     insights.push(`Gap resolution rate (${organizationMetrics.gapResolutionRate}%) above average (${Math.round(avgGapResolution)}%)`);
   }
@@ -540,21 +540,21 @@ function generateBenchmarkRecommendations(
   }
 
   // Effectiveness recommendations
-  const avgEffectiveness = comparisonMetrics.reduce((sum, m) => sum + m.averageEffectiveness, 0) / comparisonMetrics.length;
+  const avgEffectiveness = comparisonMetrics.reduce((sum: number, m: any) => sum + m.averageEffectiveness, 0) / comparisonMetrics.length;
   if (organizationMetrics.averageEffectiveness < avgEffectiveness) {
     recommendations.push('Review program implementation strategies to improve effectiveness');
     recommendations.push('Study best practices from higher-performing organizations');
   }
 
   // Reach recommendations
-  const avgReach = comparisonMetrics.reduce((sum, m) => sum + m.totalReach, 0) / comparisonMetrics.length;
+  const avgReach = comparisonMetrics.reduce((sum: number, m: any) => sum + m.totalReach, 0) / comparisonMetrics.length;
   if (organizationMetrics.totalReach < avgReach) {
     recommendations.push('Explore strategies to expand program reach');
     recommendations.push('Consider partnerships to increase service delivery capacity');
   }
 
   // Evidence recommendations
-  const avgEvidenceQuality = comparisonMetrics.reduce((sum, m) => sum + m.evidenceQualityScore, 0) / comparisonMetrics.length;
+  const avgEvidenceQuality = comparisonMetrics.reduce((sum: number, m: any) => sum + m.evidenceQualityScore, 0) / comparisonMetrics.length;
   if (organizationMetrics.evidenceQualityScore < avgEvidenceQuality) {
     recommendations.push('Strengthen evidence collection and verification processes');
   }

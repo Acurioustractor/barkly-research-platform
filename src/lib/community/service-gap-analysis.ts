@@ -313,23 +313,23 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
 
     // Create gaps by type
     const gapsByType = {
-      missing: gaps.filter(g => g.gapType === 'missing'),
-      inadequate: gaps.filter(g => g.gapType === 'inadequate'),
-      inaccessible: gaps.filter(g => g.gapType === 'inaccessible'),
-      culturally_inappropriate: gaps.filter(g => g.gapType === 'culturally_inappropriate'),
-      under_resourced: gaps.filter(g => g.gapType === 'under_resourced')
+      missing: gaps.filter((g: ServiceGap) => g.gapType === 'missing'),
+      inadequate: gaps.filter((g: ServiceGap) => g.gapType === 'inadequate'),
+      inaccessible: gaps.filter((g: ServiceGap) => g.gapType === 'inaccessible'),
+      culturally_inappropriate: gaps.filter((g: ServiceGap) => g.gapType === 'culturally_inappropriate'),
+      under_resourced: gaps.filter((g: ServiceGap) => g.gapType === 'under_resourced')
     };
 
     // Create gaps by urgency
     const gapsByUrgency = {
-      critical: gaps.filter(g => g.urgency === 'critical'),
-      high: gaps.filter(g => g.urgency === 'high'),
-      medium: gaps.filter(g => g.urgency === 'medium'),
-      low: gaps.filter(g => g.urgency === 'low')
+      critical: gaps.filter((g: ServiceGap) => g.urgency === 'critical'),
+      high: gaps.filter((g: ServiceGap) => g.urgency === 'high'),
+      medium: gaps.filter((g: ServiceGap) => g.urgency === 'medium'),
+      low: gaps.filter((g: ServiceGap) => g.urgency === 'low')
     };
 
     // Create gaps by location
-    const gapsByLocation = gaps.reduce((acc, gap) => {
+    const gapsByLocation = gaps.reduce((acc: Record<string, ServiceGap[]>, gap: ServiceGap) => {
       if (!acc[gap.location]) {
         acc[gap.location] = [];
       }

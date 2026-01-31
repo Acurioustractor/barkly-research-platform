@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { communityHealthService } from '@/lib/community/community-health-service';
-import { prisma } from '@/lib/db/database';
+import { prisma } from '@/lib/database-safe';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, communities: allHealth });
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Community health calculation error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to calculate community health',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -32,10 +32,10 @@ export async function GET(request: NextRequest) {
 async function getCommunityHealthById(communityId: string) {
   try {
     const health = await communityHealthService.calculateCommunityHealth(communityId);
-    
+
     // Store the calculated health in the database
     await communityHealthService.storeCommunityHealth(health);
-    
+
     return health;
 
   } catch (error) {
@@ -47,12 +47,12 @@ async function getCommunityHealthById(communityId: string) {
 async function getAllCommunityHealth() {
   try {
     const allHealth = await communityHealthService.calculateAllCommunityHealth();
-    
+
     // Store all calculated health data
     await Promise.all(
-      allHealth.map(health => communityHealthService.storeCommunityHealth(health))
+      allHealth.map((health: any) => communityHealthService.storeCommunityHealth(health))
     );
-    
+
     return allHealth;
 
   } catch (error) {
@@ -75,22 +75,6 @@ export async function POST(request: NextRequest) {
 
     const health = await getCommunityHealthById(communityId);
 
-    // Optionally store the calculated health in the database
-    try {
-      await prisma.community.update({
-        where: { id: communityId },
-        data: {
-          health_metrics: {
-            ...health,
-            calculated_at: new Date().toISOString()
-          }
-        }
-      });
-    } catch (dbError) {
-      console.warn('Could not store health metrics in database:', dbError);
-      // Continue without failing - health is still returned
-    }
-
     return NextResponse.json({
       success: true,
       health,
@@ -100,7 +84,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Community health recalculation error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to recalculate community health',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
