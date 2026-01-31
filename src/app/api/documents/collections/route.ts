@@ -20,7 +20,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' }
     });
 
-    const results = collections.map(collection => ({
+    const results = collections.map((collection: any) => ({
       id: collection.id,
       name: collection.name,
       description: collection.description,
@@ -38,9 +38,9 @@ export async function GET() {
 
   } catch (error) {
     console.error('Get collections error:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to retrieve collections',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     const processor = new EnhancedDocumentProcessor();
-    
+
     // Create the collection
     const collection = await processor.createCollection(name, description, tags, isPublic);
 
@@ -104,9 +104,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Create collection error:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to create collection',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
