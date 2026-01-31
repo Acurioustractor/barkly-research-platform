@@ -372,10 +372,10 @@ Focus on services, programs, initiatives, facilities. Return JSON only.`;
  */
 function mergeChunkResults(results: any[]): any {
   const merged = {
-    services: [],
-    themes: [],
-    quotes: [],
-    insights: []
+    services: [] as any[],
+    themes: [] as any[],
+    quotes: [] as any[],
+    insights: [] as any[]
   };
 
   // Combine all results
