@@ -4,7 +4,10 @@
  */
 
 import { prisma } from '@/lib/database-safe';
-import type { SystemEntityType, RelationshipType, RelationshipStrength } from '@prisma/client';
+// Define Prisma enums locally as string unions to bypass build export issues
+type SystemEntityType = 'SERVICE' | 'THEME' | 'OUTCOME' | 'FACTOR';
+type RelationshipType = 'SUPPORTS' | 'BLOCKS' | 'ENABLES' | 'INFLUENCES' | 'REQUIRES';
+type RelationshipStrength = 'STRONG' | 'MEDIUM' | 'WEAK';
 
 export interface ExtractedEntity {
   name: string;

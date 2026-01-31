@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database-safe';
 import { generateSystemsMapData } from '@/lib/ai/processing/systems-extraction-service';
-import type { SystemEntityType } from '@prisma/client';
+// Define SystemEntityType locally because Prisma export is problematic in some build environments
+type SystemEntityType = 'SERVICE' | 'THEME' | 'OUTCOME' | 'FACTOR';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,17 +16,17 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    
+
     // Get document IDs from query params
     const documentIdsParam = searchParams.get('documentIds');
     const documentIds = documentIdsParam ? documentIdsParam.split(',') : [];
-    
+
     // Get filters
     const entityTypesParam = searchParams.get('entityTypes');
-    const entityTypes = entityTypesParam 
+    const entityTypes = entityTypesParam
       ? entityTypesParam.split(',') as SystemEntityType[]
       : undefined;
-    
+
     const minConfidence = searchParams.get('minConfidence');
     const confidenceThreshold = minConfidence ? parseFloat(minConfidence) : undefined;
 
