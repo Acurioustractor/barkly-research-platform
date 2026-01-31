@@ -11,7 +11,7 @@ export const GET = withLogging(withErrorHandling(async (request: NextRequest) =>
   }
 
   const { searchParams } = new URL(request.url);
-  
+
   const query = {
     text: searchParams.get('text') || undefined,
     theme: searchParams.get('theme') || undefined,
@@ -27,7 +27,7 @@ export const GET = withLogging(withErrorHandling(async (request: NextRequest) =>
   const documents = await processor.searchDocuments(query);
 
   // Transform results for API response
-  const results = documents.map(doc => ({
+  const results = documents.map((doc: any) => ({
     id: doc.id,
     filename: doc.originalName,
     uploadedAt: doc.uploadedAt,
@@ -38,7 +38,7 @@ export const GET = withLogging(withErrorHandling(async (request: NextRequest) =>
     tags: doc.tags ? JSON.parse(doc.tags as string) : [],
     pageCount: doc.pageCount,
     wordCount: doc.wordCount,
-    themes: doc.themes.map(t => t.theme),
+    themes: doc.themes.map((t: any) => t.theme),
     counts: doc._count,
     summary: doc.summary
   }));
@@ -56,50 +56,50 @@ export const POST = withLogging(withErrorHandling(async (request: NextRequest) =
     throw ApiErrors.serviceUnavailable('Database not configured yet. Please set up Supabase integration.');
   }
 
-    const body = await request.json();
-    const { 
-      text, 
-      themes = [], 
-      categories = [], 
-      sources = [], 
-      status,
-      limit = 50,
-      offset = 0
-    } = body;
+  const body = await request.json();
+  const {
+    text,
+    themes = [],
+    categories = [],
+    sources = [],
+    status,
+    limit = 50,
+    offset = 0
+  } = body;
 
-    const processor = new EnhancedDocumentProcessor();
-    
-    // Build complex search query
-    const searchQuery: any = {
-      limit,
-      offset
-    };
+  const processor = new EnhancedDocumentProcessor();
 
-    if (text) searchQuery.text = text;
-    if (status) searchQuery.status = status;
-    
-    // Handle multiple categories, sources, etc.
-    if (categories.length > 0) searchQuery.category = categories[0]; // Simplified for now
-    if (sources.length > 0) searchQuery.source = sources[0];
-    if (themes.length > 0) searchQuery.theme = themes[0];
+  // Build complex search query
+  const searchQuery: any = {
+    limit,
+    offset
+  };
 
-    const documents = await processor.searchDocuments(searchQuery);
+  if (text) searchQuery.text = text;
+  if (status) searchQuery.status = status;
 
-    const results = documents.map(doc => ({
-      id: doc.id,
-      filename: doc.originalName,
-      uploadedAt: doc.uploadedAt,
-      processedAt: doc.processedAt,
-      status: doc.status,
-      source: doc.source,
-      category: doc.category,
-      tags: doc.tags ? JSON.parse(doc.tags as string) : [],
-      pageCount: doc.pageCount,
-      wordCount: doc.wordCount,
-      themes: doc.themes.map(t => ({ name: t.theme, confidence: t.confidence })),
-      counts: doc._count,
-      summary: doc.summary
-    }));
+  // Handle multiple categories, sources, etc.
+  if (categories.length > 0) searchQuery.category = categories[0]; // Simplified for now
+  if (sources.length > 0) searchQuery.source = sources[0];
+  if (themes.length > 0) searchQuery.theme = themes[0];
+
+  const documents = await processor.searchDocuments(searchQuery);
+
+  const results = documents.map((doc: any) => ({
+    id: doc.id,
+    filename: doc.originalName,
+    uploadedAt: doc.uploadedAt,
+    processedAt: doc.processedAt,
+    status: doc.status,
+    source: doc.source,
+    category: doc.category,
+    tags: doc.tags ? JSON.parse(doc.tags as string) : [],
+    pageCount: doc.pageCount,
+    wordCount: doc.wordCount,
+    themes: doc.themes.map((t: any) => ({ name: t.theme, confidence: t.confidence })),
+    counts: doc._count,
+    summary: doc.summary
+  }));
 
   return NextResponse.json({
     success: true,

@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match frontend interface
-    const opportunities = data?.map(opportunity => ({
+    const opportunities = data?.map((opportunity: any) => ({
       id: opportunity.id,
       title: opportunity.title,
       description: opportunity.description,

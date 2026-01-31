@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match frontend interface
-    const services = data?.map(service => ({
+    const services = data?.map((service: any) => ({
       id: service.id,
       name: service.name,
       description: service.description,

@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
         }
       },
       {
-        id: 'insight-2', 
+        id: 'insight-2',
         insight: 'Cultural Learning Program has been highly successful, with 89% of participants reporting improved cultural connection.',
         type: 'service-success',
         confidence: 0.87,
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         confidence: 0.84,
         document: {
           id: 'doc-3',
-          originalName: 'Parent Support Survey Results 2024.pdf', 
+          originalName: 'Parent Support Survey Results 2024.pdf',
           uploadedAt: new Date('2024-01-10')
         }
       },
@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
 // Transform mock insights into services
 function transformMockInsightsToServices(insights: any[], quotes: any[]) {
   const services = [];
-  
+
   for (const insight of insights) {
     if (insight.type === 'service-available' || insight.type === 'service-success') {
       const service = {
@@ -151,20 +151,20 @@ function transformMockInsightsToServices(insights: any[], quotes: any[]) {
         documentSource: insight.document.originalName,
         sourceType: 'document-derived',
         documentId: insight.document.id,
-        supportingQuotes: quotes.filter(q => q.document.id === insight.document.id)
+        supportingQuotes: quotes.filter((q: any) => q.document.id === insight.document.id)
       };
-      
+
       services.push(service);
     }
   }
-  
+
   return services;
 }
 
 // Extract service gaps from mock insights
 function extractMockServiceGaps(insights: any[], quotes: any[]) {
   const gaps = [];
-  
+
   for (const insight of insights) {
     if (insight.type === 'service-gap') {
       const gap = {
@@ -180,13 +180,13 @@ function extractMockServiceGaps(insights: any[], quotes: any[]) {
         documentSource: insight.document.originalName,
         sourceType: 'document-derived',
         documentId: insight.document.id,
-        supportingQuotes: quotes.filter(q => q.document.id === insight.document.id)
+        supportingQuotes: quotes.filter((q: any) => q.document.id === insight.document.id)
       };
-      
+
       gaps.push(gap);
     }
   }
-  
+
   return gaps;
 }
 
@@ -200,26 +200,26 @@ function extractServiceName(text: string): string | null {
     /(Mobile\\s+Health\\s+Service)/i,
     /(Childcare\\s+Service)/i
   ];
-  
+
   for (const pattern of patterns) {
     const match = text.match(pattern);
     if (match) {
       return match[1];
     }
   }
-  
+
   return null;
 }
 
 function categorizeInsight(text: string): string {
   const lower = text.toLowerCase();
-  
+
   if (lower.includes('youth') || lower.includes('young')) return 'youth';
   if (lower.includes('health') || lower.includes('medical')) return 'healthcare';
   if (lower.includes('cultural') || lower.includes('traditional')) return 'cultural';
   if (lower.includes('childcare') || lower.includes('child')) return 'childcare';
   if (lower.includes('education') || lower.includes('learning')) return 'education';
-  
+
   return 'community';
 }
 
@@ -227,9 +227,9 @@ function generateTennantCreekCoordinates(): [number, number] {
   const baseLat = -19.6544;
   const baseLng = 134.1870;
   const radius = 0.01;
-  
+
   const lat = baseLat + (Math.random() - 0.5) * radius;
   const lng = baseLng + (Math.random() - 0.5) * radius;
-  
+
   return [lat, lng];
 }

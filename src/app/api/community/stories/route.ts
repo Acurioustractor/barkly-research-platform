@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match frontend interface
-    const stories = data?.map(story => ({
+    const stories = data?.map((story: any) => ({
       id: story.id,
       title: story.title,
       excerpt: story.excerpt || story.content?.substring(0, 200) + '...',
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       story: data,
       message: 'Story submitted for review. It will be published after moderation.'
     }, { status: 201 });

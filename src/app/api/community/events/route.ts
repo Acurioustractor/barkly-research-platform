@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match frontend interface
-    const events = data?.map(event => ({
+    const events = data?.map((event: any) => ({
       id: event.id,
       title: event.title,
       description: event.description,

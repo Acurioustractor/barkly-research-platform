@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     // Get cultural protocols using the service
     let protocols = [];
-    
+
     if (contentType) {
       protocols = await getCulturalProtocols(contentType, communityId || undefined);
     } else {
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         throw new Error(`Failed to fetch protocols: ${error.message}`);
       }
 
-      protocols = data?.map(protocol => ({
+      protocols = data?.map((protocol: any) => ({
         id: protocol.id,
         protocolName: protocol.protocol_name,
         protocolType: protocol.protocol_type,
@@ -109,14 +109,14 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to create protocol: ${createError.message}`);
         }
 
-        return NextResponse.json({ 
+        return NextResponse.json({
           protocol: newProtocol,
-          message: 'Cultural protocol created successfully' 
+          message: 'Cultural protocol created successfully'
         }, { status: 201 });
 
       case 'updateProtocol':
         const { protocolId, updates } = data;
-        
+
         if (!protocolId || !updates) {
           return NextResponse.json(
             { error: 'Protocol ID and updates are required' },
@@ -136,13 +136,13 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to update protocol: ${updateError.message}`);
         }
 
-        return NextResponse.json({ 
-          message: 'Protocol updated successfully' 
+        return NextResponse.json({
+          message: 'Protocol updated successfully'
         });
 
       case 'checkCompliance':
         const { content, contentType, communityId: checkCommunityId } = data;
-        
+
         if (!content || !contentType) {
           return NextResponse.json(
             { error: 'Content and content type are required' },
@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
 
       case 'deactivateProtocol':
         const { protocolId: deactivateId, reason } = data;
-        
+
         if (!deactivateId) {
           return NextResponse.json(
             { error: 'Protocol ID is required' },
@@ -182,8 +182,8 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to deactivate protocol: ${deactivateError.message}`);
         }
 
-        return NextResponse.json({ 
-          message: 'Protocol deactivated successfully' 
+        return NextResponse.json({
+          message: 'Protocol deactivated successfully'
         });
 
       default:

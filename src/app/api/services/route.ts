@@ -5,12 +5,12 @@ export async function GET(request: NextRequest) {
   try {
     // Extract service data from processed documents and combine with baseline services
     const baselineServices = getBaselineServices();
-    
+
     // Get document-derived insights
-    let documentServices = [];
-    let documentGaps = [];
-    let documentPlanned = [];
-    
+    let documentServices: any[] = [];
+    let documentGaps: any[] = [];
+    let documentPlanned: any[] = [];
+
     if (prisma) {
       try {
         // Get services mentioned in documents through themes and insights
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
           },
           take: 20
         });
-        
+
         // Get insights about services and gaps
         const serviceInsights = await prisma.documentInsight.findMany({
           where: {
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
           },
           take: 15
         });
-        
+
         // Get community quotes about services
         const serviceQuotes = await prisma.documentQuote.findMany({
           where: {
@@ -83,17 +83,17 @@ export async function GET(request: NextRequest) {
           },
           take: 10
         });
-        
+
         console.log('Document data found:', {
           themes: serviceThemes.length,
           insights: serviceInsights.length,
           quotes: serviceQuotes.length
         });
-        
+
         // Transform document insights into service data
         documentServices = transformDocumentInsightsToServices(serviceInsights, serviceQuotes, serviceThemes);
         documentGaps = extractServiceGaps(serviceInsights, serviceQuotes);
-        
+
       } catch (dbError) {
         console.error('Database query error:', dbError);
         // Continue with baseline services if DB fails
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
     const allServices = [...baselineServices.services, ...documentServices];
     const allGaps = [...baselineServices.gaps, ...documentGaps];
     const allPlanned = [...baselineServices.planned, ...documentPlanned];
-    
+
     const servicesData = {
       location: {
         name: "Tennant Creek",
@@ -212,13 +212,13 @@ function getBaselineServices() {
 // Transform document insights into service data
 function transformDocumentInsightsToServices(insights: any[], quotes: any[], themes: any[]) {
   const services = [];
-  
+
   // Process insights that mention specific services
   for (const insight of insights) {
-    if (insight.insight.toLowerCase().includes('program') || 
-        insight.insight.toLowerCase().includes('centre') ||
-        insight.insight.toLowerCase().includes('service')) {
-      
+    if (insight.insight.toLowerCase().includes('program') ||
+      insight.insight.toLowerCase().includes('centre') ||
+      insight.insight.toLowerCase().includes('service')) {
+
       // Try to extract service details from the insight
       const service = {
         id: `doc-service-${insight.id}`,
@@ -234,24 +234,24 @@ function transformDocumentInsightsToServices(insights: any[], quotes: any[], the
         sourceType: 'document-derived',
         documentId: insight.document.id
       };
-      
+
       services.push(service);
     }
   }
-  
+
   return services.slice(0, 5); // Limit to prevent overwhelming
 }
 
 // Extract service gaps from document insights
 function extractServiceGaps(insights: any[], quotes: any[]) {
   const gaps = [];
-  
+
   for (const insight of insights) {
-    if (insight.insight.toLowerCase().includes('need') || 
-        insight.insight.toLowerCase().includes('gap') ||
-        insight.insight.toLowerCase().includes('lack') ||
-        insight.insight.toLowerCase().includes('missing')) {
-      
+    if (insight.insight.toLowerCase().includes('need') ||
+      insight.insight.toLowerCase().includes('gap') ||
+      insight.insight.toLowerCase().includes('lack') ||
+      insight.insight.toLowerCase().includes('missing')) {
+
       const gap = {
         id: `doc-gap-${insight.id}`,
         name: extractServiceName(insight.insight) || 'Community Need',
@@ -266,11 +266,11 @@ function extractServiceGaps(insights: any[], quotes: any[]) {
         sourceType: 'document-derived',
         documentId: insight.document.id
       };
-      
+
       gaps.push(gap);
     }
   }
-  
+
   return gaps.slice(0, 3);
 }
 
@@ -283,27 +283,27 @@ function extractServiceName(text: string): string | null {
     /(Mental\s+Health\s+[A-Z][a-z]+)/,
     /(Cultural\s+[A-Z][a-z]+)/
   ];
-  
+
   for (const pattern of patterns) {
     const match = text.match(pattern);
     if (match) {
       return match[1];
     }
   }
-  
+
   return null;
 }
 
 // Categorize insight into service category
 function categorizeInsight(text: string): string {
   const lower = text.toLowerCase();
-  
+
   if (lower.includes('youth') || lower.includes('young')) return 'youth';
   if (lower.includes('health') || lower.includes('medical')) return 'healthcare';
   if (lower.includes('cultural') || lower.includes('traditional')) return 'cultural';
   if (lower.includes('education') || lower.includes('learning')) return 'education';
   if (lower.includes('government') || lower.includes('centrelink')) return 'government';
-  
+
   return 'community';
 }
 
@@ -312,10 +312,10 @@ function generateTennantCreekCoordinates(): [number, number] {
   const baseLat = -19.6544;
   const baseLng = 134.1870;
   const radius = 0.01; // About 1km radius
-  
+
   const lat = baseLat + (Math.random() - 0.5) * radius;
   const lng = baseLng + (Math.random() - 0.5) * radius;
-  
+
   return [lat, lng];
 }
 
@@ -327,14 +327,14 @@ function calculateCoverageScore(services: any[], gaps: any[]): number {
 
 // Extract priority areas from gaps
 function extractPriorityAreas(gaps: any[]): string[] {
-  const categories = gaps.map(gap => gap.category);
+  const categories = gaps.map((gap: any) => gap.category);
   const counts = categories.reduce((acc: any, category) => {
     acc[category] = (acc[category] || 0) + 1;
     return acc;
   }, {});
-  
+
   return Object.entries(counts)
-    .sort(([,a], [,b]) => (b as number) - (a as number))
+    .sort(([, a], [, b]) => (b as number) - (a as number))
     .slice(0, 3)
     .map(([category]) => category.charAt(0).toUpperCase() + category.slice(1));
 }

@@ -176,16 +176,16 @@ export async function GET(request: NextRequest) {
 // Transform themes into service insights
 function transformThemesToServices(themes: any[], quotes: any[]) {
   const services = [];
-  
+
   for (const theme of themes) {
     // Look for themes that suggest existing services
     const themeName = theme.theme_name?.toLowerCase() || '';
-    if (themeName.includes('program') || 
-        themeName.includes('service') || 
-        themeName.includes('support') ||
-        themeName.includes('centre') ||
-        themeName.includes('hub')) {
-      
+    if (themeName.includes('program') ||
+      themeName.includes('service') ||
+      themeName.includes('support') ||
+      themeName.includes('centre') ||
+      themeName.includes('hub')) {
+
       const service = {
         id: `theme-service-${theme.id}`,
         name: theme.theme_name || 'Community Program',
@@ -201,30 +201,30 @@ function transformThemesToServices(themes: any[], quotes: any[]) {
         documentId: theme.document_id,
         themeId: theme.id
       };
-      
+
       services.push(service);
     }
   }
-  
+
   return services.slice(0, 5); // Limit results
 }
 
 // Extract service gaps from themes
 function extractServiceGapsFromThemes(themes: any[], quotes: any[]) {
   const gaps = [];
-  
+
   for (const theme of themes) {
     const themeName = theme.theme_name?.toLowerCase() || '';
     const description = theme.description?.toLowerCase() || '';
-    
+
     // Look for themes that suggest gaps or needs
-    if (themeName.includes('need') || 
-        themeName.includes('gap') ||
-        themeName.includes('lack') ||
-        themeName.includes('missing') ||
-        description.includes('need') ||
-        description.includes('gap')) {
-      
+    if (themeName.includes('need') ||
+      themeName.includes('gap') ||
+      themeName.includes('lack') ||
+      themeName.includes('missing') ||
+      description.includes('need') ||
+      description.includes('gap')) {
+
       const gap = {
         id: `theme-gap-${theme.id}`,
         name: theme.theme_name || 'Community Need',
@@ -240,20 +240,20 @@ function extractServiceGapsFromThemes(themes: any[], quotes: any[]) {
         documentId: theme.document_id,
         themeId: theme.id
       };
-      
+
       gaps.push(gap);
     }
   }
-  
+
   return gaps.slice(0, 3);
 }
 
 // Helper functions
 function categorizeTheme(themeName: string): string {
   if (!themeName) return 'community';
-  
+
   const lower = themeName.toLowerCase();
-  
+
   if (lower.includes('youth') || lower.includes('young')) return 'youth';
   if (lower.includes('health') || lower.includes('medical')) return 'healthcare';
   if (lower.includes('cultural') || lower.includes('traditional')) return 'cultural';
@@ -261,7 +261,7 @@ function categorizeTheme(themeName: string): string {
   if (lower.includes('business') || lower.includes('economic') || lower.includes('employment')) return 'economic';
   if (lower.includes('housing') || lower.includes('accommodation')) return 'housing';
   if (lower.includes('government') || lower.includes('policy')) return 'government';
-  
+
   return 'community';
 }
 
@@ -269,10 +269,10 @@ function generateTennantCreekCoordinates(): [number, number] {
   const baseLat = -19.6544;
   const baseLng = 134.1870;
   const radius = 0.01;
-  
+
   const lat = baseLat + (Math.random() - 0.5) * radius;
   const lng = baseLng + (Math.random() - 0.5) * radius;
-  
+
   return [lat, lng];
 }
 
@@ -282,14 +282,14 @@ function calculateCoverageScore(services: any[], gaps: any[]): number {
 }
 
 function extractPriorityAreas(gaps: any[]): string[] {
-  const categories = gaps.map(gap => gap.category);
+  const categories = gaps.map((gap: any) => gap.category);
   const counts = categories.reduce((acc: any, category) => {
     acc[category] = (acc[category] || 0) + 1;
     return acc;
   }, {});
-  
+
   return Object.entries(counts)
-    .sort(([,a], [,b]) => (b as number) - (a as number))
+    .sort(([, a], [, b]) => (b as number) - (a as number))
     .slice(0, 3)
     .map(([category]) => category.charAt(0).toUpperCase() + category.slice(1));
 }

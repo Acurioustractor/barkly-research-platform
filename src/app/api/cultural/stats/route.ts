@@ -81,8 +81,8 @@ async function getQueueStats(communityId?: string | null): Promise<any> {
     }
 
     const items = data || [];
-    const pending = items.filter(item => item.status === 'queued' || item.status === 'in_review').length;
-    const urgent = items.filter(item => item.priority === 'urgent').length;
+    const pending = items.filter((item: any) => item.status === 'queued' || item.status === 'in_review').length;
+    const urgent = items.filter((item: any) => item.priority === 'urgent').length;
 
     const distribution = items.reduce((acc, item) => {
       acc[item.priority] = (acc[item.priority] || 0) + 1;
@@ -114,8 +114,8 @@ async function getElderReviewStats(communityId?: string | null): Promise<any> {
     }
 
     const reviews = data || [];
-    const pending = reviews.filter(review => review.status === 'pending').length;
-    const urgent = reviews.filter(review => review.urgency === 'high' || review.urgency === 'urgent').length;
+    const pending = reviews.filter((review: any) => review.status === 'pending').length;
+    const urgent = reviews.filter((review: any) => review.urgency === 'high' || review.urgency === 'urgent').length;
 
     return { pending, urgent };
   } catch (error) {
@@ -142,7 +142,7 @@ async function getProtocolStats(communityId?: string | null): Promise<any> {
     }
 
     const protocols = data || [];
-    const active = protocols.filter(protocol => protocol.is_active).length;
+    const active = protocols.filter((protocol: any) => protocol.is_active).length;
     const total = protocols.length;
     const compliance = total > 0 ? Math.round((active / total) * 100) : 100;
 

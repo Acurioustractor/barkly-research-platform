@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match frontend interface
-    const reviews = data?.map(review => ({
+    const reviews = data?.map((review: any) => ({
       id: review.id,
       contentId: review.content_id,
       elderName: Array.isArray(review.elders) ? review.elders[0]?.name : (review.elders as any)?.name || 'Unknown Elder',

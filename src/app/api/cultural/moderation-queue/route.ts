@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     // Filter by status if specified
     if (status) {
-      filteredQueue = filteredQueue.filter(item => item.status === status);
+      filteredQueue = filteredQueue.filter((item: any) => item.status === status);
     }
 
     return NextResponse.json({ queue: filteredQueue });
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'submitForReview':
         const { contentId, contentType, content, submittedBy, communityContext } = data;
-        
+
         if (!contentId || !contentType || !content || !submittedBy) {
           return NextResponse.json(
             { error: 'Content ID, type, content, and submitter are required' },
@@ -66,14 +66,14 @@ export async function POST(request: NextRequest) {
           communityContext
         );
 
-        return NextResponse.json({ 
+        return NextResponse.json({
           queueId,
-          message: 'Content submitted for cultural safety review' 
+          message: 'Content submitted for cultural safety review'
         });
 
       case 'assignModerator':
         const { queueId: assignQueueId, moderatorId } = data;
-        
+
         if (!assignQueueId || !moderatorId) {
           return NextResponse.json(
             { error: 'Queue ID and moderator ID are required' },
@@ -94,13 +94,13 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to assign moderator: ${assignError.message}`);
         }
 
-        return NextResponse.json({ 
-          message: 'Moderator assigned successfully' 
+        return NextResponse.json({
+          message: 'Moderator assigned successfully'
         });
 
       case 'updatePriority':
         const { queueId: priorityQueueId, newPriority } = data;
-        
+
         if (!priorityQueueId || !newPriority) {
           return NextResponse.json(
             { error: 'Queue ID and new priority are required' },
@@ -120,8 +120,8 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to update priority: ${priorityError.message}`);
         }
 
-        return NextResponse.json({ 
-          message: 'Priority updated successfully' 
+        return NextResponse.json({
+          message: 'Priority updated successfully'
         });
 
       default:
