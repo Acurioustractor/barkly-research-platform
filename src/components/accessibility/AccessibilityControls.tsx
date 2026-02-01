@@ -475,7 +475,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.assistiveTechnology.voiceControl}
-                onCheckedChange={(checked) => updateAssistiveTechPreference('voiceControl', checked)}
+                onCheckedChange={(checked: boolean) => updateAssistiveTechPreference('voiceControl', checked)}
               />
             </div>
 
@@ -570,7 +570,7 @@ export default function AccessibilityControls({
                     <SelectItem value="orca">Orca</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
-                </SelectContent>
+                </Select>
               </div>
             )}
           </TabsContent>
@@ -629,7 +629,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.culturalAccessibility.traditionalInterface}
-                onCheckedChange={(checked) => updateCulturalPreference('traditionalInterface', checked)}
+                onCheckedChange={(checked: boolean) => updateCulturalPreference('traditionalInterface', checked)}
               />
             </div>
 
@@ -657,7 +657,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.culturalAccessibility.youthMode}
-                onCheckedChange={(checked) => updateCulturalPreference('youthMode', checked)}
+                onCheckedChange={(checked: boolean) => updateCulturalPreference('youthMode', checked)}
               />
             </div>
           </TabsContent>
@@ -694,6 +694,6 @@ export default function AccessibilityControls({
           </AlertDescription>
         </Alert>
       </CardContent>
-    </Card>
+    </Card >
   );
 }
