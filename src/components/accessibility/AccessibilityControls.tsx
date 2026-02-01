@@ -1,15 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/core/Card';
+import { Button } from '@/components/core/Button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
+import { Alert, AlertDescription } from '@/components/core/Alert';
+import {
   Eye,
   Ear,
   Keyboard,
@@ -55,7 +54,7 @@ export default function AccessibilityControls({
     try {
       setLoading(true);
       const userPrefs = await accessibilityService.loadUserPreferences(userId);
-      
+
       if (userPrefs) {
         setPreferences(userPrefs);
       } else {
@@ -100,7 +99,7 @@ export default function AccessibilityControls({
       await accessibilityService.saveUserPreferences(newPreferences);
       setPreferences(newPreferences);
       onPreferencesChange?.(newPreferences);
-      
+
       // Announce change to screen readers
       accessibilityService.announceToScreenReader(
         'Accessibility preferences have been saved',
@@ -122,9 +121,9 @@ export default function AccessibilityControls({
     value: AccessibilityPreferences[K]
   ) => {
     if (!preferences) return;
-    
+
     const newPreferences = { ...preferences, [key]: value };
-    
+
     if (previewMode) {
       // Apply immediately for preview
       setPreferences(newPreferences);
@@ -139,7 +138,7 @@ export default function AccessibilityControls({
     value: AccessibilityPreferences['culturalAccessibility'][K]
   ) => {
     if (!preferences) return;
-    
+
     const newCulturalPrefs = { ...preferences.culturalAccessibility, [key]: value };
     updatePreference('culturalAccessibility', newCulturalPrefs);
   };
@@ -149,14 +148,14 @@ export default function AccessibilityControls({
     value: AccessibilityPreferences['assistiveTechnology'][K]
   ) => {
     if (!preferences) return;
-    
+
     const newAssistiveTechPrefs = { ...preferences.assistiveTechnology, [key]: value };
     updatePreference('assistiveTechnology', newAssistiveTechPrefs);
   };
 
   const resetToDefaults = () => {
     if (!preferences) return;
-    
+
     const defaultPrefs: AccessibilityPreferences = {
       ...preferences,
       highContrast: false,
@@ -180,15 +179,15 @@ export default function AccessibilityControls({
         eyeTracking: false
       }
     };
-    
+
     setPreferences(defaultPrefs);
   };
 
   const applyPreset = (preset: 'low-vision' | 'motor-impairment' | 'cognitive' | 'elder-friendly' | 'youth') => {
     if (!preferences) return;
-    
+
     let presetPrefs = { ...preferences };
-    
+
     switch (preset) {
       case 'low-vision':
         presetPrefs = {
@@ -246,7 +245,7 @@ export default function AccessibilityControls({
         };
         break;
     }
-    
+
     setPreferences(presetPrefs);
   };
 
@@ -673,7 +672,7 @@ export default function AccessibilityControls({
           >
             Reset to Defaults
           </Button>
-          
+
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
@@ -690,7 +689,7 @@ export default function AccessibilityControls({
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            Your accessibility preferences are automatically applied across the platform. 
+            Your accessibility preferences are automatically applied across the platform.
             Changes may take a moment to fully take effect.
           </AlertDescription>
         </Alert>
