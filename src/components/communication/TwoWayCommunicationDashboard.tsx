@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  MessageSquare, 
-  Users, 
-  Calendar, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle, 
-  Send, 
+import {
+  MessageSquare,
+  Users,
+  Calendar,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Send,
   Eye,
   Filter,
   Search,
@@ -67,7 +67,8 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
     feedbackType: 'suggestion' as CommunityFeedback['feedbackType'],
     priority: 'medium' as CommunityFeedback['priority'],
     culturalContext: '',
-    traditionalKnowledgeInvolved: false
+    traditionalKnowledgeInvolved: false,
+    elderConsultationRequired: false
   });
 
   useEffect(() => {
@@ -77,7 +78,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       // Load metrics (would typically come from API)
       const mockMetrics: CommunicationMetrics = {
         totalFeedback: 45,
@@ -99,9 +100,9 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
         upcomingConsultations: 3,
         recentMeetings: 8
       };
-      
+
       setMetrics(mockMetrics);
-      
+
       // Load data based on active tab
       if (activeTab === 'feedback') {
         // Mock feedback data
@@ -146,7 +147,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
         const upcomingConsultations = await twoWayCommunicationService.getUpcomingConsultations(communityId);
         setConsultations(upcomingConsultations);
       }
-      
+
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -168,7 +169,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
       };
 
       await twoWayCommunicationService.submitFeedback(feedbackData);
-      
+
       // Reset form
       setFeedbackForm({
         subject: '',
@@ -177,9 +178,10 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
         feedbackType: 'suggestion',
         priority: 'medium',
         culturalContext: '',
-        traditionalKnowledgeInvolved: false
+        traditionalKnowledgeInvolved: false,
+        elderConsultationRequired: false
       });
-      
+
       setShowFeedbackForm(false);
       await loadDashboardData();
     } catch (error) {
@@ -195,7 +197,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
         communityAffiliation: communityId || 'community-1',
         contributionLevel: 'participant'
       });
-      
+
       await loadDashboardData();
     } catch (error) {
       console.error('Error registering for consultation:', error);
@@ -237,10 +239,10 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Less than 1 hour ago';
     if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
   };
@@ -263,7 +265,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
             Engage with your community through feedback, meetings, and consultations
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-4">
           {userRole === 'community_member' && (
             <button
@@ -334,11 +336,10 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
             >
               <tab.icon className="w-4 h-4" />
               <span>{tab.label}</span>
@@ -365,7 +366,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                   />
                 </div>
               </div>
-              
+
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
@@ -378,7 +379,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                 <option value="responded">Responded</option>
                 <option value="resolved">Resolved</option>
               </select>
-              
+
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
@@ -425,28 +426,28 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                             {item.priority.toUpperCase()}
                           </span>
                         </div>
-                        
+
                         <p className="text-gray-600 mb-4 line-clamp-2">{item.content}</p>
-                        
+
                         <div className="flex items-center space-x-6 text-sm text-gray-500">
                           <span className="flex items-center space-x-1">
                             <UserCheck className="w-4 h-4" />
                             <span>{item.submitterName}</span>
                           </span>
-                          
+
                           <span className="flex items-center space-x-1">
                             <Clock className="w-4 h-4" />
                             <span>{formatTimeAgo(item.submittedAt)}</span>
                           </span>
-                          
+
                           <span className="flex items-center space-x-1">
                             <ArrowRight className="w-4 h-4" />
                             <span>{item.routingInfo.routedToName}</span>
                           </span>
-                          
+
                           <span className="capitalize">{item.category}</span>
                         </div>
-                        
+
                         {item.traditionalKnowledgeInvolved && (
                           <div className="mt-3">
                             <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
@@ -455,7 +456,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                             </span>
                           </div>
                         )}
-                        
+
                         {item.culturalContext && (
                           <div className="mt-3 p-3 bg-purple-50 rounded-lg">
                             <p className="text-sm text-purple-800">
@@ -464,7 +465,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex items-center space-x-2 ml-4">
                         <button
                           onClick={() => setSelectedFeedback(item)}
@@ -510,31 +511,31 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                           {meeting.meetingType.replace('_', ' ').toUpperCase()}
                         </span>
                       </div>
-                      
+
                       <p className="text-gray-600 mb-4">{meeting.summary}</p>
-                      
+
                       <div className="flex items-center space-x-6 text-sm text-gray-500">
                         <span className="flex items-center space-x-1">
                           <Calendar className="w-4 h-4" />
                           <span>{meeting.date.toLocaleDateString()}</span>
                         </span>
-                        
+
                         <span className="flex items-center space-x-1">
                           <MapPin className="w-4 h-4" />
                           <span>{meeting.location}</span>
                         </span>
-                        
+
                         <span className="flex items-center space-x-1">
                           <Clock className="w-4 h-4" />
                           <span>{meeting.duration} minutes</span>
                         </span>
-                        
+
                         <span className="flex items-center space-x-1">
                           <Users className="w-4 h-4" />
                           <span>{meeting.attendees.length} attendees</span>
                         </span>
                       </div>
-                      
+
                       {meeting.keyOutcomes.length > 0 && (
                         <div className="mt-4">
                           <h4 className="font-medium text-gray-900 mb-2">Key Outcomes:</h4>
@@ -549,7 +550,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center space-x-2 ml-4">
                       <button
                         onClick={() => setSelectedMeeting(meeting)}
@@ -594,31 +595,31 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                           {consultation.type.replace('_', ' ').toUpperCase()}
                         </span>
                       </div>
-                      
+
                       <p className="text-gray-600 mb-4">{consultation.description}</p>
-                      
+
                       <div className="flex items-center space-x-6 text-sm text-gray-500">
                         <span className="flex items-center space-x-1">
                           <Calendar className="w-4 h-4" />
                           <span>{consultation.scheduledDate.toLocaleDateString()}</span>
                         </span>
-                        
+
                         <span className="flex items-center space-x-1">
                           <Clock className="w-4 h-4" />
                           <span>{consultation.scheduledDate.toLocaleTimeString()}</span>
                         </span>
-                        
+
                         <span className="flex items-center space-x-1">
                           <MapPin className="w-4 h-4" />
                           <span>{consultation.location}</span>
                         </span>
-                        
+
                         <span className="flex items-center space-x-1">
                           <Users className="w-4 h-4" />
                           <span>{consultation.participants.length} registered</span>
                         </span>
                       </div>
-                      
+
                       {consultation.culturalProtocols.length > 0 && (
                         <div className="mt-4">
                           <h4 className="font-medium text-gray-900 mb-2">Cultural Protocols:</h4>
@@ -635,7 +636,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center space-x-2 ml-4">
                       <button
                         onClick={() => setSelectedConsultation(consultation)}
@@ -644,7 +645,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      
+
                       {consultation.registrationRequired && consultation.status === 'open_registration' && (
                         <button
                           onClick={() => handleRegisterForConsultation(consultation.id)}
@@ -673,7 +674,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                   <span className="capitalize text-gray-700">{category}</span>
                   <div className="flex items-center space-x-3">
                     <div className="w-32 bg-gray-200 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-blue-600 h-2 rounded-full"
                         style={{ width: `${(count / Math.max(...Object.values(metrics.feedbackByCategory))) * 100}%` }}
                       ></div>
@@ -745,7 +746,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -765,7 +766,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                     <option value="request">Request</option>
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Category
@@ -786,7 +787,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                   </select>
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Priority
@@ -802,7 +803,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                   <option value="urgent">Urgent</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Subject
@@ -815,7 +816,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                   placeholder="Brief summary of your feedback"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Detailed Feedback
@@ -828,7 +829,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                   placeholder="Please provide detailed information about your feedback..."
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Cultural Context (Optional)
@@ -841,7 +842,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                   placeholder="Any cultural context or traditional knowledge relevant to this feedback..."
                 />
               </div>
-              
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -854,7 +855,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                   This feedback involves traditional knowledge or cultural practices
                 </label>
               </div>
-              
+
               <div className="flex items-center justify-end space-x-4 pt-4">
                 <button
                   onClick={() => setShowFeedbackForm(false)}
@@ -891,7 +892,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-6">
               <div>
                 <div className="flex items-center space-x-3 mb-4">
@@ -905,7 +906,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                     {selectedFeedback.priority.toUpperCase()}
                   </span>
                 </div>
-                
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                   <div>
                     <span className="font-medium text-gray-700">Submitted by:</span>
@@ -924,11 +925,11 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                     <span className="ml-2 text-gray-600">{selectedFeedback.routingInfo.routedToName}</span>
                   </div>
                 </div>
-                
+
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-gray-800">{selectedFeedback.content}</p>
                 </div>
-                
+
                 {selectedFeedback.culturalContext && (
                   <div className="bg-purple-50 p-4 rounded-lg">
                     <h4 className="font-medium text-purple-900 mb-2">Cultural Context</h4>
@@ -956,7 +957,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                           </span>
                         </div>
                         <p className="text-gray-700">{response.content}</p>
-                        
+
                         {response.actionsTaken.length > 0 && (
                           <div className="mt-3">
                             <h5 className="font-medium text-gray-900 mb-1">Actions Taken:</h5>
@@ -967,7 +968,7 @@ const TwoWayCommunicationDashboard: React.FC<TwoWayCommunicationDashboardProps> 
                             </ul>
                           </div>
                         )}
-                        
+
                         {response.nextSteps.length > 0 && (
                           <div className="mt-3">
                             <h5 className="font-medium text-gray-900 mb-1">Next Steps:</h5>
