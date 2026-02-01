@@ -377,7 +377,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.highContrast}
-                onCheckedChange={(checked) => updatePreference('highContrast', checked)}
+                onCheckedChange={(checked: boolean) => updatePreference('highContrast', checked)}
                 aria-describedby="high-contrast-description"
               />
             </div>
@@ -392,7 +392,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.largeText}
-                onCheckedChange={(checked) => updatePreference('largeText', checked)}
+                onCheckedChange={(checked: boolean) => updatePreference('largeText', checked)}
               />
             </div>
 
@@ -445,7 +445,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.reducedMotion}
-                onCheckedChange={(checked) => updatePreference('reducedMotion', checked)}
+                onCheckedChange={(checked: boolean) => updatePreference('reducedMotion', checked)}
               />
             </div>
           </TabsContent>
@@ -461,7 +461,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.keyboardNavigation}
-                onCheckedChange={(checked) => updatePreference('keyboardNavigation', checked)}
+                onCheckedChange={(checked: boolean) => updatePreference('keyboardNavigation', checked)}
               />
             </div>
 
@@ -489,7 +489,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.assistiveTechnology.switchNavigation}
-                onCheckedChange={(checked) => updateAssistiveTechPreference('switchNavigation', checked)}
+                onCheckedChange={(checked: boolean) => updateAssistiveTechPreference('switchNavigation', checked)}
               />
             </div>
 
@@ -503,7 +503,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.assistiveTechnology.eyeTracking}
-                onCheckedChange={(checked) => updateAssistiveTechPreference('eyeTracking', checked)}
+                onCheckedChange={(checked: boolean) => updateAssistiveTechPreference('eyeTracking', checked)}
               />
             </div>
           </TabsContent>
@@ -519,7 +519,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.screenReader}
-                onCheckedChange={(checked) => updatePreference('screenReader', checked)}
+                onCheckedChange={(checked: boolean) => updatePreference('screenReader', checked)}
               />
             </div>
 
@@ -533,7 +533,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.audioDescriptions}
-                onCheckedChange={(checked) => updatePreference('audioDescriptions', checked)}
+                onCheckedChange={(checked: boolean) => updatePreference('audioDescriptions', checked)}
               />
             </div>
 
@@ -547,7 +547,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.captionsEnabled}
-                onCheckedChange={(checked) => updatePreference('captionsEnabled', checked)}
+                onCheckedChange={(checked: boolean) => updatePreference('captionsEnabled', checked)}
               />
             </div>
 
@@ -557,7 +557,7 @@ export default function AccessibilityControls({
                 <label className="text-sm font-medium">Screen Reader Type (Optional)</label>
                 <Select
                   value={preferences.assistiveTechnology.screenReaderType || ''}
-                  onValueChange={(value) => updateAssistiveTechPreference('screenReaderType', value)}
+                  onValueChange={(value: string) => updateAssistiveTechPreference('screenReaderType', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select your screen reader" />
@@ -581,7 +581,7 @@ export default function AccessibilityControls({
               <label className="text-sm font-medium">Preferred Language</label>
               <Select
                 value={preferences.culturalAccessibility.preferredLanguage}
-                onValueChange={(value) => updateCulturalPreference('preferredLanguage', value)}
+                onValueChange={(value: string) => updateCulturalPreference('preferredLanguage', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -604,7 +604,7 @@ export default function AccessibilityControls({
               <label className="text-sm font-medium">Cultural Context</label>
               <Select
                 value={preferences.culturalAccessibility.culturalContext}
-                onValueChange={(value) => updateCulturalPreference('culturalContext', value)}
+                onValueChange={(value: string) => updateCulturalPreference('culturalContext', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -643,7 +643,7 @@ export default function AccessibilityControls({
               </div>
               <Switch
                 checked={preferences.culturalAccessibility.elderFriendlyMode}
-                onCheckedChange={(checked) => updateCulturalPreference('elderFriendlyMode', checked)}
+                onCheckedChange={(checked: boolean) => updateCulturalPreference('elderFriendlyMode', checked)}
               />
             </div>
 
