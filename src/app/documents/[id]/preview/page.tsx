@@ -40,12 +40,12 @@ export default function DocumentPreviewPage() {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
-      
+
       const response = await fetch(`/api/documents/review/${params.id}`, {
         signal: controller.signal
       });
       clearTimeout(timeoutId);
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -100,7 +100,7 @@ export default function DocumentPreviewPage() {
     );
   }
 
-  const { document, content_preview } = preview;
+  const { document: doc, content_preview } = preview;
 
   return (
     <PageLayout>
@@ -110,17 +110,17 @@ export default function DocumentPreviewPage() {
           <Link href="/documents" className="text-blue-600 hover:underline mb-4 inline-block">
             ← Back to Documents
           </Link>
-          
+
           <h1 className="text-3xl font-bold mb-2">Document Preview</h1>
-          <h2 className="text-xl text-muted-foreground mb-4">{document.title}</h2>
-          
+          <h2 className="text-xl text-muted-foreground mb-4">{doc.title}</h2>
+
           <div className="flex items-center gap-4">
-            <Badge variant="outline">{document.file_type || 'Document'}</Badge>
+            <Badge variant="outline">{doc.file_type || 'Document'}</Badge>
             <Badge variant={
-              document.cultural_sensitivity === 'public' ? 'success' :
-              document.cultural_sensitivity === 'community' ? 'secondary' : 'destructive'
+              doc.cultural_sensitivity === 'public' ? 'success' :
+                doc.cultural_sensitivity === 'community' ? 'secondary' : 'destructive'
             }>
-              {document.cultural_sensitivity || 'Public'}
+              {doc.cultural_sensitivity || 'Public'}
             </Badge>
             <span className="text-sm text-muted-foreground">
               {Math.round(content_preview.total_length / 1000)}K characters
@@ -175,20 +175,20 @@ export default function DocumentPreviewPage() {
                 <div className="text-center max-w-md">
                   <div className="w-24 h-32 bg-gray-100 border border-gray-300 rounded shadow-sm mx-auto mb-4 flex items-center justify-center">
                     <div className="text-gray-500">
-                      {document.file_type === 'pdf' ? '📄' : 
-                       document.file_type === 'docx' ? '📝' : 
-                       document.file_type === 'md' ? '📝' : '📄'}
+                      {doc.file_type === 'pdf' ? '📄' :
+                        doc.file_type === 'docx' ? '📝' :
+                          doc.file_type === 'md' ? '📝' : '📄'}
                     </div>
                   </div>
-                  <h3 className="font-medium text-sm mb-2">{document.title}</h3>
+                  <h3 className="font-medium text-sm mb-2">{doc.title}</h3>
                   <p className="text-xs text-muted-foreground">
-                    {document.file_type?.toUpperCase() || 'Document'} • 
+                    {doc.file_type?.toUpperCase() || 'Document'} •
                     {Math.round(content_preview.total_length / 1000)}K chars
                   </p>
-                  
+
                   <div className="mt-4 text-xs text-muted-foreground">
-                    <p>Uploaded: {new Date(document.created_at).toLocaleDateString()}</p>
-                    <p>Cultural Sensitivity: {document.cultural_sensitivity || 'Public'}</p>
+                    <p>Uploaded: {new Date(doc.created_at).toLocaleDateString()}</p>
+                    <p>Cultural Sensitivity: {doc.cultural_sensitivity || 'Public'}</p>
                   </div>
                 </div>
               </div>
@@ -214,7 +214,7 @@ export default function DocumentPreviewPage() {
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>AI Analysis</CardTitle>
@@ -226,7 +226,7 @@ export default function DocumentPreviewPage() {
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Document Library</CardTitle>

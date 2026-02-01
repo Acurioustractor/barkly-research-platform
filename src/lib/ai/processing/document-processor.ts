@@ -84,9 +84,9 @@ export class DocumentProcessor {
 
       for (let i = 0; i < chunks.length; i++) {
         console.log(`Processing chunk ${i + 1}/${chunks.length}`);
-        
+
         const chunkResult = await this.processChunk(chunks[i], doc.title, i);
-        
+
         allThemes.push(...chunkResult.themes);
         allQuotes.push(...chunkResult.quotes);
         allInsights.push(...chunkResult.insights);
@@ -120,11 +120,11 @@ export class DocumentProcessor {
    * Process a single chunk of content
    */
   private static async processChunk(
-    content: string, 
-    documentTitle: string, 
+    content: string,
+    documentTitle: string,
     chunkIndex: number
   ): Promise<ProcessingResult> {
-    
+
     const systemPrompt = `You are an AI assistant specializing in community intelligence and cultural analysis for Indigenous Australian communities, particularly the Barkly region and Tennant Creek.
 
 CRITICAL CULTURAL PROTOCOLS:
@@ -212,7 +212,7 @@ Extract community intelligence in this exact JSON format:
       }
 
       const parsed = JSON.parse(response);
-      
+
       return {
         themes: parsed.themes || [],
         quotes: parsed.quotes || [],
@@ -240,13 +240,13 @@ Extract community intelligence in this exact JSON format:
 
     while (start < content.length) {
       let end = start + this.CHUNK_SIZE;
-      
+
       if (end < content.length) {
         // Try to break at sentence boundary
         const lastPeriod = content.lastIndexOf('.', end);
         const lastNewline = content.lastIndexOf('\n', end);
         const breakPoint = Math.max(lastPeriod, lastNewline);
-        
+
         if (breakPoint > start + this.CHUNK_SIZE * 0.7) {
           end = breakPoint + 1;
         }
@@ -264,18 +264,18 @@ Extract community intelligence in this exact JSON format:
    */
   private static deduplicateThemes(themes: DocumentTheme[]): DocumentTheme[] {
     const unique: DocumentTheme[] = [];
-    
+
     for (const theme of themes) {
-      const isDuplicate = unique.some(existing => 
+      const isDuplicate = unique.some(existing =>
         this.calculateSimilarity(theme.theme_name, existing.theme_name) > 0.8
       );
-      
+
       if (!isDuplicate) {
         unique.push(theme);
       }
     }
 
-    return unique.sort((a, b) => b.confidence_score - a.confidence_score);
+    return unique.sort((a: any, b: any) => b.confidence_score - a.confidence_score);
   }
 
   /**
@@ -283,13 +283,13 @@ Extract community intelligence in this exact JSON format:
    */
   private static deduplicateQuotes(quotes: DocumentQuote[]): DocumentQuote[] {
     const unique: DocumentQuote[] = [];
-    
+
     for (const quote of quotes) {
-      const isDuplicate = unique.some(existing => 
-        existing.quote_text.includes(quote.quote_text) || 
+      const isDuplicate = unique.some(existing =>
+        existing.quote_text.includes(quote.quote_text) ||
         quote.quote_text.includes(existing.quote_text)
       );
-      
+
       if (!isDuplicate && quote.quote_text.length > 50) {
         unique.push(quote);
       }
@@ -303,7 +303,7 @@ Extract community intelligence in this exact JSON format:
    */
   private static consolidateInsights(insights: DocumentInsight[]): DocumentInsight[] {
     const grouped = new Map<string, DocumentInsight[]>();
-    
+
     for (const insight of insights) {
       const key = `${insight.type}:${insight.insight.substring(0, 50)}`;
       if (!grouped.has(key)) {
@@ -328,7 +328,7 @@ Extract community intelligence in this exact JSON format:
       }
     }
 
-    return consolidated.sort((a, b) => b.confidence - a.confidence);
+    return consolidated.sort((a: any, b: any) => b.confidence - a.confidence);
   }
 
   /**
@@ -336,19 +336,19 @@ Extract community intelligence in this exact JSON format:
    */
   private static deduplicateEntities(entities: DocumentEntity[]): DocumentEntity[] {
     const unique: DocumentEntity[] = [];
-    
+
     for (const entity of entities) {
-      const isDuplicate = unique.some(existing => 
+      const isDuplicate = unique.some(existing =>
         existing.name.toLowerCase() === entity.name.toLowerCase() &&
         existing.type === entity.type
       );
-      
+
       if (!isDuplicate) {
         unique.push(entity);
       }
     }
 
-    return unique.sort((a, b) => b.confidence - a.confidence);
+    return unique.sort((a: any, b: any) => b.confidence - a.confidence);
   }
 
   /**
@@ -357,9 +357,9 @@ Extract community intelligence in this exact JSON format:
   private static calculateSimilarity(str1: string, str2: string): number {
     const longer = str1.length > str2.length ? str1 : str2;
     const shorter = str1.length > str2.length ? str2 : str1;
-    
+
     if (longer.length === 0) return 1.0;
-    
+
     const editDistance = this.levenshteinDistance(longer.toLowerCase(), shorter.toLowerCase());
     return (longer.length - editDistance) / longer.length;
   }
@@ -368,7 +368,7 @@ Extract community intelligence in this exact JSON format:
    * Calculate Levenshtein distance between two strings
    */
   private static levenshteinDistance(str1: string, str2: string): number {
-    const matrix = Array(str2.length + 1).fill(null).map(() => 
+    const matrix = Array(str2.length + 1).fill(null).map(() =>
       Array(str1.length + 1).fill(null)
     );
 

@@ -51,7 +51,7 @@ export class GracefulDegradation {
       embeddings: true,
       advancedChunking: true
     }
-  }) {}
+  }) { }
 
   /**
    * Record a capability failure
@@ -59,7 +59,7 @@ export class GracefulDegradation {
   recordFailure(capability: keyof ProcessingCapabilities, error: DocumentProcessingError) {
     this.capabilities[capability] = false;
     this.errors.push(error);
-    
+
     console.warn(`Capability '${capability}' failed, degrading gracefully:`, error.message);
   }
 
@@ -101,20 +101,20 @@ export class GracefulDegradation {
 
     switch (capability) {
       case 'aiAnalysis':
-        return this.options.fallbackStrategies?.aiAnalysis 
-          ? 'pattern-matching' 
+        return this.options.fallbackStrategies?.aiAnalysis
+          ? 'pattern-matching'
           : null;
-      
+
       case 'embeddings':
         return this.options.fallbackStrategies?.embeddings
           ? 'keyword-search'
           : null;
-      
+
       case 'advancedChunking':
         return this.options.fallbackStrategies?.advancedChunking
           ? 'basic-chunking'
           : null;
-      
+
       default:
         return null;
     }
@@ -208,7 +208,7 @@ export class FallbackStrategies {
 
     const themes: string[] = [];
     for (const [theme, patterns] of Object.entries(themePatterns)) {
-      const count = patterns.filter(pattern => 
+      const count = patterns.filter(pattern =>
         text.toLowerCase().includes(pattern)
       ).length;
       if (count >= 2) {
@@ -240,7 +240,7 @@ export class FallbackStrategies {
     endChar: number;
   }> {
     const chunks: Array<{ text: string; startChar: number; endChar: number }> = [];
-    
+
     for (let i = 0; i < text.length; i += chunkSize) {
       const chunk = text.slice(i, i + chunkSize);
       chunks.push({
@@ -261,7 +261,7 @@ export class FallbackStrategies {
     documents: Array<{ id: string; text: string }>
   ): Array<{ id: string; score: number }> {
     const queryWords = query.toLowerCase().split(/\s+/);
-    
+
     return documents
       .map(doc => {
         const docLower = doc.text.toLowerCase();
@@ -273,7 +273,7 @@ export class FallbackStrategies {
         return { id: doc.id, score };
       })
       .filter(result => result.score > 0)
-      .sort((a, b) => b.score - a.score);
+      .sort((a: any, b: any) => b.score - a.score);
   }
 }
 
@@ -295,11 +295,11 @@ export class ProgressiveEnhancement {
     for (let i = this.stages.length - 1; i >= 0; i--) {
       const stage = this.stages[i];
       if (!stage) continue;
-      
+
       const meetsRequirements = stage.requirements.every(
         req => capabilities[req as keyof ProcessingCapabilities]
       );
-      
+
       if (meetsRequirements) {
         return stage.name;
       }
@@ -325,7 +325,7 @@ export class ProgressiveEnhancement {
           advancedChunking: true,
           generateSummary: true
         };
-      
+
       case 'ai-powered':
         return {
           useAI: true,
@@ -333,7 +333,7 @@ export class ProgressiveEnhancement {
           advancedChunking: true,
           generateSummary: true
         };
-      
+
       case 'enhanced':
         return {
           useAI: false,
@@ -341,7 +341,7 @@ export class ProgressiveEnhancement {
           advancedChunking: true,
           generateSummary: false
         };
-      
+
       case 'basic':
       default:
         return {

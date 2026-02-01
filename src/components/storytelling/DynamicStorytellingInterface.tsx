@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
+import {
   BookOpen,
   Network,
   Map,
@@ -131,7 +131,7 @@ xport default function DynamicStorytellingInterface({
       // First try to get existing explorations
       const listResponse = await fetch(`/api/storytelling/explorations?action=list&communityId=${communityId}`);
       const listResult = await listResponse.json();
-      
+
       if (listResult.success && listResult.data.length > 0) {
         // Use the most recent exploration
         setExploration(listResult.data[0]);
@@ -152,7 +152,7 @@ xport default function DynamicStorytellingInterface({
         });
 
         const createResult = await createResponse.json();
-        
+
         if (createResult.success) {
           setExploration(createResult.data);
         } else {
@@ -236,7 +236,7 @@ xport default function DynamicStorytellingInterface({
       if (!newFilters[filterType]) {
         newFilters[filterType] = [];
       }
-      
+
       if (newFilters[filterType].includes(value)) {
         newFilters[filterType] = newFilters[filterType].filter(v => v !== value);
         if (newFilters[filterType].length === 0) {
@@ -245,10 +245,10 @@ xport default function DynamicStorytellingInterface({
       } else {
         newFilters[filterType].push(value);
       }
-      
+
       return newFilters;
     });
-    
+
     trackEngagement('filter_applied', { filterType, value });
   };
 
@@ -259,9 +259,9 @@ xport default function DynamicStorytellingInterface({
 
   const getFilteredStories = () => {
     if (!exploration) return [];
-    
+
     let filtered = exploration.storyNodes;
-    
+
     Object.entries(activeFilters).forEach(([filterType, values]) => {
       filtered = filtered.filter(story => {
         switch (filterType) {
@@ -278,20 +278,19 @@ xport default function DynamicStorytellingInterface({
         }
       });
     });
-    
+
     return filtered;
   };
 
   const renderStoryCard = (story: StoryNode) => {
     const PerspectiveIcon = getPerspectiveIcon(story.perspective);
     const CulturalIcon = getCulturalSafetyIcon(story.culturalSafety);
-    
+
     return (
-      <Card 
-        key={story.id} 
-        className={`cursor-pointer transition-all hover:shadow-md ${
-          selectedStory?.id === story.id ? 'ring-2 ring-blue-500' : ''
-        }`}
+      <Card
+        key={story.id}
+        className={`cursor-pointer transition-all hover:shadow-md ${selectedStory?.id === story.id ? 'ring-2 ring-blue-500' : ''
+          }`}
         onClick={() => {
           setSelectedStory(story);
           trackEngagement('story_selected', { storyId: story.id });
@@ -307,9 +306,9 @@ xport default function DynamicStorytellingInterface({
               </Badge>
             </div>
           </div>
-          
+
           <p className="text-sm text-gray-600 mb-3 line-clamp-3">{story.content}</p>
-          
+
           <div className="flex items-center justify-between text-xs text-gray-500">
             <div className="flex items-center space-x-2">
               <span>By {story.author}</span>
@@ -322,7 +321,7 @@ xport default function DynamicStorytellingInterface({
               <span>{story.metadata.viewCount} views</span>
             </div>
           </div>
-          
+
           {story.themes.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
               {story.themes.slice(0, 3).map((theme, index) => (
@@ -344,7 +343,7 @@ xport default function DynamicStorytellingInterface({
 
   const renderNetworkView = () => {
     const filteredStories = getFilteredStories();
-    
+
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -358,11 +357,11 @@ xport default function DynamicStorytellingInterface({
             </Badge>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredStories.map(renderStoryCard)}
         </div>
-        
+
         {filteredStories.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <Network className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -378,19 +377,19 @@ xport default function DynamicStorytellingInterface({
 
   const renderPerspectiveView = () => {
     if (!exploration) return null;
-    
+
     const perspectives = Object.entries(exploration.perspectives);
-    
+
     return (
       <div className="space-y-6">
         {perspectives.map(([perspective, stories]) => {
           const PerspectiveIcon = getPerspectiveIcon(perspective);
-          const filteredStories = stories.filter(story => 
+          const filteredStories = stories.filter(story =>
             getFilteredStories().some(filtered => filtered.id === story.id)
           );
-          
+
           if (filteredStories.length === 0) return null;
-          
+
           return (
             <Card key={perspective}>
               <CardHeader>
@@ -416,7 +415,7 @@ xport default function DynamicStorytellingInterface({
 
   const renderPathwayView = () => {
     if (!exploration) return null;
-    
+
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -425,14 +424,13 @@ xport default function DynamicStorytellingInterface({
             {exploration.pathways.length} pathways
           </Badge>
         </div>
-        
+
         <div className="space-y-4">
           {exploration.pathways.map((pathway) => (
-            <Card 
+            <Card
               key={pathway.id}
-              className={`cursor-pointer transition-all hover:shadow-md ${
-                selectedPathway?.id === pathway.id ? 'ring-2 ring-blue-500' : ''
-              }`}
+              className={`cursor-pointer transition-all hover:shadow-md ${selectedPathway?.id === pathway.id ? 'ring-2 ring-blue-500' : ''
+                }`}
               onClick={() => {
                 setSelectedPathway(pathway);
                 trackEngagement('pathway_selected', { pathwayId: pathway.id });
@@ -443,7 +441,7 @@ xport default function DynamicStorytellingInterface({
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900 mb-2">{pathway.title}</h4>
                     <p className="text-sm text-gray-600 mb-3">{pathway.description}</p>
-                    
+
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <span>{pathway.pathwaySteps.length} steps</span>
                       <span>•</span>
@@ -452,7 +450,7 @@ xport default function DynamicStorytellingInterface({
                       <span>{pathway.stakeholders.length} stakeholders</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col space-y-2 ml-4">
                     <div className="text-center">
                       <div className="text-lg font-bold text-blue-600">
@@ -468,7 +466,7 @@ xport default function DynamicStorytellingInterface({
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex flex-wrap gap-1">
                     {pathway.stakeholders.slice(0, 3).map((stakeholder, index) => (
@@ -482,7 +480,7 @@ xport default function DynamicStorytellingInterface({
                       </Badge>
                     )}
                   </div>
-                  
+
                   <Button variant="outline" size="sm">
                     <ArrowRight className="w-4 h-4 mr-1" />
                     Explore Pathway
@@ -492,7 +490,7 @@ xport default function DynamicStorytellingInterface({
             </Card>
           ))}
         </div>
-        
+
         {exploration.pathways.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -506,11 +504,11 @@ xport default function DynamicStorytellingInterface({
 
   const renderTimelineView = () => {
     if (!exploration) return null;
-    
-    const events = exploration.timeline.events.sort((a, b) => 
+
+    const events = exploration.timeline.events.sort((a: any, b: any) =>
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
-    
+
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -519,11 +517,11 @@ xport default function DynamicStorytellingInterface({
             {events.length} events
           </Badge>
         </div>
-        
+
         <div className="relative">
           {/* Timeline line */}
           <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-          
+
           <div className="space-y-6">
             {events.map((event, index) => (
               <div key={event.id} className="relative flex items-start space-x-4">
@@ -531,7 +529,7 @@ xport default function DynamicStorytellingInterface({
                 <div className="relative z-10 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                   <Clock className="w-4 h-4 text-white" />
                 </div>
-                
+
                 {/* Event content */}
                 <div className="flex-1 min-w-0">
                   <div className="bg-white border rounded-lg p-4 shadow-sm">
@@ -551,7 +549,7 @@ xport default function DynamicStorytellingInterface({
             ))}
           </div>
         </div>
-        
+
         {events.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <Timeline className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -605,7 +603,7 @@ xport default function DynamicStorytellingInterface({
             <span>{exploration.pathways.length} pathways</span>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Button
             variant={narrativeMode ? "default" : "outline"}
@@ -640,7 +638,7 @@ xport default function DynamicStorytellingInterface({
               </Button>
             )}
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Perspective Filter */}
             <div>
@@ -661,7 +659,7 @@ xport default function DynamicStorytellingInterface({
                 ))}
               </div>
             </div>
-            
+
             {/* Theme Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -681,7 +679,7 @@ xport default function DynamicStorytellingInterface({
                 ))}
               </div>
             </div>
-            
+
             {/* Impact Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -701,7 +699,7 @@ xport default function DynamicStorytellingInterface({
                 ))}
               </div>
             </div>
-            
+
             {/* Cultural Safety Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -792,9 +790,9 @@ xport default function DynamicStorytellingInterface({
                   {selectedStory.metadata.impactLevel} impact
                 </Badge>
               </div>
-              
+
               <p className="text-gray-700">{selectedStory.content}</p>
-              
+
               {selectedStory.themes.length > 0 && (
                 <div>
                   <h5 className="font-medium text-gray-900 mb-2">Themes</h5>
@@ -807,7 +805,7 @@ xport default function DynamicStorytellingInterface({
                   </div>
                 </div>
               )}
-              
+
               <div className="flex items-center space-x-4 pt-4 border-t">
                 <Button variant="outline" size="sm">
                   <Eye className="w-4 h-4 mr-1" />

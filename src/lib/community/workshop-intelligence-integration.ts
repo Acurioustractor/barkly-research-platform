@@ -124,7 +124,7 @@ export async function processWorkshopIntelligence(eventId: string): Promise<Work
         frequency,
         priority: frequency > 3 ? 'high' : frequency > 1 ? 'medium' : 'low'
       }))
-      .sort((a, b) => b.frequency - a.frequency)
+      .sort((a: any, b: any) => b.frequency - a.frequency)
       .slice(0, 10);
 
     // Generate stakeholder map

@@ -55,7 +55,7 @@ export default function DocumentNetwork() {
           for (let j = i + 1; j < nodes.length; j++) {
             const nodeA = nodes[i];
             const nodeB = nodes[j];
-            
+
             let strength = 0;
             let reasons = [];
 
@@ -195,7 +195,7 @@ export default function DocumentNetwork() {
                     const radius = 120;
                     const x = 50 + (Math.cos(angle) * radius) / 3;
                     const y = 50 + (Math.sin(angle) * radius) / 3;
-                    
+
                     return (
                       <div
                         key={node.id}
@@ -211,24 +211,24 @@ export default function DocumentNetwork() {
                       </div>
                     );
                   })}
-                  
+
                   {/* Connection lines */}
                   <svg className="absolute inset-0 w-full h-full pointer-events-none">
                     {networkData.connections.slice(0, 20).map((connection, index) => {
                       const sourceIndex = networkData.nodes.findIndex(n => n.id === connection.source);
                       const targetIndex = networkData.nodes.findIndex(n => n.id === connection.target);
-                      
+
                       if (sourceIndex === -1 || targetIndex === -1) return null;
-                      
+
                       const sourceAngle = (sourceIndex / networkData.nodes.length) * 2 * Math.PI;
                       const targetAngle = (targetIndex / networkData.nodes.length) * 2 * Math.PI;
                       const radius = 120;
-                      
+
                       const x1 = 50 + (Math.cos(sourceAngle) * radius) / 3;
                       const y1 = 50 + (Math.sin(sourceAngle) * radius) / 3;
                       const x2 = 50 + (Math.cos(targetAngle) * radius) / 3;
                       const y2 = 50 + (Math.sin(targetAngle) * radius) / 3;
-                      
+
                       return (
                         <line
                           key={index}
@@ -244,7 +244,7 @@ export default function DocumentNetwork() {
                     })}
                   </svg>
                 </div>
-                
+
                 <div className="absolute bottom-4 left-4 text-xs text-gray-500">
                   Click nodes to view details • Lines show document relationships
                 </div>
@@ -293,7 +293,7 @@ export default function DocumentNetwork() {
                   <div>
                     <h4 className="font-medium text-sm mb-1">Connections</h4>
                     <p className="text-sm text-muted-foreground">
-                      {networkData.connections.filter(c => 
+                      {networkData.connections.filter(c =>
                         c.source === selectedNode.id || c.target === selectedNode.id
                       ).length} related documents
                     </p>
@@ -355,14 +355,14 @@ export default function DocumentNetwork() {
         <CardContent>
           <div className="space-y-3">
             {networkData.connections
-              .sort((a, b) => b.strength - a.strength)
+              .sort((a: any, b: any) => b.strength - a.strength)
               .slice(0, 5)
               .map((connection, index) => {
                 const sourceNode = networkData.nodes.find(n => n.id === connection.source);
                 const targetNode = networkData.nodes.find(n => n.id === connection.target);
-                
+
                 if (!sourceNode || !targetNode) return null;
-                
+
                 return (
                   <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                     <div className="flex-1">

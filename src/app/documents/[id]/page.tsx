@@ -109,7 +109,7 @@ export default function DocumentViewPage() {
     );
   }
 
-  const { document, extraction, navigation } = documentReview;
+  const { document: doc, extraction, navigation } = documentReview;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -126,10 +126,10 @@ export default function DocumentViewPage() {
 
   const getCategoriesData = () => {
     if (!documentReview?.extraction?.category_counts) return [];
-    return Object.entries(documentReview.extraction.category_counts || {}).map(([category, count]) => ({
+    return Object.entries(documentReview.extraction.category_counts as Record<string, number> || {}).map(([category, count]) => ({
       category,
-      count,
-      themes: documentReview.extraction.themes_by_category?.[category] || []
+      count: count as number,
+      themes: (documentReview.extraction.themes_by_category?.[category] || []) as any[]
     }));
   };
 
@@ -141,32 +141,32 @@ export default function DocumentViewPage() {
           <Link href="/documents" className="text-blue-600 hover:underline mb-4 inline-block">
             ← Back to Documents Library
           </Link>
-          
+
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">{document.title}</h1>
+              <h1 className="text-3xl font-bold mb-2">{doc.title}</h1>
               <p className="text-muted-foreground mb-4">{extraction.summary}</p>
-              
+
               <div className="flex items-center gap-4 flex-wrap">
-                {getStatusBadge(document.processing_status)}
-                <Badge variant="outline">{document.file_type || 'Unknown Type'}</Badge>
-                <Badge variant="outline">{document.cultural_sensitivity || 'Public'}</Badge>
+                {getStatusBadge(doc.processing_status)}
+                <Badge variant="outline">{doc.file_type || 'Unknown Type'}</Badge>
+                <Badge variant="outline">{doc.cultural_sensitivity || 'Public'}</Badge>
                 <span className="text-sm text-muted-foreground">
-                  Processed: {new Date(document.processed_at).toLocaleDateString()}
+                  Processed: {new Date(doc.processed_at).toLocaleDateString()}
                 </span>
               </div>
             </div>
-            
+
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => window.open(navigation.verification_link, '_blank')}
               >
                 Verify Quality
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => window.open(navigation.dashboard_link, '_blank')}
               >
@@ -194,7 +194,7 @@ export default function DocumentViewPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-6">
                 <div className="text-center">
@@ -203,7 +203,7 @@ export default function DocumentViewPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-6">
                 <div className="text-center">
@@ -212,7 +212,7 @@ export default function DocumentViewPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-6">
                 <div className="text-center">
@@ -241,11 +241,10 @@ export default function DocumentViewPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`pb-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                className={`pb-4 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
               >
                 {tab.label}
               </button>
@@ -297,7 +296,7 @@ export default function DocumentViewPage() {
                         ))}
                       </div>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-medium mb-2">Quality Metrics</h4>
                       <div className="space-y-2 text-sm">
@@ -441,17 +440,17 @@ export default function DocumentViewPage() {
                 <CardTitle>Content Preview</CardTitle>
                 <CardDescription>
                   Original document content with highlighted themes
-                  ({document.content_preview?.total_length.toLocaleString()} characters total)
+                  ({doc.content_preview?.total_length.toLocaleString()} characters total)
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
                   <pre className="whitespace-pre-wrap text-sm font-sans bg-gray-50 p-4 rounded-lg">
-                    {document.content_preview?.text || 'No content preview available'}
+                    {doc.content_preview?.text || 'No content preview available'}
                   </pre>
                 </div>
                 <div className="mt-4 text-center space-x-2">
-                  <Button 
+                  <Button
                     variant="outline"
                     onClick={() => window.open(`/api/documents/${params.id}/file`, '_blank')}
                   >
@@ -462,7 +461,7 @@ export default function DocumentViewPage() {
                       📄 View Extracted Text
                     </Button>
                   </Link>
-                  <Button 
+                  <Button
                     variant="ghost"
                     onClick={() => {
                       const link = document.createElement('a');

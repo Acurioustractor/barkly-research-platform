@@ -44,12 +44,12 @@ export default function DocumentAnalysisPage() {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
-      
+
       const response = await fetch(`/api/documents/verify-extraction?documentId=${params.id}`, {
         signal: controller.signal
       });
       clearTimeout(timeoutId);
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -110,7 +110,7 @@ export default function DocumentAnalysisPage() {
     );
   }
 
-  const { document, themes, quotes, insights, statistics } = analysis;
+  const { document: doc, themes, quotes, insights, statistics } = analysis;
 
   return (
     <PageLayout>
@@ -120,17 +120,17 @@ export default function DocumentAnalysisPage() {
           <Link href="/documents" className="text-blue-600 hover:underline mb-4 inline-block">
             ← Back to Documents
           </Link>
-          
+
           <h1 className="text-3xl font-bold mb-2">AI Analysis</h1>
-          <h2 className="text-xl text-muted-foreground mb-4">{document.title}</h2>
-          
+          <h2 className="text-xl text-muted-foreground mb-4">{doc.title}</h2>
+
           <div className="flex items-center gap-4">
-            <Badge variant="outline">{document.file_type || 'Document'}</Badge>
-            <Badge variant={document.processing_status === 'completed' ? 'success' : 'secondary'}>
-              {document.processing_status}
+            <Badge variant="outline">{doc.file_type || 'Document'}</Badge>
+            <Badge variant={doc.processing_status === 'completed' ? 'success' : 'secondary'}>
+              {doc.processing_status}
             </Badge>
             <span className="text-sm text-muted-foreground">
-              Processed: {new Date(document.processed_at).toLocaleDateString()}
+              Processed: {new Date(doc.processed_at).toLocaleDateString()}
             </span>
           </div>
         </Container>
@@ -146,21 +146,21 @@ export default function DocumentAnalysisPage() {
                 <p className="text-sm text-muted-foreground">Themes</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-6 text-center">
                 <p className="text-3xl font-bold text-green-600">{statistics.total_quotes}</p>
                 <p className="text-sm text-muted-foreground">Quotes</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-6 text-center">
                 <p className="text-3xl font-bold text-purple-600">{statistics.total_insights}</p>
                 <p className="text-sm text-muted-foreground">Insights</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-6 text-center">
                 <p className="text-3xl font-bold text-orange-600">
