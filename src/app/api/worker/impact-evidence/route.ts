@@ -385,7 +385,7 @@ function extractKeyMetrics(evidence: any[]): any[] {
       timeframe: e.timeframe,
       reliability: e.reliability_score
     }))
-    .sort((a, b) => (b.reliability || 0) - (a.reliability || 0))
+    .sort((a: any, b: any) => (b.reliability || 0) - (a.reliability || 0))
     .slice(0, 5); // Top 5 most reliable metrics
 }
 

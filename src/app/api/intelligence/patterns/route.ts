@@ -115,7 +115,7 @@ async function getCrossCommunityTrends(communityId?: string | null) {
         trajectory: data.count > 5 ? 'growing' : 'emerging',
         implications: [`Appears across ${data.communities.size} communities`, `Mentioned ${data.count} times`]
       }))
-      .sort((a, b) => b.strength - a.strength)
+      .sort((a: any, b: any) => b.strength - a.strength)
       .slice(0, 10);
 
     const needTrends = Array.from(needMap.entries())
@@ -135,7 +135,7 @@ async function getCrossCommunityTrends(communityId?: string | null) {
           ]
         };
       })
-      .sort((a, b) => b.strength - a.strength)
+      .sort((a: any, b: any) => b.strength - a.strength)
       .slice(0, 10);
 
     return {
@@ -213,7 +213,7 @@ async function getServiceGapPatterns(communityId?: string | null) {
           priority: criticalCount > 0 ? 'critical' : avgImpact > 7 ? 'high' : 'medium'
         };
       })
-      .sort((a, b) => b.averageImpact - a.averageImpact);
+      .sort((a: any, b: any) => b.averageImpact - a.averageImpact);
 
     return {
       serviceGaps: gapPatterns,
@@ -284,7 +284,7 @@ async function getOpportunityPatterns(communityId?: string | null) {
           commonTimelines: [...new Set(data.timelines)]
         };
       })
-      .sort((a, b) => b.averagePotential - a.averagePotential);
+      .sort((a: any, b: any) => b.averagePotential - a.averagePotential);
 
     return {
       opportunities,
@@ -357,7 +357,7 @@ async function getRiskPatterns(communityId?: string | null) {
           priority: riskScore > 5 ? 'high' : riskScore > 3 ? 'medium' : 'low'
         };
       })
-      .sort((a, b) => b.riskScore - a.riskScore);
+      .sort((a: any, b: any) => b.riskScore - a.riskScore);
 
     return {
       risks,

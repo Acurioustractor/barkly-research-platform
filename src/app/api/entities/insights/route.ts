@@ -236,7 +236,7 @@ async function generateComparativeAnalysis(
         documents: data.documents,
         coverage: (data.count / documentIds.length) * 100
       }))
-      .sort((a, b) => b.documentCount - a.documentCount);
+      .sort((a: any, b: any) => b.documentCount - a.documentCount);
 
     // Compare pattern types across documents
     const patternComparison = documentAnalytics.map(({ documentId, analytics }: any) => ({

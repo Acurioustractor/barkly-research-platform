@@ -355,7 +355,7 @@ function identifyPriorityGaps(services: any[], needs: any[]): any[] {
     }
   });
 
-  return priorityGaps.sort((a, b) => (b.urgency + b.impact) - (a.urgency + a.impact));
+  return priorityGaps.sort((a: any, b: any) => (b.urgency + b.impact) - (a.urgency + a.impact));
 }
 
 function generateGapRecommendations(services: any[], needs: any[]): string[] {

@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       strongRelationshipsCount: analysis.strongestRelationships.filter((rel: any) => rel.strength >= 0.7).length,
       relationshipTypeDistribution: analysis.relationshipTypes,
       topConnectedEntities: analysis.entityConnections
-        .sort((a, b) => b.connectionCount - a.connectionCount)
+        .sort((a: any, b: any) => b.connectionCount - a.connectionCount)
         .slice(0, 5)
         .map((entity: any) => ({
           id: entity.entityId,

@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
       });
 
       entities = Array.from(uniqueResults.values())
-        .sort((a, b) => b.relevanceScore - a.relevanceScore)
+        .sort((a: any, b: any) => b.relevanceScore - a.relevanceScore)
         .slice(0, limit);
 
     } else if (searchMode === 'semantic') {
@@ -176,7 +176,7 @@ export async function GET(request: NextRequest) {
           ...entity,
           relevanceScore: calculateSemanticRelevance(entity, query, keywords)
         }))
-        .sort((a, b) => b.relevanceScore - a.relevanceScore)
+        .sort((a: any, b: any) => b.relevanceScore - a.relevanceScore)
         .slice(0, limit);
     }
 

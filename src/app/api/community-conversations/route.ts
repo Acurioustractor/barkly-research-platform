@@ -159,7 +159,7 @@ function extractCommonThemes(conversations: CommunityConversation[]): Array<{ th
 
   return Object.entries(themeCount)
     .map(([theme, frequency]: [string, number]) => ({ theme, frequency }))
-    .sort((a, b) => b.frequency - a.frequency)
+    .sort((a: any, b: any) => b.frequency - a.frequency)
     .slice(0, 10);
 }
 

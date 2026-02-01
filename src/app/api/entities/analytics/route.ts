@@ -264,7 +264,7 @@ function extractContextPatterns(contextData: any[]): any[] {
   // Return top patterns
   return Object.entries(patterns)
     .filter(([, count]: [string, number]) => count > 1)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a: any, b: any) => (b[1] as number) - (a[1] as number))
     .slice(0, 15)
     .map(([pattern, count]: [string, number]) => ({ pattern, count }));
 }

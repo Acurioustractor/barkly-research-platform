@@ -296,7 +296,7 @@ async function findPotentialPartners(params: {
         contactInfo: org.contact_info
       };
     }).filter((partner: any) => partner.compatibilityScore > 0.3) // Filter out low compatibility
-      .sort((a, b) => b.compatibilityScore - a.compatibilityScore) || [];
+      .sort((a: any, b: any) => b.compatibilityScore - a.compatibilityScore) || [];
 
     return potentialPartners.slice(0, 10); // Return top 10 matches
   } catch (error) {

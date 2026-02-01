@@ -583,7 +583,7 @@ function analyzeProgramTrends(metrics: any[]): any {
   }
 
   // Simple trend analysis based on metrics over time
-  const sortedMetrics = metrics.sort((a, b) =>
+  const sortedMetrics = metrics.sort((a: any, b: any) =>
     new Date(a.measurement_date).getTime() - new Date(b.measurement_date).getTime()
   );
 

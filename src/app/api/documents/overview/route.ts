@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
         },
         categories: categories,
         top_categories: Object.entries(categories)
-          .sort(([, a], [, b]) => (b as number) - (a as number))
+          .sort(([, a]: [string, any], [, b]: [string, any]) => (b as number) - (a as number))
           .slice(0, 3)
           .map(([cat, count]: [string, any]) => ({ category: cat, count })),
         ai_analysis: doc.ai_analysis,
