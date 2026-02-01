@@ -195,7 +195,7 @@ export class EarlyWarningSystemService {
       console.log('Monitoring for emerging community issues...');
 
       const communities = await this.getAllCommunities();
-      
+
       for (const community of communities) {
         await this.analyzeEmergingIssues(community.id);
       }
@@ -212,7 +212,7 @@ export class EarlyWarningSystemService {
       console.log('Monitoring service strain...');
 
       const communities = await this.getAllCommunities();
-      
+
       for (const community of communities) {
         await this.analyzeServiceStrain(community.id);
       }
@@ -230,7 +230,7 @@ export class EarlyWarningSystemService {
 
       const communities = await this.getAllCommunities();
       const opportunities = await this.identifyOpportunities();
-      
+
       for (const community of communities) {
         await this.matchOpportunities(community.id, opportunities);
       }
@@ -246,17 +246,17 @@ export class EarlyWarningSystemService {
     try {
       // Get recent documents and stories
       const recentData = await this.getRecentCommunityData(communityId, 30); // Last 30 days
-      
+
       if (recentData.length === 0) {
         return;
       }
 
       // Analyze for emerging patterns
       const emergingPatterns = await this.detectEmergingPatterns(recentData);
-      
+
       // Check against historical baselines
       const historicalBaseline = await this.getHistoricalBaseline(communityId);
-      
+
       // Generate alerts for significant deviations
       for (const pattern of emergingPatterns) {
         const alert = await this.evaluateEmergingIssue(
@@ -264,7 +264,7 @@ export class EarlyWarningSystemService {
           pattern,
           historicalBaseline
         );
-        
+
         if (alert) {
           await this.createAlert(alert);
         }
@@ -280,11 +280,11 @@ export class EarlyWarningSystemService {
   private async analyzeServiceStrain(communityId: string): Promise<void> {
     try {
       const serviceMetrics = await this.getServiceStrainMetrics(communityId);
-      
+
       for (const metrics of serviceMetrics) {
         const strainLevel = this.calculateStrainLevel(metrics);
-        
-        if (strainLevel >= this.alertThresholds.get('service_strain') || 0.7) {
+
+        if (strainLevel >= (this.alertThresholds.get('service_strain') ?? 0.7)) {
           const alert = await this.createServiceStrainAlert(communityId, metrics, strainLevel);
           await this.createAlert(alert);
         }
@@ -304,14 +304,14 @@ export class EarlyWarningSystemService {
     try {
       const communityNeeds = await this.getCommunityNeeds(communityId);
       const communityProfile = await this.getCommunityProfile(communityId);
-      
+
       for (const opportunity of opportunities) {
         const matchScore = this.calculateOpportunityMatch(
           opportunity,
           communityNeeds,
           communityProfile
         );
-        
+
         if (matchScore >= 0.7) { // High match threshold
           const alert = await this.createOpportunityAlert(
             communityId,
@@ -332,7 +332,7 @@ export class EarlyWarningSystemService {
   private async detectEmergingPatterns(data: any[]): Promise<EmergingIssuePattern[]> {
     try {
       const patterns: EmergingIssuePattern[] = [];
-      
+
       // Use AI to analyze patterns in the data
       const analysisPrompt = `
         Analyze the following community data for emerging issues or concerning patterns.
@@ -347,20 +347,21 @@ export class EarlyWarningSystemService {
         
         Return patterns in JSON format with: pattern, description, indicators, severity, confidence
       `;
-      
-      const analysis = await analyzeDocument(analysisPrompt, 'pattern_detection');
-      
+
+      const analysis = await analyzeDocument<any>(analysisPrompt, 'pattern_detection');
+
       // Parse AI response and create pattern objects
       if (analysis && analysis.themes) {
-        for (const theme of analysis.themes) {
-          if (theme.urgency === 'high' || theme.urgency === 'critical') {
+        for (const theme of (analysis.themes || [])) {
+          const urgency = theme.urgency || theme.priority || 'medium';
+          if (urgency === 'high' || urgency === 'critical') {
             patterns.push({
               id: `pattern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              pattern: theme.theme,
-              description: theme.description || '',
-              indicators: theme.keywords || [],
+              pattern: theme.theme || theme.name || 'Unknown Pattern',
+              description: theme.description || theme.evidence || '',
+              indicators: theme.keywords || theme.indicators || [],
               affectedCommunities: [data[0]?.community_id || ''],
-              severity: theme.urgency as 'low' | 'medium' | 'high' | 'critical',
+              severity: urgency as 'low' | 'medium' | 'high' | 'critical',
               confidence: theme.confidence || 0.5,
               firstDetected: new Date(),
               lastUpdated: new Date(),
@@ -372,7 +373,7 @@ export class EarlyWarningSystemService {
           }
         }
       }
-      
+
       return patterns;
     } catch (error) {
       console.error('Error detecting emerging patterns:', error);
@@ -390,15 +391,15 @@ export class EarlyWarningSystemService {
   ): Promise<EarlyWarningAlert | null> {
     try {
       // Check if this is significantly different from baseline
-      const isSignificant = pattern.confidence > 0.6 && 
-                           (pattern.severity === 'high' || pattern.severity === 'critical');
-      
+      const isSignificant = pattern.confidence > 0.6 &&
+        (pattern.severity === 'high' || pattern.severity === 'critical');
+
       if (!isSignificant) {
         return null;
       }
 
       const community = await this.getCommunityInfo(communityId);
-      
+
       const alert: EarlyWarningAlert = {
         id: `alert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         communityId,
@@ -446,10 +447,10 @@ export class EarlyWarningSystemService {
     strainLevel: number
   ): Promise<EarlyWarningAlert> {
     const community = await this.getCommunityInfo(communityId);
-    
-    const severity = strainLevel >= 0.9 ? 'critical' : 
-                    strainLevel >= 0.8 ? 'high' : 
-                    strainLevel >= 0.7 ? 'medium' : 'low';
+
+    const severity = strainLevel >= 0.9 ? 'critical' :
+      strainLevel >= 0.8 ? 'high' :
+        strainLevel >= 0.7 ? 'medium' : 'low';
 
     return {
       id: `alert-strain-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -501,7 +502,7 @@ export class EarlyWarningSystemService {
     matchScore: number
   ): Promise<EarlyWarningAlert> {
     const community = await this.getCommunityInfo(communityId);
-    
+
     return {
       id: `alert-opportunity-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       communityId,
@@ -762,12 +763,12 @@ export class EarlyWarningSystemService {
     const { data, error } = await supabase
       .from('communities')
       .select('id, name');
-    
+
     if (error) {
       console.error('Error getting communities:', error);
       return [];
     }
-    
+
     return data || [];
   }
 
@@ -777,48 +778,48 @@ export class EarlyWarningSystemService {
       .select('*')
       .eq('id', communityId)
       .single();
-    
+
     if (error) {
       console.error('Error getting community info:', error);
       return null;
     }
-    
+
     return data;
   }
 
   private async getRecentCommunityData(communityId: string, days: number): Promise<any[]> {
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    
+
     const { data, error } = await supabase
       .from('documents')
       .select('*, analysis')
       .eq('community_id', communityId)
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: false });
-    
+
     if (error) {
       console.error('Error getting recent community data:', error);
       return [];
     }
-    
+
     return data || [];
   }
 
   private async getHistoricalBaseline(communityId: string): Promise<any> {
     // Get historical data for comparison
     const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
-    
+
     const { data, error } = await supabase
       .from('documents')
       .select('analysis')
       .eq('community_id', communityId)
       .lt('created_at', sixMonthsAgo.toISOString());
-    
+
     if (error) {
       console.error('Error getting historical baseline:', error);
       return {};
     }
-    
+
     return data || [];
   }
 
@@ -851,7 +852,7 @@ export class EarlyWarningSystemService {
     const staffingStrain = 1 - metrics.staffingLevels;
     const resourceStrain = 1 - metrics.resourceAvailability;
     const feedbackStrain = 1 - metrics.communityFeedback;
-    
+
     return (utilizationStrain + waitTimeStrain + qualityStrain + staffingStrain + resourceStrain + feedbackStrain) / 6;
   }
 
@@ -860,12 +861,12 @@ export class EarlyWarningSystemService {
       .from('community_needs')
       .select('*')
       .eq('community_id', communityId);
-    
+
     if (error) {
       console.error('Error getting community needs:', error);
       return [];
     }
-    
+
     return data || [];
   }
 
@@ -875,12 +876,12 @@ export class EarlyWarningSystemService {
       .select('*')
       .eq('id', communityId)
       .single();
-    
+
     if (error) {
       console.error('Error getting community profile:', error);
       return {};
     }
-    
+
     return data || {};
   }
 
@@ -916,22 +917,22 @@ export class EarlyWarningSystemService {
   ): number {
     // Simple matching algorithm - in production would be more sophisticated
     let score = 0;
-    
+
     // Check eligibility criteria
-    if (opportunity.eligibilityCriteria.some(criteria => 
+    if (opportunity.eligibilityCriteria.some(criteria =>
       criteria.toLowerCase().includes('indigenous') && profile.is_indigenous)) {
       score += 0.3;
     }
-    
+
     // Check needs alignment
-    const relevantNeeds = needs.filter(need => 
+    const relevantNeeds = needs.filter(need =>
       opportunity.description.toLowerCase().includes(need.category?.toLowerCase())
     );
     score += Math.min(relevantNeeds.length * 0.2, 0.4);
-    
+
     // Cultural alignment
     score += opportunity.culturalAlignment * 0.3;
-    
+
     return Math.min(score, 1);
   }
 
@@ -940,7 +941,7 @@ export class EarlyWarningSystemService {
     pattern: EmergingIssuePattern
   ): Promise<AlertEvidence[]> {
     const evidence: AlertEvidence[] = [];
-    
+
     // Get related documents
     const { data: documents } = await supabase
       .from('documents')
@@ -948,9 +949,9 @@ export class EarlyWarningSystemService {
       .eq('community_id', communityId)
       .order('created_at', { ascending: false })
       .limit(5);
-    
+
     documents?.forEach(doc => {
-      if (pattern.indicators.some(indicator => 
+      if (pattern.indicators.some(indicator =>
         doc.content?.toLowerCase().includes(indicator.toLowerCase())
       )) {
         evidence.push({
@@ -965,7 +966,7 @@ export class EarlyWarningSystemService {
         });
       }
     });
-    
+
     return evidence;
   }
 
@@ -995,7 +996,7 @@ export class EarlyWarningSystemService {
     severity: string
   ): Promise<AlertRecommendation[]> {
     const recommendations: AlertRecommendation[] = [];
-    
+
     if (metrics.utilizationRate > 1) {
       recommendations.push({
         id: `rec-capacity-${Date.now()}`,
@@ -1011,7 +1012,7 @@ export class EarlyWarningSystemService {
         successMetrics: ['Capacity increased', 'Wait times reduced', 'Utilization normalized']
       });
     }
-    
+
     if (metrics.staffingLevels < 0.8) {
       recommendations.push({
         id: `rec-staffing-${Date.now()}`,
@@ -1027,26 +1028,26 @@ export class EarlyWarningSystemService {
         successMetrics: ['Staff hired', 'Training completed', 'Retention improved']
       });
     }
-    
+
     return recommendations;
   }
 
   private async identifyStakeholders(pattern: EmergingIssuePattern, community: any): Promise<string[]> {
     const stakeholders = ['Community Leaders', 'Elders'];
-    
+
     // Add specific stakeholders based on pattern type
     if (pattern.pattern.toLowerCase().includes('health')) {
       stakeholders.push('Health Services', 'Nurses', 'Traditional Healers');
     }
-    
+
     if (pattern.pattern.toLowerCase().includes('youth')) {
       stakeholders.push('Youth Workers', 'Schools', 'Recreation Programs');
     }
-    
+
     if (pattern.pattern.toLowerCase().includes('housing')) {
       stakeholders.push('Housing Authority', 'Construction Services', 'Government Officials');
     }
-    
+
     return stakeholders;
   }
 
@@ -1058,11 +1059,11 @@ export class EarlyWarningSystemService {
       .eq('alert_type', alert.alertType)
       .eq('status', 'active')
       .ilike('title', `%${alert.title.split(':')[0]}%`);
-    
+
     if (error || !data || data.length === 0) {
       return null;
     }
-    
+
     return this.mapDatabaseToAlert(data[0]);
   }
 
@@ -1078,7 +1079,7 @@ export class EarlyWarningSystemService {
         updated_at: new Date().toISOString()
       })
       .eq('id', alertId);
-    
+
     if (error) {
       console.error('Error updating existing alert:', error);
     }

@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
     ];
 
     const confidenceDistribution = await Promise.all(
-      confidenceRanges.map(async (range) => {
+      confidenceRanges.map(async (range: any) => {
         const count = await prisma!.documentEntity.count({
           where: {
             ...baseWhere,
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
 
     // Get document details for the top documents
     const topDocuments = await Promise.all(
-      documentEntityStats.map(async (stat) => {
+      documentEntityStats.map(async (stat: any) => {
         const document = await prisma!.document.findUnique({
           where: { id: stat.documentId },
           select: {
@@ -197,7 +197,7 @@ export async function GET(request: NextRequest) {
       summary: {
         totalEntities: await prisma!.documentEntity.count({ where: baseWhere }),
         uniqueEntityNames: entityFrequency.length,
-        avgConfidence: typeDistribution.reduce((sum, t) => sum + (t._avg.confidence || 0), 0) / typeDistribution.length,
+        avgConfidence: typeDistribution.reduce((sum: number, t: any) => sum + (t._avg.confidence || 0), 0) / typeDistribution.length,
         entityTypes: typeDistribution.length
       },
       typeDistribution: typeDistribution.map((t: any) => ({
@@ -239,7 +239,7 @@ export async function GET(request: NextRequest) {
 function extractContextPatterns(contextData: any[]): any[] {
   const patterns: { [key: string]: number } = {};
 
-  contextData.forEach(item => {
+  contextData.forEach((item: any) => {
     if (item.context) {
       // Simple pattern extraction - look for common phrases
       const words = item.context.toLowerCase().split(/\s+/);
@@ -263,8 +263,8 @@ function extractContextPatterns(contextData: any[]): any[] {
 
   // Return top patterns
   return Object.entries(patterns)
-    .filter(([, count]) => count > 1)
+    .filter(([, count]: [string, number]) => count > 1)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 15)
-    .map(([pattern, count]) => ({ pattern, count }));
-} 
+    .map(([pattern, count]: [string, number]) => ({ pattern, count }));
+}

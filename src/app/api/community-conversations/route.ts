@@ -104,7 +104,7 @@ function extractThemes(content: string): string[] {
     'systems change', 'health services', 'cultural protocols', 'community consultation'
   ];
 
-  themePatterns.forEach(pattern => {
+  themePatterns.forEach((pattern: string) => {
     if (content.toLowerCase().includes(pattern)) {
       themes.push(pattern);
     }
@@ -123,11 +123,9 @@ function extractKeyInsights(content: string): string[] {
   }
 
   // Look for key findings or outcomes
-  const findingsMatch = content.match(/### Key Findings[\s\S]*?(?=###|$)/);
-  if (findingsMatch) {
-    const findings = findingsMatch[0].split('\n').filter(line => line.startsWith('- '));
-    insights.push(...findings.slice(0, 2));
-  }
+  const findingsMatch = content.match(/## (?:Key Findings|Insights)([\s\S]*?)(?:##|$)/);
+  const findings = findingsMatch ? findingsMatch[0].split('\n').filter((line: string) => line.startsWith('- ')) : [];
+  insights.push(...findings.slice(0, 2));
 
   return insights;
 }
@@ -153,14 +151,14 @@ function extractRelatedInitiatives(content: string): string[] {
 function extractCommonThemes(conversations: CommunityConversation[]): Array<{ theme: string, frequency: number }> {
   const themeCount: Record<string, number> = {};
 
-  conversations.forEach(conv => {
-    conv.themes.forEach(theme => {
+  conversations.forEach((conv: CommunityConversation) => {
+    conv.themes.forEach((theme: string) => {
       themeCount[theme] = (themeCount[theme] || 0) + 1;
     });
   });
 
   return Object.entries(themeCount)
-    .map(([theme, frequency]) => ({ theme, frequency }))
+    .map(([theme, frequency]: [string, number]) => ({ theme, frequency }))
     .sort((a, b) => b.frequency - a.frequency)
     .slice(0, 10);
 }
@@ -172,14 +170,14 @@ function generateCommunityInsights(conversations: CommunityConversation[]): Arra
 }> {
   const insights = [];
 
-  // Cultural mentoring insight
-  const mentoringConvs = conversations.filter(c =>
-    c.themes.includes('cultural mentoring') || c.content.includes('mentor')
+  // Cultural  // Categorize by type
+  const mentoringConvs = conversations.filter((c: any) =>
+    c.type === 'mentoring-session' || c.type === 'elder-mentoring' || c.content.includes('mentor')
   );
   if (mentoringConvs.length > 0) {
     insights.push({
       insight: 'Cultural mentoring significantly improves training and employment outcomes',
-      evidence: mentoringConvs.map((c: any) => c.title),
+      evidence: mentoringConvs.map((c: CommunityConversation) => c.title),
       actionItems: [
         'Expand cultural mentoring to all training programs',
         'Establish mentor recognition and support program',
@@ -189,7 +187,7 @@ function generateCommunityInsights(conversations: CommunityConversation[]): Arra
   }
 
   // Youth priorities insight
-  const youthConvs = conversations.filter(c => c.type === 'youth-roundtable');
+  const youthConvs = conversations.filter((c: CommunityConversation) => c.type === 'youth-roundtable');
   if (youthConvs.length > 0) {
     insights.push({
       insight: 'Youth consistently prioritize safe spaces and mental health support',
@@ -203,7 +201,7 @@ function generateCommunityInsights(conversations: CommunityConversation[]): Arra
   }
 
   // Systems change insight
-  const systemsConvs = conversations.filter(c => c.type === 'systems-change');
+  const systemsConvs = conversations.filter((c: CommunityConversation) => c.type === 'systems-change');
   if (systemsConvs.length > 0) {
     insights.push({
       insight: 'Community-led systems change produces measurable improvements',

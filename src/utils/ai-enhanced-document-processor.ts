@@ -116,7 +116,7 @@ export class AIEnhancedDocumentProcessor {
         text = extractionResult.text;
         metadata = {
           pageCount: extractionResult.pageCount,
-          wordCount: text.split(/\s+/).filter(w => w.length > 0).length
+          wordCount: text.split(/\s+/).filter((w: string) => w.length > 0).length
         };
 
         console.log('Text extraction result:', {
@@ -144,7 +144,7 @@ export class AIEnhancedDocumentProcessor {
 
       // Combine chunks for maximum coverage
       const allChunks = [...standardChunks];
-      const chunkTexts = new Set(standardChunks.map(c => c.text));
+      const chunkTexts = new Set(standardChunks.map((c: any) => c.text));
 
       // Add unique sliding chunks
       for (const chunk of slidingChunks) {
@@ -161,7 +161,7 @@ export class AIEnhancedDocumentProcessor {
         standardChunksCount: standardChunks.length,
         slidingChunksCount: slidingChunks.length,
         totalUniqueChunks: chunks.length,
-        averageChunkSize: Math.round(chunks.reduce((sum, c) => sum + c.text.length, 0) / chunks.length),
+        averageChunkSize: Math.round(chunks.reduce((sum: number, c: any) => sum + c.text.length, 0) / chunks.length),
         firstChunk: chunks[0]
       });
 
@@ -186,7 +186,7 @@ export class AIEnhancedDocumentProcessor {
 
         for (const batch of chunkBatches) {
           const batchResults = await Promise.all(
-            batch.map(chunk =>
+            batch.map((chunk: any) =>
               analyzeDocumentChunk(chunk.text, originalName)
                 .catch(err => {
                   console.error('AI analysis failed for chunk:', err);
@@ -195,7 +195,7 @@ export class AIEnhancedDocumentProcessor {
             )
           );
 
-          analysisResults.push(...batchResults.filter(r => r !== null) as AIAnalysisResult[]);
+          analysisResults.push(...batchResults.filter((r: any) => r !== null) as AIAnalysisResult[]);
         }
       }
 
@@ -243,7 +243,7 @@ export class AIEnhancedDocumentProcessor {
       if (options.generateSummary && useAI) {
         try {
           summary = await generateDocumentSummary(
-            chunks.map(c => c.text),
+            chunks.map((c: any) => c.text),
             originalName
           );
         } catch (err) {
@@ -289,9 +289,9 @@ export class AIEnhancedDocumentProcessor {
             averageQuotesPerChunk: (aggregatedResults.quotes.length / chunks.length).toFixed(1)
           },
           quality: {
-            highConfidenceThemes: aggregatedResults.themes.filter(t => t.confidence > 0.8).length,
-            actionableInsights: aggregatedResults.insights.filter(i => i.importance >= 8).length,
-            uniqueKeywords: new Set(aggregatedResults.keywords.map(k => k.term)).size
+            highConfidenceThemes: aggregatedResults.themes.filter((t: any) => t.confidence > 0.8).length,
+            actionableInsights: aggregatedResults.insights.filter((i: any) => i.importance >= 8).length,
+            uniqueKeywords: new Set(aggregatedResults.keywords.map((k: any) => k.term)).size
           }
         },
         useAI
@@ -388,25 +388,25 @@ export class AIEnhancedDocumentProcessor {
     // Convert maps to arrays and sort by relevance
     return {
       themes: Array.from(themes.entries())
-        .map(([name, data]) => ({
+        .map(([name, data]: [string, any]) => ({
           name,
           confidence: data.confidence,
           evidence: data.evidence.join(' | ')
         }))
-        .sort((a, b) => b.confidence - a.confidence),
+        .sort((a: any, b: any) => b.confidence - a.confidence),
       quotes: quotes
-        .sort((a, b) => b.confidence - a.confidence)
+        .sort((a: any, b: any) => b.confidence - a.confidence)
         .slice(0, 20), // Top 20 quotes
       insights: insights
-        .sort((a, b) => b.importance - a.importance)
+        .sort((a: any, b: any) => b.importance - a.importance)
         .slice(0, 15), // Top 15 insights
       keywords: Array.from(keywords.entries())
-        .map(([term, data]) => ({
+        .map(([term, data]: [string, any]) => ({
           term,
           frequency: data.frequency,
           category: data.category
         }))
-        .sort((a, b) => b.frequency - a.frequency)
+        .sort((a: any, b: any) => b.frequency - a.frequency)
         .slice(0, 30), // Top 30 keywords
       summaries
     };
@@ -418,7 +418,7 @@ export class AIEnhancedDocumentProcessor {
   private async storeChunks(documentId: string, chunks: DocumentChunk[]): Promise<Array<{ id: string; text: string }>> {
     if (!prisma) return [];
 
-    const chunkData = chunks.map((chunk, idx) => ({
+    const chunkData = chunks.map((chunk: any, idx: number) => ({
       documentId,
       chunkIndex: chunk.index ?? idx,
       startPage: chunk.startPage ?? 0,
@@ -453,7 +453,7 @@ export class AIEnhancedDocumentProcessor {
   ): Promise<void> {
     if (!prisma) return;
 
-    const themeData = themes.map(theme => ({
+    const themeData = themes.map((theme: any) => ({
       documentId,
       theme: theme.name,
       confidence: theme.confidence,
@@ -474,7 +474,7 @@ export class AIEnhancedDocumentProcessor {
   ): Promise<void> {
     if (!prisma) return;
 
-    const quoteData = quotes.map((quote) => ({
+    const quoteData = quotes.map((quote: any) => ({
       documentId,
       text: quote.text,
       context: quote.context,
@@ -498,7 +498,7 @@ export class AIEnhancedDocumentProcessor {
   ): Promise<void> {
     if (!prisma) return;
 
-    const insightData = insights.map(insight => ({
+    const insightData = insights.map((insight: any) => ({
       documentId,
       insight: insight.text,
       type: insight.category || 'general',
@@ -520,7 +520,7 @@ export class AIEnhancedDocumentProcessor {
   ): Promise<void> {
     if (!prisma) return;
 
-    const keywordData = keywords.map(keyword => ({
+    const keywordData = keywords.map((keyword: any) => ({
       documentId,
       keyword: keyword.term,
       frequency: keyword.frequency,

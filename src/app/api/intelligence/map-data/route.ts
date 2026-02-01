@@ -51,10 +51,10 @@ async function getCommunityMapData(communityId?: string | null) {
       ? [await communityHealthService.calculateCommunityHealth(communityId)]
       : await communityHealthService.calculateAllCommunityHealth();
 
-    // Add coordinates to communities
+    // Get coordinates for communities
     const communitiesWithCoords = await Promise.all(
-      healthData.map(async (community) => {
-        const coords = await getCommunityCoordinates(community.communityId);
+      healthData.map(async (community: any) => {
+        const coords = getMockCoordinatesForCommunity(community.community_id);
         return {
           ...community,
           coordinates: coords,
@@ -72,14 +72,15 @@ async function getCommunityMapData(communityId?: string | null) {
     return {
       communities: communitiesWithCoords,
       summary: {
-        total: communitiesWithCoords.length,
-        thriving: communitiesWithCoords.filter(c => c.status === 'thriving').length,
-        developing: communitiesWithCoords.filter(c => c.status === 'developing').length,
-        struggling: communitiesWithCoords.filter(c => c.status === 'struggling').length,
-        improving: communitiesWithCoords.filter(c => c.status === 'improving').length,
-        averageHealth: Math.round(
-          communitiesWithCoords.reduce((sum, c) => sum + c.healthScore, 0) / communitiesWithCoords.length
-        )
+        totalCommunities: communitiesWithCoords.length,
+        avgHealthScore: communitiesWithCoords.length > 0 ?
+          communitiesWithCoords.reduce((sum: number, c: any) => sum + c.healthScore, 0) / communitiesWithCoords.length : 0,
+        statusDistribution: {
+          thriving: communitiesWithCoords.filter((c: any) => c.status === 'thriving').length,
+          developing: communitiesWithCoords.filter((c: any) => c.status === 'developing').length,
+          struggling: communitiesWithCoords.filter((c: any) => c.status === 'struggling').length,
+          improving: communitiesWithCoords.filter((c: any) => c.status === 'improving').length,
+        }
       }
     };
 
@@ -97,11 +98,12 @@ async function getServiceMapData(communityId?: string | null) {
     return {
       services,
       summary: {
-        total: services.length,
-        active: services.filter(s => s.status === 'active').length,
-        limited: services.filter(s => s.status === 'limited').length,
-        closed: services.filter(s => s.status === 'closed').length,
-        byType: services.reduce((acc: Record<string, number>, service: any) => {
+        serviceStatus: {
+          active: services.filter((s: { status: string }) => s.status === 'active').length,
+          limited: services.filter((s: { status: string }) => s.status === 'limited').length,
+          closed: services.filter((s: { status: string }) => s.status === 'closed').length,
+        },
+        byType: services.reduce((acc: Record<string, number>, service: { type?: string }) => {
           const type = service.type || 'other';
           acc[type] = (acc[type] || 0) + 1;
           return acc;
@@ -111,7 +113,7 @@ async function getServiceMapData(communityId?: string | null) {
 
   } catch (error) {
     console.error('Error getting service map data:', error);
-    return { services: [], summary: { total: 0, active: 0, limited: 0, closed: 0, byType: {} } };
+    return { services: [], summary: { serviceStatus: { total: 0, active: 0, limited: 0, closed: 0 }, byType: {} } };
   }
 }
 
@@ -123,12 +125,13 @@ async function getStoryMapData(communityId?: string | null) {
     return {
       stories,
       summary: {
-        total: stories.length,
-        success: stories.filter(s => s.type === 'success').length,
-        challenge: stories.filter(s => s.type === 'challenge').length,
-        opportunity: stories.filter(s => s.type === 'opportunity').length,
-        voice: stories.filter(s => s.type === 'voice').length,
-        highImpact: stories.filter(s => s.impact === 'high').length
+        storyInsights: {
+          success: stories.filter((s: { type: string }) => s.type === 'success').length,
+          challenge: stories.filter((s: { type: string }) => s.type === 'challenge').length,
+          opportunity: stories.filter((s: { type: string }) => s.type === 'opportunity').length,
+          voice: stories.filter((s: { type: string }) => s.type === 'voice').length,
+          highImpact: stories.filter((s: { impact: string }) => s.impact === 'high').length
+        }
       }
     };
 
@@ -164,6 +167,7 @@ async function getAllMapData(communityId?: string | null) {
   }
 }
 
+// This function is no longer used as per the change, but kept for context if needed elsewhere.
 async function getCommunityCoordinates(communityId: string): Promise<[number, number]> {
   try {
     // Try to get coordinates from database
@@ -203,9 +207,8 @@ function getMockCoordinates(communityId: string, communityName?: string): [numbe
   };
 
   // Try to match by ID or name
-  const key = Object.keys(mockCoords).find(k =>
-    k === communityId.toLowerCase() ||
-    (communityName && k.includes(communityName.toLowerCase().replace(/\s+/g, '-')))
+  const key = Object.keys(mockCoords).find((k: string) =>
+    communityId.toLowerCase().includes(k.toLowerCase())
   );
 
   if (key) {
@@ -214,11 +217,41 @@ function getMockCoordinates(communityId: string, communityName?: string): [numbe
 
   // Generate coordinates around Tennant Creek for unknown communities
   const baseCoords: [number, number] = [-19.6530, 134.1805];
-  const hash = communityId.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+  const hash = communityId.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0);
   const latOffset = ((hash % 200) - 100) / 1000; // ±0.1 degrees
   const lngOffset = (((hash * 7) % 200) - 100) / 1000; // ±0.1 degrees
 
   return [baseCoords[0] + latOffset, baseCoords[1] + lngOffset];
+}
+
+function getMockCoordinatesForCommunity(communityId: string): { lat: number, lng: number } {
+  // Mock coordinates for Barkly region communities
+  const mockCoords: Record<string, [number, number]> = {
+    'tennant-creek': [-19.6530, 134.1805],
+    'elliott': [-17.5500, 133.5400],
+    'ali-curung': [-20.0300, 134.3200],
+    'alpurrurulam': [-20.2000, 135.8800],
+    'ampilatwatja': [-21.9000, 135.5000],
+    'canteen-creek': [-19.9500, 135.2000],
+    'epenarra': [-18.6000, 133.8500],
+    'neutral-junction': [-19.8000, 134.5000],
+    'rockhampton-downs': [-19.2000, 134.8000],
+    'wutunugurra': [-20.1000, 134.1000]
+  };
+
+  const key = Object.keys(mockCoords).find((k: string) =>
+    k.toLowerCase().includes(communityId.toLowerCase()) ||
+    communityId.toLowerCase().includes(k.toLowerCase())
+  );
+
+  if (key) return { lat: mockCoords[key][0], lng: mockCoords[key][1] };
+
+  // Default coordinate based on ID hash if not found
+  const hash = communityId.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0);
+  return {
+    lat: -23.35 + (hash % 100) / 500,
+    lng: 134.25 + (hash % 100) / 500
+  };
 }
 
 function calculateNeedIntensity(community: any): 'low' | 'medium' | 'high' | 'critical' {
@@ -229,6 +262,11 @@ function calculateNeedIntensity(community: any): 'low' | 'medium' | 'high' | 'cr
   if (highNeeds > 1) return 'high';
   if (community.healthScore < 50) return 'medium';
   return 'low';
+}
+
+function filterServicesByCommunity(allServices: any[], communityId: string): any[] {
+  if (!communityId) return allServices;
+  return allServices.filter((service: any) => service.communityId === communityId);
 }
 
 async function generateServicePoints(communityId?: string | null) {
@@ -326,11 +364,12 @@ async function generateServicePoints(communityId?: string | null) {
   ];
 
   // Filter by community if specified
-  if (communityId) {
-    return allServices.filter(service => service.communityId === communityId);
-  }
+  return filterServicesByCommunity(allServices, communityId as string);
+}
 
-  return allServices;
+function filterStoriesByCommunity(allStories: any[], communityId: string): any[] {
+  if (!communityId) return allStories;
+  return allStories.filter((story: any) => story.communityId === communityId);
 }
 
 async function generateStoryMarkers(communityId?: string | null) {
@@ -391,11 +430,7 @@ async function generateStoryMarkers(communityId?: string | null) {
   ];
 
   // Filter by community if specified
-  if (communityId) {
-    return allStories.filter(story => story.communityId === communityId);
-  }
-
-  return allStories;
+  return filterStoriesByCommunity(allStories, communityId as string);
 }
 
 // POST endpoint to update map data

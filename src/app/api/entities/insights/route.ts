@@ -229,8 +229,8 @@ async function generateComparativeAnalysis(
 
     // Find entities that appear in multiple documents
     const commonEntities = Array.from(allEntities.entries())
-      .filter(([, data]: [string, any]) => data.count > 1)
-      .map(([entity, data]) => ({
+      .filter(([, data]: [string, { count: number; documents: string[] }]) => data.count > 1)
+      .map(([entity, data]: [string, { count: number; documents: string[] }]) => ({
         entity,
         documentCount: data.count,
         documents: data.documents,

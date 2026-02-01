@@ -57,7 +57,7 @@ export async function GET(
         const testFiles = await fs.readdir(testDocPath);
 
         // Try to find a matching file
-        const matchingFile = testFiles.find(file =>
+        const matchingFile = testFiles.find((file: any) =>
           file.includes(document.originalName.replace(/[^a-zA-Z0-9.-]/g, '')) ||
           document.originalName.includes(file.replace(/[^a-zA-Z0-9.-]/g, ''))
         );

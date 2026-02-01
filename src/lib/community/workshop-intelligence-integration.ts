@@ -1,10 +1,10 @@
 import { supabase } from '@/lib/db/supabase';
 import { analyzeDocument } from '@/lib/ai-service';
-import { 
-  getEventKnowledgeCaptures, 
+import {
+  getEventKnowledgeCaptures,
   getWorkshopSessions,
   type KnowledgeCapture,
-  type WorkshopSession 
+  type WorkshopSession
 } from './event-management-service';
 
 export interface WorkshopInsight {
@@ -85,12 +85,12 @@ export async function processWorkshopIntelligence(eventId: string): Promise<Work
     for (const capture of captures) {
       const insights = await extractInsightsFromCapture(capture, eventId, event.community_id);
       processedInsights.push(...insights);
-      
+
       // Collect themes and stakeholders
-      insights.forEach(insight => {
+      insights.forEach((insight: WorkshopInsight) => {
         allThemes.push(...insight.themes);
         allStakeholders.push(...insight.stakeholders);
-        
+
         if (insight.insightType === 'action_item') {
           followUpActions.push({
             action: insight.title,
@@ -98,7 +98,7 @@ export async function processWorkshopIntelligence(eventId: string): Promise<Work
             priority: insight.priority
           });
         }
-        
+
         if (insight.culturalSafety !== 'public') {
           culturalConsiderations.push(`${insight.title}: Requires ${insight.culturalSafety} level access`);
         }
@@ -106,14 +106,14 @@ export async function processWorkshopIntelligence(eventId: string): Promise<Work
     }
 
     // Categorize insights by type
-    const communityNeeds = processedInsights.filter(i => i.insightType === 'community_need');
-    const serviceGaps = processedInsights.filter(i => i.insightType === 'service_gap');
-    const successPatterns = processedInsights.filter(i => i.insightType === 'success_pattern');
-    const culturalKnowledge = processedInsights.filter(i => i.insightType === 'cultural_knowledge');
-    const actionItems = processedInsights.filter(i => i.insightType === 'action_item');
+    const communityNeeds = processedInsights.filter((i: WorkshopInsight) => i.insightType === 'community_need');
+    const serviceGaps = processedInsights.filter((i: WorkshopInsight) => i.insightType === 'service_gap');
+    const successPatterns = processedInsights.filter((i: WorkshopInsight) => i.insightType === 'success_pattern');
+    const culturalKnowledge = processedInsights.filter((i: WorkshopInsight) => i.insightType === 'cultural_knowledge');
+    const actionItems = processedInsights.filter((i: WorkshopInsight) => i.insightType === 'action_item');
 
     // Generate theme frequency analysis
-    const themeFrequency = allThemes.reduce((acc, theme) => {
+    const themeFrequency = allThemes.reduce((acc: Record<string, number>, theme: string) => {
       acc[theme] = (acc[theme] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -128,7 +128,7 @@ export async function processWorkshopIntelligence(eventId: string): Promise<Work
       .slice(0, 10);
 
     // Generate stakeholder map
-    const stakeholderFrequency = allStakeholders.reduce((acc, stakeholder) => {
+    const stakeholderFrequency = allStakeholders.reduce((acc: Record<string, number>, stakeholder: string) => {
       acc[stakeholder] = (acc[stakeholder] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -137,8 +137,8 @@ export async function processWorkshopIntelligence(eventId: string): Promise<Work
       .map(([stakeholder, count]) => ({
         stakeholder,
         involvement: processedInsights
-          .filter(i => i.stakeholders.includes(stakeholder))
-          .map(i => i.insightType),
+          .filter((i: WorkshopInsight) => i.stakeholders.includes(stakeholder))
+          .map((i: WorkshopInsight) => i.insightType),
         priority: count > 3 ? 'high' : count > 1 ? 'medium' : 'low'
       }))
       .sort((a, b) => stakeholderFrequency[b.stakeholder] - stakeholderFrequency[a.stakeholder]);
@@ -220,18 +220,28 @@ For each insight, provide:
 Format as JSON array of insights.
 `;
 
-    const analysis = await analyzeDocument(analysisPrompt, 'workshop_intelligence');
-    
+    const analysis = await analyzeDocument<any>(analysisPrompt, 'workshop_intelligence');
+
     // Parse AI response and create WorkshopInsight objects
     let aiInsights: any[] = [];
     try {
-      aiInsights = JSON.parse(analysis.analysis);
+      // Handle different possible AI response structures
+      if (Array.isArray(analysis)) {
+        aiInsights = analysis;
+      } else if (analysis.insights && Array.isArray(analysis.insights)) {
+        aiInsights = analysis.insights;
+      } else if (analysis.analysis) {
+        aiInsights = typeof analysis.analysis === 'string' ? JSON.parse(analysis.analysis) : analysis.analysis;
+      } else {
+        // Fallback: look for any array in the object
+        aiInsights = Object.values(analysis).find(v => Array.isArray(v)) as any[] || [];
+      }
     } catch (parseError) {
       console.warn('Failed to parse AI insights, using fallback extraction');
       aiInsights = await fallbackInsightExtraction(capture);
     }
 
-    const insights: WorkshopInsight[] = aiInsights.map((aiInsight, index) => ({
+    const insights: WorkshopInsight[] = aiInsights.map((aiInsight: any, index: number) => ({
       id: `${capture.id}-insight-${index}`,
       eventId,
       sessionId: capture.sessionId,
@@ -293,7 +303,7 @@ Format as JSON array of insights.
  */
 async function fallbackInsightExtraction(capture: KnowledgeCapture): Promise<any[]> {
   const insights = [];
-  
+
   // Basic insight based on capture type
   const baseInsight = {
     title: capture.title,
@@ -356,14 +366,14 @@ async function generateRecommendedNextSteps(
   communityId: string
 ): Promise<string[]> {
   try {
-    const highPriorityInsights = insights.filter(i => i.priority === 'high' || i.priority === 'critical');
-    const topThemes = themes.slice(0, 5).map(t => t.theme);
-    
+    const highPriorityInsights = insights.filter((i: WorkshopInsight) => i.priority === 'high' || i.priority === 'critical');
+    const topThemes = themes.slice(0, 5).map((t: any) => t.theme);
+
     const prompt = `
 Based on these workshop insights and themes, recommend 5-7 specific next steps for the community:
 
 High Priority Insights:
-${highPriorityInsights.map(i => `- ${i.title}: ${i.description}`).join('\n')}
+${highPriorityInsights.map((i: WorkshopInsight) => `- ${i.title}: ${i.description}`).join('\n')}
 
 Top Themes:
 ${topThemes.join(', ')}
@@ -378,11 +388,11 @@ Provide actionable, culturally appropriate recommendations that:
 Format as a simple array of recommendation strings.
 `;
 
-    const analysis = await analyzeDocument(prompt, 'workshop_recommendations');
-    
+    const analysis = await analyzeDocument<any>(prompt, 'workshop_recommendations');
+
     try {
-      const recommendations = JSON.parse(analysis.analysis);
-      return Array.isArray(recommendations) ? recommendations : [analysis.analysis];
+      const recommendations = Array.isArray(analysis) ? analysis : (analysis.recommendations || analysis.analysis || analysis.summary || []);
+      return Array.isArray(recommendations) ? recommendations : [typeof recommendations === 'string' ? recommendations : JSON.stringify(recommendations)];
     } catch {
       // Fallback to basic recommendations
       return [
@@ -404,7 +414,7 @@ Format as a simple array of recommendation strings.
  */
 async function saveWorkshopInsights(insights: WorkshopInsight[]): Promise<void> {
   try {
-    const insightRecords = insights.map(insight => ({
+    const insightRecords = insights.map((insight: WorkshopInsight) => ({
       id: insight.id,
       event_id: insight.eventId,
       session_id: insight.sessionId,
@@ -450,19 +460,19 @@ async function saveWorkshopInsights(insights: WorkshopInsight[]): Promise<void> 
 async function integrateWithIntelligenceSystems(insights: WorkshopInsight[]): Promise<void> {
   try {
     // Integrate community needs with needs analysis system
-    const communityNeeds = insights.filter(i => i.insightType === 'community_need');
+    const communityNeeds = insights.filter((i: WorkshopInsight) => i.insightType === 'community_need');
     for (const need of communityNeeds) {
       await integrateWithNeedsAnalysis(need);
     }
 
     // Integrate service gaps with gap analysis system
-    const serviceGaps = insights.filter(i => i.insightType === 'service_gap');
+    const serviceGaps = insights.filter((i: WorkshopInsight) => i.insightType === 'service_gap');
     for (const gap of serviceGaps) {
       await integrateWithServiceGapAnalysis(gap);
     }
 
     // Integrate success patterns with pattern recognition system
-    const successPatterns = insights.filter(i => i.insightType === 'success_pattern');
+    const successPatterns = insights.filter((i: WorkshopInsight) => i.insightType === 'success_pattern');
     for (const pattern of successPatterns) {
       await integrateWithSuccessPatterns(pattern);
     }
@@ -725,13 +735,13 @@ export async function getWorkshopInsights(
 export async function updateCommunityIntelligenceFromWorkshop(eventId: string): Promise<void> {
   try {
     const insights = await getWorkshopInsights(eventId);
-    
+
     // Update community health indicators based on insights
     await updateCommunityHealthFromInsights(insights);
-    
+
     // Update community status based on workshop outcomes
     await updateCommunityStatusFromWorkshop(eventId, insights);
-    
+
     console.log(`Updated community intelligence with ${insights.length} workshop insights`);
   } catch (error) {
     console.error('Error updating community intelligence from workshop:', error);
@@ -745,13 +755,13 @@ export async function updateCommunityIntelligenceFromWorkshop(eventId: string): 
 async function updateCommunityHealthFromInsights(insights: WorkshopInsight[]): Promise<void> {
   try {
     // Analyze insights to determine health impact
-    const positiveInsights = insights.filter(i => 
-      i.insightType === 'success_pattern' || 
+    const positiveInsights = insights.filter((i: WorkshopInsight) =>
+      i.insightType === 'success_pattern' ||
       (i.insightType === 'action_item' && i.priority !== 'critical')
     );
-    
-    const negativeInsights = insights.filter(i => 
-      i.insightType === 'service_gap' || 
+
+    const negativeInsights = insights.filter((i: WorkshopInsight) =>
+      i.insightType === 'service_gap' ||
       (i.insightType === 'community_need' && i.priority === 'critical')
     );
 
@@ -785,8 +795,8 @@ async function updateCommunityStatusFromWorkshop(eventId: string, insights: Work
       details: {
         workshop_title: event.title,
         insights_generated: insights.length,
-        high_priority_items: insights.filter(i => i.priority === 'high' || i.priority === 'critical').length,
-        cultural_knowledge_captured: insights.filter(i => i.insightType === 'cultural_knowledge').length
+        high_priority_items: insights.filter((i: WorkshopInsight) => i.priority === 'high' || i.priority === 'critical').length,
+        cultural_knowledge_captured: insights.filter((i: WorkshopInsight) => i.insightType === 'cultural_knowledge').length
       },
       recorded_at: new Date().toISOString(),
       source: 'workshop_intelligence'

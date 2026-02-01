@@ -142,7 +142,7 @@ function analyzeExtractionQuality(themes: any[], document: any) {
     'crisis youth', 'training', 'education', 'health', 'housing'
   ];
 
-  const foundKeywords = expectedKeywords.filter(keyword =>
+  const foundKeywords = expectedKeywords.filter((keyword: string) =>
     themes.some((theme: any) =>
       theme.theme_name.toLowerCase().includes(keyword.toLowerCase()) ||
       theme.description.toLowerCase().includes(keyword.toLowerCase())

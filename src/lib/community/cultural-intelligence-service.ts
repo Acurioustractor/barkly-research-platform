@@ -749,7 +749,7 @@ export class CulturalIntelligenceService {
       ];
 
       const protocolCompliance = await Promise.all(
-        protocolCategories.map(category =>
+        protocolCategories.map((category: string) =>
           this.createProtocolCompliance({
             insight_id: insightId,
             community_id: communityId,
@@ -770,7 +770,7 @@ export class CulturalIntelligenceService {
       ];
 
       const impactAssessments = await Promise.all(
-        assessmentTypes.map(type =>
+        assessmentTypes.map((type: string) =>
           this.createCulturalImpactAssessment({
             insight_id: insightId,
             community_id: communityId,

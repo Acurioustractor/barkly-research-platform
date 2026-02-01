@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     const options = {
       source: (formData.get('source') as string) || 'upload',
       category: (formData.get('category') as string) || 'general',
-      tags: formData.get('tags') ? (formData.get('tags') as string).split(',').map(t => t.trim()) : [],
+      tags: formData.get('tags') ? (formData.get('tags') as string).split(',').map((t: string) => t.trim()) : [],
       enableAI: formData.get('enableAI') !== 'false',
       storeOriginal: formData.get('storeOriginal') !== 'false'
     };
@@ -139,8 +139,9 @@ export async function POST(request: NextRequest) {
             console.warn(`[upload-with-files] Unsupported file type for text extraction: ${file.type}`);
             extractedText = `Document uploaded: ${file.name}`;
           }
-
-          wordCount = extractedText.split(/\s+/).filter(w => w.length > 0).length;
+          if (extractedText.trim()) {
+            wordCount = extractedText.trim().split(/\s+/).filter((w: string) => w.length > 0).length;
+          }
           console.log(`[upload-with-files] Extracted ${wordCount} words from ${pageCount} pages`);
         } catch (extractionError) {
           console.error(`[upload-with-files] Text extraction failed for ${file.name}:`, extractionError);
@@ -204,7 +205,8 @@ export async function POST(request: NextRequest) {
     }
 
     const processingTime = Date.now() - startTime;
-    const successCount = results.filter(r => r.status === 'completed').length;
+    const successCount = results.filter((r: any) => r.status === 'completed').length;
+    const failureCount = results.filter((r: any) => r.status === 'failed').length;
 
     console.log(`[upload-with-files] Completed in ${processingTime}ms: ${successCount}/${files.length} successful`);
 

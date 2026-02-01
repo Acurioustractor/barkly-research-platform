@@ -282,6 +282,16 @@ async function generateImpactReport(params: {
 function generateReportSummary(evidence: any[]): any {
   const programs = [...new Set(evidence.map((e: any) => e.program_id))];
   const communities = [...new Set(evidence.map((e: any) => e.communities?.name).filter(Boolean))];
+
+  const programGroups = evidence.reduce((groups: Record<string, any[]>, item: any) => {
+    const group = item.program_id || 'unknown';
+    if (!groups[group]) {
+      groups[group] = [];
+    }
+    groups[group].push(item);
+    return groups;
+  }, {});
+
   const verifiedEvidence = evidence.filter((e: any) => e.verified);
 
   // Calculate aggregate metrics
@@ -304,8 +314,38 @@ function generateReportSummary(evidence: any[]): any {
   };
 }
 
+function calculateMetricsByProgram(evidence: any[]): any[] {
+  const metricGroups = evidence.reduce((groups: Record<string, any[]>, item: any) => {
+    const key = `${item.program_id}-${item.metric_name}`;
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    groups[key].push(item);
+    return groups;
+  }, {});
+
+  return Object.entries(metricGroups).map(([key, items]: [string, any[]]) => {
+    const [programId, metricName] = key.split('-');
+    const firstItem = items[0];
+
+    const values = items.map((e: any) => parseFloat(e.metric_value)).filter((v: number) => !isNaN(v));
+    const avgValue = values.length > 0 ? values.reduce((sum: number, val: number) => sum + val, 0) / values.length : 0;
+
+    return {
+      programId,
+      metricName,
+      avgValue,
+      baseline: firstItem.baseline_value,
+      target: firstItem.target_value,
+      timeframe: firstItem.timeframe,
+      reliability: firstItem.reliability_score,
+      dataPoints: items.length
+    };
+  });
+}
+
 function generateProgramSummaries(evidence: any[]): any[] {
-  const programGroups = evidence.reduce((groups, item) => {
+  const programGroups = evidence.reduce((groups: Record<string, any[]>, item: any) => {
     const programId = item.program_id;
     if (!groups[programId]) {
       groups[programId] = [];
@@ -350,14 +390,17 @@ function extractKeyMetrics(evidence: any[]): any[] {
 }
 
 function extractImpactStories(evidence: any[]): string[] {
-  const allStories = evidence.flatMap(e => e.supporting_stories || []);
+  const allStories = evidence.flatMap((e: any) => e.supporting_stories || []);
   return [...new Set(allStories)].slice(0, 10); // Unique stories, max 10
 }
 
 function assessProgramDataQuality(evidence: any[]): any {
   const verified = evidence.filter((e: any) => e.verified).length;
   const withBaseline = evidence.filter((e: any) => e.baseline_value).length;
-  const withTarget = evidence.filter((e: any) => e.target_value).length;
+  const withTargets = evidence.filter((e: any) => e.target_value);
+  withTargets.forEach((e: any) => {
+    const programId = e.program_id;
+  });
   const highReliability = evidence.filter((e: any) => (e.reliability_score || 0) >= 7).length;
 
   const total = evidence.length;
@@ -365,9 +408,9 @@ function assessProgramDataQuality(evidence: any[]): any {
   return {
     verificationRate: total > 0 ? Math.round((verified / total) * 100) : 0,
     baselineRate: total > 0 ? Math.round((withBaseline / total) * 100) : 0,
-    targetRate: total > 0 ? Math.round((withTarget / total) * 100) : 0,
+    targetRate: total > 0 ? Math.round((withTargets.length / total) * 100) : 0,
     highReliabilityRate: total > 0 ? Math.round((highReliability / total) * 100) : 0,
-    overallScore: total > 0 ? Math.round(((verified + withBaseline + withTarget + highReliability) / (total * 4)) * 100) : 0
+    overallScore: total > 0 ? Math.round(((verified + withBaseline + withTargets.length + highReliability) / (total * 4)) * 100) : 0
   };
 }
 
@@ -582,12 +625,22 @@ function calculateOverallImpact(evidence: any[]): number {
     return Math.min((actual / target) * 100, 150); // Cap at 150% achievement
   });
 
-  return Math.round(achievements.reduce((sum, achievement) => sum + achievement, 0) / achievements.length);
+  const achievementsMapped = evidence
+    .filter((e: any) => e.target_value && e.metric_value)
+    .map((e: any) => {
+      const target = parseFloat(e.target_value);
+      const actual = parseFloat(e.metric_value);
+      if (isNaN(target) || isNaN(actual) || target === 0) return 0;
+      return Math.min((actual / target) * 100, 150);
+    });
+
+  if (achievementsMapped.length === 0) return 0;
+  return Math.round(achievementsMapped.reduce((sum: number, achievement: number) => sum + achievement, 0) / achievementsMapped.length);
 }
 
 function analyzeImpactTrends(evidence: any[]): any {
   // Group evidence by metric and analyze trends over time
-  const metricGroups = evidence.reduce((groups, item) => {
+  const metricGroups = evidence.reduce((groups: Record<string, any[]>, item: any) => {
     if (!groups[item.metric_name]) {
       groups[item.metric_name] = [];
     }
@@ -652,7 +705,7 @@ function analyzeOutcomeAchievement(evidence: any[]): any {
   let notAchieved = 0;
   let overAchieved = 0;
 
-  withTargets.forEach(e => {
+  withTargets.forEach((e: any) => {
     const target = parseFloat(e.target_value);
     const actual = parseFloat(e.metric_value);
 

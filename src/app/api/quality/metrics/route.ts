@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
       targetCommunityId = user.community_id;
     }
 
-    const canViewMetrics = 
-      user.role === 'admin' || 
+    const canViewMetrics =
+      user.role === 'admin' ||
       user.role === 'moderator' ||
       !targetCommunityId ||
       user.community_id === targetCommunityId;
@@ -53,8 +53,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Filter by metric type if specified
-    const filteredMetrics = metricType 
-      ? metrics.filter(m => m.metric_type === metricType)
+    const filteredMetrics = metricType
+      ? metrics.filter((m: any) => m.metric_type === metricType)
       : metrics;
 
     return NextResponse.json({
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -95,8 +95,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const canTriggerCalculation = 
-      user.role === 'admin' || 
+    const canTriggerCalculation =
+      user.role === 'admin' ||
       user.role === 'moderator';
 
     if (!canTriggerCalculation) {

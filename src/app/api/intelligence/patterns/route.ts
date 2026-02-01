@@ -73,13 +73,13 @@ async function getCrossCommunityTrends(communityId?: string | null) {
     const themeMap = new Map<string, { communities: Set<string>; count: number; evidence: string[] }>();
     const needMap = new Map<string, { communities: Set<string>; urgency: string[]; count: number }>();
 
-    documents.forEach(doc => {
+    documents.forEach((doc: any) => {
       const intelligence = doc.ai_analysis?.intelligence;
       const communityName = doc.community_name || 'Unknown';
 
       if (intelligence) {
         // Process themes
-        intelligence.themes?.forEach((theme: any) => {
+        intelligence.themes?.forEach((theme: { name: string; evidence?: string }) => {
           if (!themeMap.has(theme.name)) {
             themeMap.set(theme.name, { communities: new Set(), count: 0, evidence: [] });
           }
@@ -92,7 +92,7 @@ async function getCrossCommunityTrends(communityId?: string | null) {
         });
 
         // Process community needs
-        intelligence.communityNeeds?.forEach((need: any) => {
+        intelligence.communityNeeds?.forEach((need: { category?: string; need: string; urgency: string }) => {
           const needKey = need.category || need.need;
           if (!needMap.has(needKey)) {
             needMap.set(needKey, { communities: new Set(), urgency: [], count: 0 });
@@ -107,8 +107,8 @@ async function getCrossCommunityTrends(communityId?: string | null) {
 
     // Convert to trend analysis
     const trends = Array.from(themeMap.entries())
-      .filter(([_, data]) => data.communities.size > 1) // Cross-community trends
-      .map(([theme, data]) => ({
+      .filter(([_theme, data]: [string, { communities: Set<string>; count: number; evidence: string[] }]) => data.communities.size > 1) // Cross-community trends
+      .map(([theme, data]: [string, { communities: Set<string>; count: number; evidence: string[] }]) => ({
         trend: theme,
         communities: Array.from(data.communities),
         strength: data.count,
@@ -119,10 +119,10 @@ async function getCrossCommunityTrends(communityId?: string | null) {
       .slice(0, 10);
 
     const needTrends = Array.from(needMap.entries())
-      .filter(([_, data]) => data.communities.size > 1)
-      .map(([need, data]) => {
-        const criticalCount = data.urgency.filter(u => u === 'critical').length;
-        const highCount = data.urgency.filter(u => u === 'high').length;
+      .filter(([_need, data]: [string, { communities: Set<string>; urgency: string[]; count: number }]) => data.communities.size > 1)
+      .map(([need, data]: [string, { communities: Set<string>; urgency: string[]; count: number }]) => {
+        const criticalCount = data.urgency.filter((u: string) => u === 'critical').length;
+        const highCount = data.urgency.filter((u: string) => u === 'high').length;
 
         return {
           trend: `${need} needs`,
@@ -180,11 +180,11 @@ async function getServiceGapPatterns(communityId?: string | null) {
 
     const gapMap = new Map<string, { locations: Set<string>; impact: number[]; urgency: string[] }>();
 
-    documents.forEach(doc => {
+    documents.forEach((doc: any) => {
       const intelligence = doc.ai_analysis?.intelligence;
       const communityName = doc.community_name || 'Unknown';
 
-      intelligence?.serviceGaps?.forEach((gap: any) => {
+      intelligence?.serviceGaps?.forEach((gap: { service: string; location?: string; impact?: number; urgency?: string }) => {
         if (!gapMap.has(gap.service)) {
           gapMap.set(gap.service, { locations: new Set(), impact: [], urgency: [] });
         }
@@ -196,9 +196,9 @@ async function getServiceGapPatterns(communityId?: string | null) {
     });
 
     const gapPatterns = Array.from(gapMap.entries())
-      .map(([service, data]) => {
-        const avgImpact = data.impact.reduce((a, b) => a + b, 0) / data.impact.length;
-        const criticalCount = data.urgency.filter(u => u === 'critical').length;
+      .map(([service, data]: [string, { locations: Set<string>; impact: number[]; urgency: string[] }]) => {
+        const avgImpact = data.impact.reduce((a: number, b: number) => a + b, 0) / data.impact.length;
+        const criticalCount = data.urgency.filter((u: string) => u === 'critical').length;
 
         return {
           service,
@@ -206,9 +206,9 @@ async function getServiceGapPatterns(communityId?: string | null) {
           averageImpact: Math.round(avgImpact * 10) / 10,
           urgencyDistribution: {
             critical: criticalCount,
-            high: data.urgency.filter(u => u === 'high').length,
-            medium: data.urgency.filter(u => u === 'medium').length,
-            low: data.urgency.filter(u => u === 'low').length
+            high: data.urgency.filter((u: string) => u === 'high').length,
+            medium: data.urgency.filter((u: string) => u === 'medium').length,
+            low: data.urgency.filter((u: string) => u === 'low').length
           },
           priority: criticalCount > 0 ? 'critical' : avgImpact > 7 ? 'high' : 'medium'
         };
@@ -219,9 +219,9 @@ async function getServiceGapPatterns(communityId?: string | null) {
       serviceGaps: gapPatterns,
       summary: {
         total_gaps_identified: gapPatterns.length,
-        critical_gaps: gapPatterns.filter(g => g.priority === 'critical').length,
-        high_impact_gaps: gapPatterns.filter(g => g.averageImpact > 7).length
-      }
+        critical_gaps: gapPatterns.filter((g: { priority: string }) => g.priority === 'critical').length,
+        high_impact_gaps: gapPatterns.filter((g: { averageImpact: number }) => g.averageImpact > 7).length
+      },
     };
 
   } catch (error) {
@@ -256,11 +256,11 @@ async function getOpportunityPatterns(communityId?: string | null) {
 
     const opportunityMap = new Map<string, { communities: Set<string>; potential: number[]; timelines: string[] }>();
 
-    documents.forEach(doc => {
+    documents.forEach((doc: any) => {
       const intelligence = doc.ai_analysis?.intelligence;
       const communityName = doc.community_name || 'Unknown';
 
-      intelligence?.opportunities?.forEach((opp: any) => {
+      intelligence?.opportunities?.forEach((opp: { opportunity: string; potential?: number; timeline?: string }) => {
         const oppKey = opp.opportunity;
         if (!opportunityMap.has(oppKey)) {
           opportunityMap.set(oppKey, { communities: new Set(), potential: [], timelines: [] });
@@ -273,8 +273,8 @@ async function getOpportunityPatterns(communityId?: string | null) {
     });
 
     const opportunities = Array.from(opportunityMap.entries())
-      .map(([opportunity, data]) => {
-        const avgPotential = data.potential.reduce((a, b) => a + b, 0) / data.potential.length;
+      .map(([opportunity, data]: [string, { communities: Set<string>; potential: number[]; timelines: string[] }]) => {
+        const avgPotential = data.potential.reduce((a: number, b: number) => a + b, 0) / data.potential.length;
 
         return {
           opportunity,
@@ -290,9 +290,9 @@ async function getOpportunityPatterns(communityId?: string | null) {
       opportunities,
       summary: {
         total_opportunities: opportunities.length,
-        high_potential: opportunities.filter(o => o.averagePotential > 7).length,
-        cross_community: opportunities.filter(o => o.communities.length > 1).length
-      }
+        high_potential: opportunities.filter((o: { averagePotential: number }) => o.averagePotential > 7).length,
+        cross_community: opportunities.filter((o: { communities: string[] }) => o.communities.length > 1).length
+      },
     };
 
   } catch (error) {
@@ -327,7 +327,7 @@ async function getRiskPatterns(communityId?: string | null) {
 
     const riskMap = new Map<string, { communities: Set<string>; probability: number[]; impact: number[] }>();
 
-    documents.forEach(doc => {
+    documents.forEach((doc: any) => {
       const intelligence = doc.ai_analysis?.intelligence;
       const communityName = doc.community_name || 'Unknown';
 
@@ -343,9 +343,9 @@ async function getRiskPatterns(communityId?: string | null) {
     });
 
     const risks = Array.from(riskMap.entries())
-      .map(([risk, data]) => {
-        const avgProbability = data.probability.reduce((a, b) => a + b, 0) / data.probability.length;
-        const avgImpact = data.impact.reduce((a, b) => a + b, 0) / data.impact.length;
+      .map(([risk, data]: [string, { communities: Set<string>; probability: number[]; impact: number[] }]) => {
+        const avgProbability = data.probability.reduce((a: number, b: number) => a + b, 0) / data.probability.length;
+        const avgImpact = data.impact.reduce((a: number, b: number) => a + b, 0) / data.impact.length;
         const riskScore = avgProbability * avgImpact;
 
         return {
@@ -363,8 +363,8 @@ async function getRiskPatterns(communityId?: string | null) {
       risks,
       summary: {
         total_risks: risks.length,
-        high_priority: risks.filter(r => r.priority === 'high').length,
-        cross_community: risks.filter(r => r.communities.length > 1).length
+        high_priority: risks.filter((r: any) => r.priority === 'high').length,
+        cross_community: risks.filter((r: any) => r.communities.length > 1).length
       }
     };
 

@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const canViewAlerts = 
-      user.role === 'admin' || 
+    const canViewAlerts =
+      user.role === 'admin' ||
       user.role === 'moderator';
 
     if (!canViewAlerts) {
@@ -67,9 +67,16 @@ export async function GET(request: NextRequest) {
       alerts = data || [];
     }
 
+    // Apply additional filters
+    if (status) {
+      alerts = alerts.filter((alert: any) =>
+        alert.status === status
+      );
+    }
+
     // Filter alerts by user's community if not admin/moderator
     if (user.role !== 'admin' && user.role !== 'moderator' && user.community_id) {
-      alerts = alerts.filter(alert => 
+      alerts = alerts.filter((alert: any) =>
         alert.affected_communities.includes(user.community_id)
       );
     }
@@ -93,17 +100,17 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    
+
     // Validate required fields
     const requiredFields = ['alert_type', 'severity', 'title', 'description'];
-    const missingFields = requiredFields.filter(field => !body[field]);
-    
+    const missingFields = requiredFields.filter((field: string) => !body[field]);
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         { error: `Missing required fields: ${missingFields.join(', ')}` },
@@ -140,8 +147,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const canCreateAlerts = 
-      user.role === 'admin' || 
+    const canCreateAlerts =
+      user.role === 'admin' ||
       user.role === 'moderator';
 
     if (!canCreateAlerts) {
@@ -182,7 +189,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -215,8 +222,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const canResolveAlerts = 
-      user.role === 'admin' || 
+    const canResolveAlerts =
+      user.role === 'admin' ||
       user.role === 'moderator';
 
     if (!canResolveAlerts) {

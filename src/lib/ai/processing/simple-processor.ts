@@ -183,7 +183,7 @@ export class SimpleProcessor {
 
   private simpleChunk(text: string): string[] {
     // Split by paragraphs, keep it simple
-    const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 50);
+    const paragraphs = text.split(/\n\s*\n/).filter((p: string) => p.trim().length > 50);
 
     // If paragraphs are too long, split by sentences
     const chunks: string[] = [];
@@ -191,7 +191,7 @@ export class SimpleProcessor {
       if (para.length <= 1000) {
         chunks.push(para.trim());
       } else {
-        const sentences = para.split(/[.!?]+/).filter(s => s.trim().length > 20);
+        const sentences = para.split(/[.!?]+/).filter((s: string) => s.trim().length > 20);
         let currentChunk = '';
 
         for (const sentence of sentences) {
@@ -209,13 +209,13 @@ export class SimpleProcessor {
       }
     }
 
-    return chunks.filter(chunk => chunk.length > 50);
+    return chunks.filter((chunk: string) => chunk.length > 50);
   }
 
   private async storeChunks(documentId: string, chunks: string[]): Promise<void> {
     if (!prisma) return;
 
-    const chunkData = chunks.map((text, index) => ({
+    const chunkData = chunks.map((text: string, index: number) => ({
       documentId,
       chunkIndex: index,
       text,

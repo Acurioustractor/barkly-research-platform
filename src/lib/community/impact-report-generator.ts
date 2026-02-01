@@ -76,7 +76,7 @@ export interface ImpactReport {
     endDate: Date;
     description: string;
   };
-  
+
   // Executive Summary
   executiveSummary: {
     keyAchievements: string[];
@@ -85,7 +85,7 @@ export interface ImpactReport {
     futureDirections: string[];
     culturalSignificance: string[];
   };
-  
+
   // Quantitative Data
   metrics: {
     primary: ImpactMetric[];
@@ -96,14 +96,14 @@ export interface ImpactReport {
       targets: ImpactMetric[];
     };
   };
-  
+
   // Qualitative Stories
   stories: {
     featured: QualitativeStory[];
     supporting: QualitativeStory[];
     culturalStories: QualitativeStory[];
   };
-  
+
   // Community Voices
   voices: {
     testimonials: CommunityVoice[];
@@ -111,7 +111,7 @@ export interface ImpactReport {
     youthPerspectives: CommunityVoice[];
     leadershipInsights: CommunityVoice[];
   };
-  
+
   // Analysis Sections
   analysis: {
     trendsAnalysis: string;
@@ -121,14 +121,14 @@ export interface ImpactReport {
     culturalImpact: string;
     recommendations: string[];
   };
-  
+
   // Visual Elements
   visualizations: {
     charts: { type: string; data: any; title: string; description: string }[];
     maps: { type: string; data: any; title: string; description: string }[];
     infographics: { title: string; elements: any[]; description: string }[];
   };
-  
+
   // Appendices
   appendices: {
     methodology: string;
@@ -137,7 +137,7 @@ export interface ImpactReport {
     acknowledgments: string;
     glossary: { term: string; definition: string; culturalContext?: string }[];
   };
-  
+
   // Metadata
   generatedAt: Date;
   generatedBy: string;
@@ -186,7 +186,7 @@ export async function generateImpactReport(
 ): Promise<ImpactReport> {
   try {
     console.log(`Generating impact report for community ${communityId}`);
-    
+
     // Get community information
     const { data: community, error: communityError } = await supabase
       .from('communities')
@@ -200,25 +200,25 @@ export async function generateImpactReport(
 
     // Collect quantitative data
     const metrics = await collectQuantitativeMetrics(
-      communityId, 
-      reportConfig.timeframe.startDate, 
+      communityId,
+      reportConfig.timeframe.startDate,
       reportConfig.timeframe.endDate
     );
 
     // Collect qualitative stories
-    const stories = reportConfig.includeStories !== false 
+    const stories = reportConfig.includeStories !== false
       ? await collectQualitativeStories(
-          communityId, 
-          reportConfig.timeframe.startDate, 
-          reportConfig.timeframe.endDate,
-          reportConfig.culturalSafetyLevel || 'public'
-        )
+        communityId,
+        reportConfig.timeframe.startDate,
+        reportConfig.timeframe.endDate,
+        reportConfig.culturalSafetyLevel || 'public'
+      )
       : { featured: [], supporting: [], culturalStories: [] };
 
     // Collect community voices
     const voices = await collectCommunityVoices(
-      communityId, 
-      reportConfig.timeframe.startDate, 
+      communityId,
+      reportConfig.timeframe.startDate,
       reportConfig.timeframe.endDate,
       reportConfig.culturalSafetyLevel || 'public'
     );
@@ -299,13 +299,13 @@ async function collectQuantitativeMetrics(
   try {
     // Get health indicators
     const healthIndicators = await getCommunityHealthIndicators(communityId);
-    
+
     // Get community needs data
     const needsData = await getCommunityNeeds(communityId);
-    
+
     // Get service gaps data
     const serviceGaps = await getServiceGaps(communityId);
-    
+
     // Get success patterns data
     const successPatterns = await getSuccessPatterns(communityId);
 
@@ -334,7 +334,7 @@ async function collectQuantitativeMetrics(
         description: 'Overall community wellbeing indicator',
         value: healthIndicators?.overallScore || 0,
         unit: 'score',
-        trend: healthIndicators?.trend || 'unknown',
+        trend: (healthIndicators?.trend as any) || 'unknown',
         trendPercentage: healthIndicators?.trendPercentage,
         timeframe: 'Current',
         source: 'Community Health Indicators',
@@ -346,7 +346,7 @@ async function collectQuantitativeMetrics(
         category: 'social',
         name: 'Community Engagement',
         description: 'Level of community participation in events and activities',
-        value: eventData?.reduce((sum, event) => sum + (event.current_attendees || 0), 0) || 0,
+        value: (eventData || []).reduce((sum: number, event: any) => sum + (event.current_attendees || 0), 0) || 0,
         unit: 'participants',
         trend: 'improving',
         timeframe: `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`,
@@ -409,9 +409,9 @@ async function collectQuantitativeMetrics(
         category: 'education',
         name: 'Workshop Attendance Rate',
         description: 'Average attendance rate for community workshops',
-        value: eventData?.length > 0 
-          ? Math.round((eventData.reduce((sum, event) => sum + (event.current_attendees || 0), 0) / 
-              eventData.reduce((sum, event) => sum + (event.max_attendees || event.current_attendees || 0), 0)) * 100)
+        value: (eventData && eventData.length > 0)
+          ? Math.round(((eventData as any[]).reduce((sum: number, event: any) => sum + (event.current_attendees || 0), 0) /
+            (eventData as any[]).reduce((sum: number, event: any) => sum + (event.max_attendees || event.current_attendees || 0), 0)) * 100)
           : 0,
         unit: 'percentage',
         trend: 'improving',
@@ -424,8 +424,8 @@ async function collectQuantitativeMetrics(
         category: 'cultural',
         name: 'Cultural Events Held',
         description: 'Number of cultural events and ceremonies conducted',
-        value: eventData?.filter(event => 
-          event.event_type === 'ceremony' || 
+        value: (eventData || []).filter((event: any) =>
+          event.event_type === 'ceremony' ||
           event.cultural_safety !== 'public'
         ).length || 0,
         unit: 'events',
@@ -440,9 +440,9 @@ async function collectQuantitativeMetrics(
     const comparative = {
       baseline: primaryMetrics.map(metric => ({ ...metric, value: metric.value * 0.7 })), // Mock baseline
       current: primaryMetrics,
-      targets: primaryMetrics.map(metric => ({ 
-        ...metric, 
-        value: metric.targetValue || metric.value * 1.2 
+      targets: primaryMetrics.map(metric => ({
+        ...metric,
+        value: metric.targetValue || metric.value * 1.2
       }))
     };
 
@@ -528,10 +528,10 @@ async function collectQualitativeStories(
       .slice(0, 10);
 
     const culturalStories = stories
-      .filter(story => 
-        story.culturalSafety !== 'public' || 
-        story.themes.some(theme => 
-          theme.toLowerCase().includes('cultural') || 
+      .filter((story: QualitativeStory) =>
+        story.culturalSafety !== 'public' ||
+        story.themes.some((theme: string) =>
+          theme.toLowerCase().includes('cultural') ||
           theme.toLowerCase().includes('traditional')
         )
       )
@@ -550,32 +550,32 @@ async function collectQualitativeStories(
 function categorizeStory(content: string, themes: string[]): QualitativeStory['category'] {
   const contentLower = content.toLowerCase();
   const themeString = themes.join(' ').toLowerCase();
-  
-  if (contentLower.includes('success') || contentLower.includes('achievement') || 
-      themeString.includes('success')) {
+
+  if (contentLower.includes('success') || contentLower.includes('achievement') ||
+    themeString.includes('success')) {
     return 'success';
   }
-  
-  if (contentLower.includes('challenge') || contentLower.includes('difficult') || 
-      contentLower.includes('problem')) {
+
+  if (contentLower.includes('challenge') || contentLower.includes('difficult') ||
+    contentLower.includes('problem')) {
     return 'challenge';
   }
-  
-  if (contentLower.includes('change') || contentLower.includes('transform') || 
-      contentLower.includes('improve')) {
+
+  if (contentLower.includes('change') || contentLower.includes('transform') ||
+    contentLower.includes('improve')) {
     return 'transformation';
   }
-  
-  if (contentLower.includes('traditional') || contentLower.includes('cultural') || 
-      contentLower.includes('elder') || themeString.includes('cultural')) {
+
+  if (contentLower.includes('traditional') || contentLower.includes('cultural') ||
+    contentLower.includes('elder') || themeString.includes('cultural')) {
     return 'cultural_preservation';
   }
-  
-  if (contentLower.includes('new') || contentLower.includes('innovative') || 
-      contentLower.includes('creative')) {
+
+  if (contentLower.includes('new') || contentLower.includes('innovative') ||
+    contentLower.includes('creative')) {
     return 'innovation';
   }
-  
+
   return 'success'; // Default category
 }
 
@@ -591,7 +591,7 @@ async function collectCommunityVoices(
   try {
     // This would typically come from a dedicated community voices/testimonials system
     // For now, we'll extract quotes from stories and workshop captures
-    
+
     const safetyLevels = ['public', 'community', 'restricted', 'sacred'];
     const maxSafetyIndex = safetyLevels.indexOf(maxCulturalSafety);
     const allowedLevels = safetyLevels.slice(0, maxSafetyIndex + 1);
@@ -626,25 +626,25 @@ async function collectCommunityVoices(
       }));
 
     // Categorize voices
-    const testimonials = voices.filter(voice => 
-      voice.quote.toLowerCase().includes('help') || 
+    const testimonials = voices.filter(voice =>
+      voice.quote.toLowerCase().includes('help') ||
       voice.quote.toLowerCase().includes('impact') ||
       voice.quote.toLowerCase().includes('change')
     ).slice(0, 5);
 
-    const elderWisdom = voices.filter(voice => 
+    const elderWisdom = voices.filter(voice =>
       voice.speakerRole.toLowerCase().includes('elder') ||
       voice.quote.toLowerCase().includes('traditional') ||
       voice.quote.toLowerCase().includes('ancestor')
     ).slice(0, 3);
 
-    const youthPerspectives = voices.filter(voice => 
+    const youthPerspectives = voices.filter(voice =>
       voice.speakerRole.toLowerCase().includes('youth') ||
       voice.quote.toLowerCase().includes('young') ||
       voice.quote.toLowerCase().includes('future')
     ).slice(0, 3);
 
-    const leadershipInsights = voices.filter(voice => 
+    const leadershipInsights = voices.filter(voice =>
       voice.speakerRole.toLowerCase().includes('leader') ||
       voice.speakerRole.toLowerCase().includes('coordinator') ||
       voice.quote.toLowerCase().includes('community') && voice.quote.toLowerCase().includes('lead')
@@ -702,11 +702,11 @@ Generate analysis for:
 Keep analysis culturally sensitive and community-focused.
 `;
 
-    const analysis = await analyzeDocument(analysisPrompt, 'impact_analysis');
-    
+    const analysis = await analyzeDocument<any>(analysisPrompt, 'impact_analysis');
+
     // Parse the AI response into structured sections
-    const sections = parseAnalysisResponse(analysis.analysis);
-    
+    const sections = parseAnalysisResponse(analysis.analysis || analysis.summary || JSON.stringify(analysis));
+
     return {
       trendsAnalysis: sections.trendsAnalysis || 'Positive trends observed in community engagement and cultural activities.',
       gapAnalysis: sections.gapAnalysis || 'Service gaps identified in key areas requiring attention.',
@@ -750,28 +750,28 @@ function parseAnalysisResponse(response: string): any {
   } catch {
     // If not JSON, parse as text sections
     const sections: any = {};
-    
-    const trendMatch = response.match(/trends?\s*analysis[:\-]?\s*(.*?)(?=gap\s*analysis|$)/is);
+
+    const trendMatch = response.match(/trends?\s*analysis[:\-]?\s*([^]*?)(?=gap\s*analysis|$)/i);
     if (trendMatch) sections.trendsAnalysis = trendMatch[1].trim();
-    
-    const gapMatch = response.match(/gap\s*analysis[:\-]?\s*(.*?)(?=success\s*factors|$)/is);
+
+    const gapMatch = response.match(/gap\s*analysis[:\-]?\s*([^]*?)(?=success\s*factors|$)/i);
     if (gapMatch) sections.gapAnalysis = gapMatch[1].trim();
-    
-    const successMatch = response.match(/success\s*factors[:\-]?\s*(.*?)(?=challenges?\s*analysis|$)/is);
+
+    const successMatch = response.match(/success\s*factors[:\-]?\s*([^]*?)(?=challenges?\s*analysis|$)/i);
     if (successMatch) sections.successFactors = successMatch[1].trim();
-    
-    const challengesMatch = response.match(/challenges?\s*analysis[:\-]?\s*(.*?)(?=cultural\s*impact|$)/is);
+
+    const challengesMatch = response.match(/challenges?\s*analysis[:\-]?\s*([^]*?)(?=cultural\s*impact|$)/i);
     if (challengesMatch) sections.challengesAnalysis = challengesMatch[1].trim();
-    
-    const culturalMatch = response.match(/cultural\s*impact[:\-]?\s*(.*?)(?=recommendations?|$)/is);
+
+    const culturalMatch = response.match(/cultural\s*impact[:\-]?\s*([^]*?)(?=recommendations?|$)/i);
     if (culturalMatch) sections.culturalImpact = culturalMatch[1].trim();
-    
-    const recommendationsMatch = response.match(/recommendations?[:\-]?\s*(.*?)$/is);
+
+    const recommendationsMatch = response.match(/recommendations?[:\-]?\s*([^]*?)$/i);
     if (recommendationsMatch) {
       const recText = recommendationsMatch[1].trim();
-      sections.recommendations = recText.split(/\d+\.|\n-|\n\*/).filter(r => r.trim()).map(r => r.trim());
+      sections.recommendations = recText.split(/\d+\.|\n-|\n\*/).filter((r: string) => r.trim()).map((r: string) => r.trim());
     }
-    
+
     return sections;
   }
 }
@@ -823,15 +823,15 @@ async function generateVisualizations(
         labels: ['Success Stories', 'Challenges', 'Transformations', 'Cultural', 'Innovation'],
         datasets: [{
           data: [
-            stories.featured.filter(s => s.category === 'success').length + 
+            stories.featured.filter(s => s.category === 'success').length +
             stories.supporting.filter(s => s.category === 'success').length,
-            stories.featured.filter(s => s.category === 'challenge').length + 
+            stories.featured.filter(s => s.category === 'challenge').length +
             stories.supporting.filter(s => s.category === 'challenge').length,
-            stories.featured.filter(s => s.category === 'transformation').length + 
+            stories.featured.filter(s => s.category === 'transformation').length +
             stories.supporting.filter(s => s.category === 'transformation').length,
-            stories.featured.filter(s => s.category === 'cultural_preservation').length + 
+            stories.featured.filter(s => s.category === 'cultural_preservation').length +
             stories.supporting.filter(s => s.category === 'cultural_preservation').length,
-            stories.featured.filter(s => s.category === 'innovation').length + 
+            stories.featured.filter(s => s.category === 'innovation').length +
             stories.supporting.filter(s => s.category === 'innovation').length
           ],
           backgroundColor: [

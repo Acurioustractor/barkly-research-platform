@@ -189,26 +189,20 @@ export async function analyzeSuccessPatterns(
 }
 
 // Legacy support for generic document analysis
-export async function analyzeDocument(
+export async function analyzeDocument<T = any>(
   promptOrText: string,
   context?: string
-): Promise<AIAnalysisResult> {
+): Promise<T> {
   const provider = getProvider();
 
   try {
-    return await provider.generateJSON<AIAnalysisResult>(
+    return await provider.generateJSON<T>(
       "You are an expert analyst. Respond in JSON.",
       context ? `Context: ${context}\n\n${promptOrText}` : promptOrText
     );
   } catch (error) {
     console.error('Generic analysis error:', error);
-    return {
-      summary: '',
-      themes: [],
-      quotes: [],
-      keywords: [],
-      insights: []
-    };
+    return {} as T;
   }
 }
 

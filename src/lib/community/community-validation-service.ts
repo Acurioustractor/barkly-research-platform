@@ -26,6 +26,7 @@ export interface ValidationRequest {
   feedback: ValidationFeedback[];
   revisions: ContentRevision[];
   completedAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface ValidationContent {
@@ -620,10 +621,10 @@ export class CommunityValidationService {
 
       // Calculate metrics
       const totalRequests = requests.length;
-      const completedValidations = requests.filter(r => r.status === 'validated').length;
+      const completedValidations = requests.filter((r: ValidationRequest) => r.status === 'validated').length;
       const averageCompletionTime = this.calculateAverageCompletionTime(requests);
-      const consensusRate = completedValidations > 0 ? 
-        requests.filter(r => r.consensusReached).length / completedValidations : 0;
+      const consensusRate = completedValidations > 0 ?
+        requests.filter((r: ValidationRequest) => r.consensusReached).length / completedValidations : 0;
       const averageConfidence = this.calculateAverageConfidence(requests);
 
       return {
@@ -656,7 +657,7 @@ export class CommunityValidationService {
         throw error;
       }
 
-      data?.forEach(validator => {
+      data?.forEach((validator: any) => {
         this.validators.set(validator.id, this.mapDatabaseToValidator(validator));
       });
     } catch (error) {
@@ -675,7 +676,7 @@ export class CommunityValidationService {
         throw error;
       }
 
-      data?.forEach(workflow => {
+      data?.forEach((workflow: any) => {
         this.workflows.set(workflow.content_type, this.mapDatabaseToWorkflow(workflow));
       });
     } catch (error) {
@@ -696,13 +697,13 @@ export class CommunityValidationService {
     elderReviewRequired: boolean
   ): Promise<CommunityValidator[]> {
     const suitableValidators: CommunityValidator[] = [];
-    
+
     for (const validator of this.validators.values()) {
       if (validator.communityAffiliation === communityId || validator.communityAffiliation === 'all') {
-        const hasRequiredExpertise = requiredExpertise.some(expertise => 
+        const hasRequiredExpertise = requiredExpertise.some(expertise =>
           validator.expertise.includes(expertise)
         );
-        
+
         if (hasRequiredExpertise) {
           suitableValidators.push(validator);
         }
@@ -711,11 +712,11 @@ export class CommunityValidationService {
 
     // Ensure elder is included if required
     if (elderReviewRequired) {
-      const elders = suitableValidators.filter(v => v.role === 'elder');
+      const elders = suitableValidators.filter((v: CommunityValidator) => v.role === 'elder');
       if (elders.length === 0) {
         // Find any available elder
         const availableElders = Array.from(this.validators.values())
-          .filter(v => v.role === 'elder' && v.isActive);
+          .filter((v: CommunityValidator) => v.role === 'elder' && v.isActive);
         if (availableElders.length > 0) {
           suitableValidators.push(availableElders[0]);
         }
@@ -752,14 +753,14 @@ export class CommunityValidationService {
       return { reached: false, score: 0 };
     }
 
-    const scores = validations.map(v => v.validationScore);
-    const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    const variance = scores.reduce((sum, score) => sum + Math.pow(score - averageScore, 2), 0) / scores.length;
+    const scores = validations.map((v: CommunityValidation) => v.validationScore);
+    const averageScore = scores.reduce((sum: number, score: number) => sum + score, 0) / scores.length;
+    const variance = scores.reduce((sum: number, score: number) => sum + Math.pow(score - averageScore, 2), 0) / scores.length;
     const standardDeviation = Math.sqrt(variance);
-    
+
     // Consensus reached if standard deviation is below threshold
     const consensusReached = standardDeviation <= (1 - threshold);
-    
+
     return { reached: consensusReached, score: averageScore };
   }
 
@@ -774,17 +775,17 @@ export class CommunityValidationService {
 
     for (const validation of validations) {
       let weight = 1;
-      
+
       // Give more weight to elders and experts
       if (validation.validatorRole === 'elder') {
         weight = 1.5;
       } else if (validation.validatorRole === 'community_expert') {
         weight = 1.3;
       }
-      
+
       // Adjust for confidence level
       weight *= validation.confidenceLevel;
-      
+
       weightedSum += validation.validationScore * weight;
       totalWeight += weight;
     }
@@ -797,9 +798,9 @@ export class CommunityValidationService {
       return 0;
     }
 
-    const averageConfidence = validations.reduce((sum, v) => sum + v.confidenceLevel, 0) / validations.length;
+    const averageConfidence = validations.reduce((sum: number, v: CommunityValidation) => sum + v.confidenceLevel, 0) / validations.length;
     const consensusBonus = consensusReached ? 0.1 : 0;
-    
+
     return Math.min(averageConfidence + consensusBonus, 1);
   }
 
@@ -831,10 +832,10 @@ export class CommunityValidationService {
   }
 
   private calculateAverageCompletionTime(requests: ValidationRequest[]): number {
-    const completedRequests = requests.filter(r => r.completedAt);
+    const completedRequests = requests.filter((r: ValidationRequest) => r.completedAt);
     if (completedRequests.length === 0) return 0;
 
-    const totalTime = completedRequests.reduce((sum, r) => {
+    const totalTime = completedRequests.reduce((sum: number, r: ValidationRequest) => {
       const completionTime = r.completedAt!.getTime() - r.submittedAt.getTime();
       return sum + (completionTime / (1000 * 60 * 60)); // Convert to hours
     }, 0);
@@ -843,65 +844,65 @@ export class CommunityValidationService {
   }
 
   private calculateAverageConfidence(requests: ValidationRequest[]): number {
-    const completedRequests = requests.filter(r => r.status === 'validated');
+    const completedRequests = requests.filter((r: ValidationRequest) => r.status === 'validated');
     if (completedRequests.length === 0) return 0;
 
-    return completedRequests.reduce((sum, r) => sum + r.confidence, 0) / completedRequests.length;
+    return completedRequests.reduce((sum: number, r: ValidationRequest) => sum + r.confidence, 0) / completedRequests.length;
   }
 
   private calculateValidatorParticipation(requests: ValidationRequest[]): { [validatorId: string]: number } {
     const participation: { [validatorId: string]: number } = {};
-    
+
     for (const request of requests) {
       for (const validation of request.validations) {
         participation[validation.validatorId] = (participation[validation.validatorId] || 0) + 1;
       }
     }
-    
+
     return participation;
   }
 
   private calculateContentTypeBreakdown(requests: ValidationRequest[]): { [contentType: string]: number } {
     const breakdown: { [contentType: string]: number } = {};
-    
+
     for (const request of requests) {
       breakdown[request.contentType] = (breakdown[request.contentType] || 0) + 1;
     }
-    
+
     return breakdown;
   }
 
   private calculateCulturalComplianceScore(requests: ValidationRequest[]): number {
-    const culturallyReviewedRequests = requests.filter(r => 
-      r.validations.some(v => v.validatorRole === 'elder' || v.culturalAffiliation)
+    const culturallyReviewedRequests = requests.filter((r: ValidationRequest) =>
+      r.validations.some((v: CommunityValidation) => v.validatorRole === 'elder' || v.culturalAffiliation)
     );
-    
+
     if (culturallyReviewedRequests.length === 0) return 0;
-    
-    const averageCulturalScore = culturallyReviewedRequests.reduce((sum, r) => {
+
+    const averageCulturalScore = culturallyReviewedRequests.reduce((sum: number, r: ValidationRequest) => {
       const culturalScores = r.validations
-        .filter(v => v.validatorRole === 'elder' || v.culturalAffiliation)
-        .map(v => v.culturalAppropriateness);
-      
-      const avgScore = culturalScores.length > 0 
-        ? culturalScores.reduce((s, score) => s + score, 0) / culturalScores.length 
+        .filter((v: CommunityValidation) => v.validatorRole === 'elder' || v.culturalAffiliation)
+        .map((v: CommunityValidation) => v.culturalAppropriateness);
+
+      const avgScore = culturalScores.length > 0
+        ? culturalScores.reduce((s: number, score: number) => s + score, 0) / culturalScores.length
         : 0;
-      
+
       return sum + avgScore;
     }, 0);
-    
+
     return (averageCulturalScore / culturallyReviewedRequests.length) * 20; // Convert to 0-100 scale
   }
 
   private countModelImprovementSuggestions(requests: ValidationRequest[]): number {
-    return requests.reduce((count, r) => 
-      count + r.feedback.filter(f => f.feedbackType === 'model_improvement').length, 0
+    return requests.reduce((count: number, r: ValidationRequest) =>
+      count + r.feedback.filter((f: ValidationFeedback) => f.feedbackType === 'model_improvement').length, 0
     );
   }
 
   private countImplementedImprovements(requests: ValidationRequest[]): number {
-    return requests.reduce((count, r) => 
-      count + r.feedback.filter(f => f.implementationStatus === 'implemented').length, 0
+    return requests.reduce((count: number, r: ValidationRequest) =>
+      count + r.feedback.filter((f: ValidationFeedback) => f.implementationStatus === 'implemented').length, 0
     );
   }
 
@@ -930,7 +931,8 @@ export class CommunityValidationService {
       sourceAttribution: data.source_attribution || [],
       feedback: data.feedback || [],
       revisions: data.revisions || [],
-      completedAt: data.completed_at ? new Date(data.completed_at) : undefined
+      completedAt: data.completed_at ? new Date(data.completed_at) : undefined,
+      updatedAt: data.updated_at ? new Date(data.updated_at) : undefined
     };
   }
 

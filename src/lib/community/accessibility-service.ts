@@ -103,19 +103,19 @@ export class AccessibilityService {
     try {
       // Apply system preferences
       await this.applySystemPreferences();
-      
+
       // Set up keyboard navigation
       this.setupKeyboardNavigation();
-      
+
       // Initialize screen reader support
       this.initializeScreenReaderSupport();
-      
+
       // Set up focus management
       this.setupFocusManagement();
-      
+
       // Apply cultural accessibility
       await this.loadCulturalAccessibilityGuides();
-      
+
       console.log('Accessibility service initialized');
     } catch (error) {
       console.error('Error initializing accessibility service:', error);
@@ -166,7 +166,7 @@ export class AccessibilityService {
 
         this.preferences.set(userId, preferences);
         await this.applyUserPreferences(preferences);
-        
+
         return preferences;
       }
 
@@ -209,7 +209,7 @@ export class AccessibilityService {
 
       this.preferences.set(preferences.userId, preferences);
       await this.applyUserPreferences(preferences);
-      
+
       console.log('User accessibility preferences saved');
     } catch (error) {
       console.error('Error saving user preferences:', error);
@@ -389,7 +389,7 @@ export class AccessibilityService {
   private handleEscapeKey(): void {
     // Close any open modals or dialogs
     const openModals = document.querySelectorAll('[role="dialog"][aria-hidden="false"]');
-    openModals.forEach(modal => {
+    openModals.forEach((modal: any) => {
       const closeButton = modal.querySelector('[data-dismiss="modal"]') as HTMLElement;
       if (closeButton) {
         closeButton.click();
@@ -398,7 +398,7 @@ export class AccessibilityService {
 
     // Close any open dropdowns
     const openDropdowns = document.querySelectorAll('[aria-expanded="true"]');
-    openDropdowns.forEach(dropdown => {
+    openDropdowns.forEach((dropdown: any) => {
       dropdown.setAttribute('aria-expanded', 'false');
     });
   }
@@ -408,7 +408,7 @@ export class AccessibilityService {
    */
   private handleArrowKeyNavigation(event: KeyboardEvent): void {
     const target = event.target as HTMLElement;
-    
+
     // Handle navigation in lists
     if (target.closest('[role="listbox"], [role="menu"], [role="tablist"]')) {
       event.preventDefault();
@@ -548,9 +548,9 @@ export class AccessibilityService {
   private enhanceFormAccessibility(): void {
     // Add proper labels and descriptions to form elements
     const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
+    forms.forEach((form: any) => {
       const inputs = form.querySelectorAll('input, select, textarea');
-      inputs.forEach(input => {
+      inputs.forEach((input: any) => {
         this.enhanceFormElement(input as HTMLElement);
       });
     });
@@ -561,7 +561,7 @@ export class AccessibilityService {
    */
   private enhanceFormElement(element: HTMLElement): void {
     const input = element as HTMLInputElement;
-    
+
     // Ensure proper labeling
     if (!input.getAttribute('aria-label') && !input.getAttribute('aria-labelledby')) {
       const label = document.querySelector(`label[for="${input.id}"]`);
@@ -636,7 +636,7 @@ export class AccessibilityService {
         isAnnouncing = true;
         const message = announcementQueue.shift()!;
         this.announceToScreenReader(message, 'polite');
-        
+
         setTimeout(() => {
           isAnnouncing = false;
           processQueue();
@@ -659,13 +659,13 @@ export class AccessibilityService {
    * Announce message to screen reader
    */
   public announceToScreenReader(message: string, priority: 'polite' | 'assertive' | 'status' = 'polite'): void {
-    const regionId = priority === 'assertive' ? 'assertive-live-region' : 
-                    priority === 'status' ? 'status-live-region' : 'polite-live-region';
-    
+    const regionId = priority === 'assertive' ? 'assertive-live-region' :
+      priority === 'status' ? 'status-live-region' : 'polite-live-region';
+
     const region = document.getElementById(regionId);
     if (region) {
       region.textContent = message;
-      
+
       // Clear after announcement
       setTimeout(() => {
         region.textContent = '';
@@ -698,7 +698,7 @@ export class AccessibilityService {
     const focusableElements = container.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
-    
+
     const firstElement = focusableElements[0] as HTMLElement;
     const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
 
@@ -749,7 +749,7 @@ export class AccessibilityService {
       }
 
       if (data) {
-        data.forEach(guide => {
+        data.forEach((guide: any) => {
           this.culturalGuides.set(guide.community_id, {
             id: guide.id,
             communityId: guide.community_id,
@@ -819,11 +819,11 @@ export class AccessibilityService {
    */
   public getAudioDescriptions(contentId: string, language?: string): AudioDescription[] {
     const descriptions = this.audioDescriptions.get(contentId) || [];
-    
+
     if (language) {
-      return descriptions.filter(desc => desc.language === language);
+      return descriptions.filter((desc: AudioDescription) => desc.language === language);
     }
-    
+
     return descriptions;
   }
 
@@ -890,10 +890,10 @@ export class AccessibilityService {
    */
   private checkColorContrast(element: HTMLElement): AccessibilityIssue[] {
     const issues: AccessibilityIssue[] = [];
-    
+
     // This would implement actual color contrast checking
     // For now, return placeholder issues
-    
+
     return issues;
   }
 
@@ -902,10 +902,10 @@ export class AccessibilityService {
    */
   private checkKeyboardNavigation(element: HTMLElement): AccessibilityIssue[] {
     const issues: AccessibilityIssue[] = [];
-    
+
     // Check for focusable elements without proper tabindex
     const focusableElements = element.querySelectorAll('button, a, input, select, textarea');
-    focusableElements.forEach((el, index) => {
+    focusableElements.forEach((el: any, index: number) => {
       if (!el.hasAttribute('tabindex') && el.getAttribute('tabindex') !== '0') {
         // Check if element should be focusable
         if (el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'INPUT') {
@@ -923,7 +923,7 @@ export class AccessibilityService {
         }
       }
     });
-    
+
     return issues;
   }
 
@@ -932,15 +932,15 @@ export class AccessibilityService {
    */
   private checkScreenReaderSupport(element: HTMLElement): AccessibilityIssue[] {
     const issues: AccessibilityIssue[] = [];
-    
+
     // Check for missing ARIA labels
     const interactiveElements = element.querySelectorAll('button, a, input, select, textarea');
-    interactiveElements.forEach((el, index) => {
-      const hasLabel = el.hasAttribute('aria-label') || 
-                      el.hasAttribute('aria-labelledby') ||
-                      el.querySelector('label') ||
-                      el.textContent?.trim();
-      
+    interactiveElements.forEach((el: any, index: number) => {
+      const hasLabel = el.hasAttribute('aria-label') ||
+        el.hasAttribute('aria-labelledby') ||
+        el.querySelector('label') ||
+        el.textContent?.trim();
+
       if (!hasLabel) {
         issues.push({
           id: `screen-reader-${index}`,
@@ -953,7 +953,7 @@ export class AccessibilityService {
         });
       }
     });
-    
+
     return issues;
   }
 
@@ -962,15 +962,15 @@ export class AccessibilityService {
    */
   private checkFocusManagement(element: HTMLElement): AccessibilityIssue[] {
     const issues: AccessibilityIssue[] = [];
-    
+
     // Check for focus indicators
     const focusableElements = element.querySelectorAll('button, a, input, select, textarea');
-    focusableElements.forEach((el, index) => {
+    focusableElements.forEach((el: any, index: number) => {
       const computedStyle = window.getComputedStyle(el, ':focus');
-      const hasVisibleFocus = computedStyle.outline !== 'none' || 
-                             computedStyle.boxShadow !== 'none' ||
-                             computedStyle.border !== computedStyle.getPropertyValue('border');
-      
+      const hasVisibleFocus = computedStyle.outline !== 'none' ||
+        computedStyle.boxShadow !== 'none' ||
+        computedStyle.border !== computedStyle.getPropertyValue('border');
+
       if (!hasVisibleFocus) {
         issues.push({
           id: `focus-${index}`,
@@ -983,7 +983,7 @@ export class AccessibilityService {
         });
       }
     });
-    
+
     return issues;
   }
 
@@ -992,12 +992,12 @@ export class AccessibilityService {
    */
   private checkSemanticMarkup(element: HTMLElement): AccessibilityIssue[] {
     const issues: AccessibilityIssue[] = [];
-    
+
     // Check for proper heading hierarchy
     const headings = element.querySelectorAll('h1, h2, h3, h4, h5, h6');
     let lastLevel = 0;
-    
-    headings.forEach((heading, index) => {
+
+    headings.forEach((heading: any, index: number) => {
       const level = parseInt(heading.tagName.charAt(1));
       if (level > lastLevel + 1) {
         issues.push({
@@ -1012,7 +1012,7 @@ export class AccessibilityService {
       }
       lastLevel = level;
     });
-    
+
     return issues;
   }
 
@@ -1021,8 +1021,8 @@ export class AccessibilityService {
    */
   private calculateAccessibilityScore(issues: AccessibilityIssue[]): number {
     let score = 100;
-    
-    issues.forEach(issue => {
+
+    issues.forEach((issue: AccessibilityIssue) => {
       switch (issue.severity) {
         case 'critical':
           score -= 20;
@@ -1038,7 +1038,7 @@ export class AccessibilityService {
           break;
       }
     });
-    
+
     return Math.max(0, score);
   }
 
@@ -1047,16 +1047,16 @@ export class AccessibilityService {
    */
   private generateRecommendations(issues: AccessibilityIssue[]): string[] {
     const recommendations: string[] = [];
-    
+
     // Group issues by type
-    const issuesByType = issues.reduce((acc, issue) => {
+    const issuesByType = issues.reduce((acc: { [key: string]: AccessibilityIssue[] }, issue: AccessibilityIssue) => {
       if (!acc[issue.type]) {
         acc[issue.type] = [];
       }
       acc[issue.type].push(issue);
       return acc;
     }, {} as { [key: string]: AccessibilityIssue[] });
-    
+
     // Generate type-specific recommendations
     Object.entries(issuesByType).forEach(([type, typeIssues]) => {
       switch (type) {
@@ -1077,7 +1077,7 @@ export class AccessibilityService {
           break;
       }
     });
-    
+
     return recommendations;
   }
 
@@ -1126,7 +1126,7 @@ export class AccessibilityService {
   public hasAccessibilityNeed(userId: string, need: keyof AccessibilityPreferences): boolean {
     const preferences = this.preferences.get(userId);
     if (!preferences) return false;
-    
+
     return Boolean(preferences[need]);
   }
 }

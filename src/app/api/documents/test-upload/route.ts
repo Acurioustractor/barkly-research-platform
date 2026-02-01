@@ -53,7 +53,9 @@ export async function POST(request: NextRequest) {
 
           extractedText = pdfData.text || '';
           pageCount = pdfData.numpages || 1;
-          wordCount = extractedText.split(/\s+/).filter(w => w.length > 0).length;
+          if (extractedText.trim()) {
+            wordCount = extractedText.trim().split(/\s+/).filter((w: string) => w.length > 0).length;
+          }
           extractionSuccess = true;
 
           console.log(`[test-upload] Extracted ${wordCount} words from ${pageCount} pages`);
@@ -95,21 +97,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const successful = results.filter(r => r.status === 'COMPLETED').length;
-    const failed = results.filter(r => r.status === 'FAILED').length;
+    const successCount = results.filter((r: any) => r.status === 'COMPLETED').length;
+    const failureCount = results.filter((r: any) => r.status === 'FAILED').length;
 
-    console.log(`[test-upload] Summary: ${successful} successful, ${failed} failed`);
+    console.log(`[test-upload] Summary: ${successCount} successful, ${failureCount} failed`);
 
     return NextResponse.json({
       success: true,
+      results,
       summary: {
-        totalFiles: files.length,
-        successful,
-        failed,
+        successful: successCount,
+        failed: failureCount,
+        totalFiles: results.length,
         note: 'This is a test upload - files are processed but not stored in database'
       },
-      results,
-      message: `Processed ${successful} of ${files.length} files successfully (test mode - no database storage)`
+      message: `Processed ${successCount} of ${results.length} files`
     });
 
   } catch (error) {

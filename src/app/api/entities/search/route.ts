@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
 
       // Execute all searches in parallel
       const searchResults = await Promise.all(
-        searchQueries.map(async (searchQuery) => {
+        searchQueries.map(async (searchQuery: { where: any, priority: number }) => {
           const results = await prisma!.documentEntity.findMany({
             where: searchQuery.where,
             orderBy: { confidence: 'desc' },
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       const allResults = searchResults.flat();
       const uniqueResults = new Map();
 
-      allResults.forEach(entity => {
+      allResults.forEach((entity: any) => {
         const key = entity.id;
         if (!uniqueResults.has(key) || uniqueResults.get(key).relevanceScore < entity.relevanceScore) {
           uniqueResults.set(key, entity);
@@ -274,7 +274,7 @@ function calculateSemanticRelevance(entity: any, query: string, keywords: string
   }
 
   // Keyword matches
-  keywords.forEach(keyword => {
+  keywords.forEach((keyword: string) => {
     if (nameLower.includes(keyword)) {
       score += 0.1;
     }
@@ -294,7 +294,7 @@ function extractKeywords(query: string): string[] {
   const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should']);
 
   return words
-    .filter((word: any) => word.length > 2 && !stopWords.has(word))
+    .filter((word: string) => word.length > 2 && !stopWords.has(word))
     .slice(0, 5); // Limit to top 5 keywords
 }
 

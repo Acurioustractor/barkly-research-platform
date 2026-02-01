@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     switch (action) {
       case 'report':
         const report = await getWorkshopIntelligenceReport(eventId);
-        
+
         if (!report) {
           return NextResponse.json(
             { success: false, error: 'Intelligence report not found. Process workshop first.' },
@@ -53,13 +53,14 @@ export async function GET(request: NextRequest) {
           hasReport: !!existingReport,
           totalInsights: allInsights.length,
           insightsByType: {
-            community_need: allInsights.filter(i => i.insightType === 'community_need').length,
-            service_gap: allInsights.filter(i => i.insightType === 'service_gap').length,
-            success_pattern: allInsights.filter(i => i.insightType === 'success_pattern').length,
-            cultural_knowledge: allInsights.filter(i => i.insightType === 'cultural_knowledge').length,
-            action_item: allInsights.filter(i => i.insightType === 'action_item').length
+            community_need: allInsights.filter((i: any) => i.insightType === 'community_need').length,
+            service_gap: allInsights.filter((i: any) => i.insightType === 'service_gap').length,
+            success_pattern: allInsights.filter((i: any) => i.insightType === 'success_pattern').length,
+            cultural_knowledge: allInsights.filter((i: any) => i.insightType === 'cultural_knowledge').length,
+            action_item: allInsights.filter((i: any) => i.insightType === 'action_item').length
           },
-          highPriorityInsights: allInsights.filter(i => i.priority === 'high' || i.priority === 'critical').length,
+          highPriorityInsights: allInsights.filter((i: any) => i.priority === 'high' || i.priority === 'critical').length,
+          criticalThemes: [],
           lastProcessed: existingReport?.generatedAt || null
         };
 

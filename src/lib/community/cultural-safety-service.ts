@@ -461,7 +461,7 @@ export async function getCulturalProtocols(
       throw new Error(`Failed to fetch cultural protocols: ${error.message}`);
     }
 
-    return data?.map(protocol => ({
+    return data?.map((protocol: any) => ({
       id: protocol.id,
       protocolName: protocol.protocol_name,
       protocolType: protocol.protocol_type,
@@ -592,12 +592,12 @@ export async function getCulturalSafetyStats(
 
     if (reviews && reviews.length > 0) {
       // Calculate stats
-      stats.reviewsByLevel = reviews.reduce((acc, review) => {
+      stats.reviewsByLevel = reviews.reduce((acc: Record<string, number>, review: any) => {
         acc[review.cultural_safety_level] = (acc[review.cultural_safety_level] || 0) + 1;
         return acc;
       }, {});
 
-      stats.reviewsByStatus = reviews.reduce((acc, review) => {
+      stats.reviewsByStatus = reviews.reduce((acc: Record<string, number>, review: any) => {
         acc[review.status] = (acc[review.status] || 0) + 1;
         return acc;
       }, {});
@@ -608,7 +608,7 @@ export async function getCulturalSafetyStats(
       // Calculate average review time for completed reviews
       const completedReviews = reviews.filter((r: any) => r.reviewed_at);
       if (completedReviews.length > 0) {
-        const totalTime = completedReviews.reduce((sum, review) => {
+        const totalTime = completedReviews.reduce((sum: number, review: any) => {
           const created = new Date(review.created_at);
           const reviewed = new Date(review.reviewed_at);
           return sum + (reviewed.getTime() - created.getTime());

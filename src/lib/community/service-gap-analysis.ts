@@ -254,7 +254,7 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
   ): Promise<ServiceGapAnalysisResult> {
     try {
       const allAnalyses = await Promise.all(
-        documents.map(doc =>
+        documents.map((doc: any) =>
           this.analyzeDocumentForServiceGaps(doc.content, doc.context, doc.communityContext)
         )
       );
@@ -350,7 +350,7 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
     const priorityRecommendations = this.generatePriorityRecommendations(gaps);
 
     // Generate summary
-    const serviceTypeCount = gaps.reduce((acc, gap) => {
+    const serviceTypeCount = gaps.reduce((acc: Record<string, number>, gap: ServiceGap) => {
       acc[gap.serviceType] = (acc[gap.serviceType] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -360,7 +360,7 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    const locationCount = gaps.reduce((acc, gap) => {
+    const locationCount = gaps.reduce((acc: Record<string, number>, gap: ServiceGap) => {
       acc[gap.location] = (acc[gap.location] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -371,7 +371,7 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
       .map(([location]) => location);
 
     const averageImpact = gaps.length > 0
-      ? gaps.reduce((sum, gap) => sum + gap.impact, 0) / gaps.length
+      ? gaps.reduce((sum: number, gap: ServiceGap) => sum + gap.impact, 0) / gaps.length
       : 0;
 
     const summary = {
@@ -398,8 +398,8 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
    * Generate priority recommendations based on gaps
    */
   private generatePriorityRecommendations(gaps: ServiceGap[]) {
-    const allRecommendations = gaps.flatMap(gap =>
-      gap.recommendations.map(rec => ({
+    const allRecommendations = gaps.flatMap((gap: ServiceGap) =>
+      gap.recommendations.map((rec: any) => ({
         ...rec,
         gapService: gap.service,
         gapImpact: gap.impact,
@@ -409,7 +409,7 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
 
     // Group similar recommendations
     const groupedRecs = new Map<string, any[]>();
-    allRecommendations.forEach(rec => {
+    allRecommendations.forEach((rec: any) => {
       const key = rec.solution.toLowerCase();
       if (!groupedRecs.has(key)) {
         groupedRecs.set(key, []);
@@ -419,11 +419,11 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
 
     // Calculate priority scores
     const priorityRecommendations = Array.from(groupedRecs.entries()).map(([solution, recs]) => {
-      const totalImpact = recs.reduce((sum, rec) => sum + rec.gapImpact, 0);
-      const averageFeasibility = recs.reduce((sum, rec) => sum + rec.feasibility, 0) / recs.length;
-      const averagePriority = recs.reduce((sum, rec) => sum + rec.priority, 0) / recs.length;
+      const totalImpact = recs.reduce((sum: number, rec: any) => sum + rec.gapImpact, 0);
+      const averageFeasibility = recs.reduce((sum: number, rec: any) => sum + rec.feasibility, 0) / recs.length;
+      const averagePriority = recs.reduce((sum: number, rec: any) => sum + rec.priority, 0) / recs.length;
 
-      const urgencyScore = recs.reduce((sum, rec) => {
+      const urgencyScore = recs.reduce((sum: number, rec: any) => {
         const urgencyValues = { low: 1, medium: 2, high: 3, critical: 4 };
         return sum + (urgencyValues[rec.gapUrgency as keyof typeof urgencyValues] || 2);
       }, 0) / recs.length;
@@ -433,7 +433,7 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
 
       return {
         recommendation: solution,
-        addressedGaps: recs.map(rec => rec.gapService),
+        addressedGaps: recs.map((rec: any) => rec.gapService),
         totalImpact,
         feasibilityScore: Math.round(averageFeasibility * 10) / 10,
         urgencyScore: Math.round(urgencyScore * 10) / 10,
@@ -468,21 +468,21 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
 
     // Recreate categorizations
     const gapsByType = {
-      missing: uniqueGaps.filter(g => g.gapType === 'missing'),
-      inadequate: uniqueGaps.filter(g => g.gapType === 'inadequate'),
-      inaccessible: uniqueGaps.filter(g => g.gapType === 'inaccessible'),
-      culturally_inappropriate: uniqueGaps.filter(g => g.gapType === 'culturally_inappropriate'),
-      under_resourced: uniqueGaps.filter(g => g.gapType === 'under_resourced')
+      missing: uniqueGaps.filter((g: ServiceGap) => g.gapType === 'missing'),
+      inadequate: uniqueGaps.filter((g: ServiceGap) => g.gapType === 'inadequate'),
+      inaccessible: uniqueGaps.filter((g: ServiceGap) => g.gapType === 'inaccessible'),
+      culturally_inappropriate: uniqueGaps.filter((g: ServiceGap) => g.gapType === 'culturally_inappropriate'),
+      under_resourced: uniqueGaps.filter((g: ServiceGap) => g.gapType === 'under_resourced')
     };
 
     const gapsByUrgency = {
-      critical: uniqueGaps.filter(g => g.urgency === 'critical'),
-      high: uniqueGaps.filter(g => g.urgency === 'high'),
-      medium: uniqueGaps.filter(g => g.urgency === 'medium'),
-      low: uniqueGaps.filter(g => g.urgency === 'low')
+      critical: uniqueGaps.filter((g: ServiceGap) => g.urgency === 'critical'),
+      high: uniqueGaps.filter((g: ServiceGap) => g.urgency === 'high'),
+      medium: uniqueGaps.filter((g: ServiceGap) => g.urgency === 'medium'),
+      low: uniqueGaps.filter((g: ServiceGap) => g.urgency === 'low')
     };
 
-    const gapsByLocation = uniqueGaps.reduce((acc, gap) => {
+    const gapsByLocation = uniqueGaps.reduce((acc: Record<string, ServiceGap[]>, gap: ServiceGap) => {
       if (!acc[gap.location]) {
         acc[gap.location] = [];
       }
@@ -494,7 +494,7 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
     const priorityRecommendations = this.generatePriorityRecommendations(uniqueGaps);
 
     // Generate combined summary
-    const serviceTypeCount = uniqueGaps.reduce((acc, gap) => {
+    const serviceTypeCount = uniqueGaps.reduce((acc: Record<string, number>, gap: ServiceGap) => {
       acc[gap.serviceType] = (acc[gap.serviceType] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -504,7 +504,7 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    const locationCount = uniqueGaps.reduce((acc, gap) => {
+    const locationCount = uniqueGaps.reduce((acc: Record<string, number>, gap: ServiceGap) => {
       acc[gap.location] = (acc[gap.location] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -515,7 +515,7 @@ Extract 3-8 key service gaps with comprehensive analysis for each.`;
       .map(([location]) => location);
 
     const averageImpact = uniqueGaps.length > 0
-      ? uniqueGaps.reduce((sum, gap) => sum + gap.impact, 0) / uniqueGaps.length
+      ? uniqueGaps.reduce((sum: number, gap: ServiceGap) => sum + gap.impact, 0) / uniqueGaps.length
       : 0;
 
     const summary = {

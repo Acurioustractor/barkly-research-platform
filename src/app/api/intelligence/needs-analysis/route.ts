@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
 
     // Prepare documents for analysis
     const documentsForAnalysis = await Promise.all(
-      (documents as any[]).map(async (doc) => {
+      (documents as any[]).map(async (doc: any) => {
         let communityContext = '';
         if (doc.community_id) {
           try {
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
     let filteredResult = result;
 
     if (category || urgency) {
-      const filteredNeeds = result.needs.filter(need => {
+      const filteredNeeds = result.needs.filter((need: any) => {
         if (category && need.category !== category) return false;
         if (urgency && need.urgency !== urgency) return false;
         return true;
@@ -137,15 +137,15 @@ export async function GET(request: NextRequest) {
         ...result,
         needs: filteredNeeds,
         needsHierarchy: {
-          critical: filteredNeeds.filter(n => n.urgency === 'critical'),
-          high: filteredNeeds.filter(n => n.urgency === 'high'),
-          medium: filteredNeeds.filter(n => n.urgency === 'medium'),
-          low: filteredNeeds.filter(n => n.urgency === 'low')
+          critical: filteredNeeds.filter((n: any) => n.urgency === 'critical'),
+          high: filteredNeeds.filter((n: any) => n.urgency === 'high'),
+          medium: filteredNeeds.filter((n: any) => n.urgency === 'medium'),
+          low: filteredNeeds.filter((n: any) => n.urgency === 'low')
         },
         summary: {
           ...result.summary,
           totalNeeds: filteredNeeds.length,
-          criticalNeeds: filteredNeeds.filter(n => n.urgency === 'critical').length
+          criticalNeeds: filteredNeeds.filter((n: any) => n.urgency === 'critical').length
         }
       };
     }
@@ -187,7 +187,7 @@ async function getDocumentsContent(documentIds: string[]) {
     `;
 
     return Promise.all(
-      documents.map(async (doc) => {
+      documents.map(async (doc: any) => {
         let communityContext = '';
         if (doc.community_id) {
           try {

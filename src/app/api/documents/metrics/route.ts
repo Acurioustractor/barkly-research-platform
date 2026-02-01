@@ -5,9 +5,9 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const days = parseInt(searchParams.get('days') || '30')
-    
+
     const supabase = await createClient()
-    
+
     // Get basic document metrics
     const { data: documents, error } = await supabase
       .from('documents')
@@ -25,10 +25,10 @@ export async function GET(request: Request) {
       totalDocuments: documents?.length || 0,
       totalThemes: 0, // Placeholder - would need themes table
       totalQuotes: 0, // Placeholder - would need quotes table
-      processingStatus: {
-        completed: documents?.filter(d => d.status === 'completed').length || 0,
-        processing: documents?.filter(d => d.status === 'processing').length || 0,
-        failed: documents?.filter(d => d.status === 'failed').length || 0,
+      statusDistribution: {
+        completed: documents?.filter((d: any) => d.status === 'completed').length || 0,
+        processing: documents?.filter((d: any) => d.status === 'processing').length || 0,
+        failed: documents?.filter((d: any) => d.status === 'failed').length || 0,
       }
     }
 

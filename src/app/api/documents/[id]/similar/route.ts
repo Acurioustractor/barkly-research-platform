@@ -70,7 +70,7 @@ export async function GET(
 
     // Get additional details for similar documents
     const detailedResults = await Promise.all(
-      similarDocs.map(async (doc) => {
+      similarDocs.map(async (doc: any) => {
         const details = await prisma.document.findUnique({
           where: { id: doc.documentId },
           select: {
@@ -109,9 +109,9 @@ export async function GET(
 
   } catch (error) {
     console.error('Find similar documents error:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to find similar documents',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

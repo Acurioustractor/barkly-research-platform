@@ -80,13 +80,13 @@ class CommunityPreviewService {
     try {
       // Validate cultural protocols
       await this.validateCulturalProtocols(sessionData.community_id, sessionData.cultural_protocols);
-      
+
       // Prepare data subset for preview
       const dataSubset = await this.prepareDataSubset(
         sessionData.community_id,
         sessionData.data_subset.feature_areas
       );
-      
+
       const { data, error } = await supabase
         .from('preview_sessions')
         .insert({
@@ -99,12 +99,12 @@ class CommunityPreviewService {
         })
         .select()
         .single();
-      
+
       if (error) throw error;
-      
+
       // Schedule notifications for participants
       await this.scheduleParticipantNotifications(data.id);
-      
+
       return data;
     } catch (error) {
       console.error('Error creating preview session:', error);
@@ -119,7 +119,7 @@ class CommunityPreviewService {
         feature_areas: featureAreas,
         intelligence_samples: []
       };
-      
+
       // Get representative stories (anonymized)
       const { data: stories } = await supabase
         .from('documents')
@@ -128,12 +128,12 @@ class CommunityPreviewService {
         .eq('status', 'approved')
         .eq('cultural_sensitivity', 'low') // Only low sensitivity for preview
         .limit(10);
-      
+
       if (stories) {
-        dataSubset.story_ids = stories.map(s => s.id);
-        
+        dataSubset.story_ids = stories.map((s: any) => s.id);
+
         // Anonymize story content for preview
-        dataSubset.anonymized_stories = stories.map(story => ({
+        dataSubset.anonymized_stories = stories.map((story: any) => ({
           id: story.id,
           title: this.anonymizeText(story.title),
           content: this.anonymizeText(story.content),
@@ -141,7 +141,7 @@ class CommunityPreviewService {
           created_at: story.created_at
         }));
       }
-      
+
       // Get sample intelligence insights
       if (featureAreas.includes('community_health')) {
         const healthData = await this.getHealthIndicatorSamples(communityId);
@@ -150,7 +150,7 @@ class CommunityPreviewService {
           data: healthData
         });
       }
-      
+
       if (featureAreas.includes('service_gaps')) {
         const gapData = await this.getServiceGapSamples(communityId);
         dataSubset.intelligence_samples.push({
@@ -158,7 +158,7 @@ class CommunityPreviewService {
           data: gapData
         });
       }
-      
+
       if (featureAreas.includes('success_patterns')) {
         const patternData = await this.getSuccessPatternSamples(communityId);
         dataSubset.intelligence_samples.push({
@@ -166,7 +166,7 @@ class CommunityPreviewService {
           data: patternData
         });
       }
-      
+
       return dataSubset;
     } catch (error) {
       console.error('Error preparing data subset:', error);
@@ -189,14 +189,14 @@ class CommunityPreviewService {
       .select('*')
       .eq('community_id', communityId)
       .eq('protocol_type', 'preview_sessions');
-    
+
     if (communityProtocols && communityProtocols.length > 0) {
       const required = communityProtocols[0].requirements;
-      
+
       if (required.elder_presence_required && !protocols.elder_presence_required) {
         throw new Error('Elder presence is required for preview sessions in this community');
       }
-      
+
       if (required.traditional_opening && !protocols.traditional_opening) {
         throw new Error('Traditional opening is required for preview sessions in this community');
       }
@@ -209,7 +209,7 @@ class CommunityPreviewService {
       .select('*')
       .eq('community_id', communityId)
       .limit(5);
-    
+
     return data || [];
   }
 
@@ -220,7 +220,7 @@ class CommunityPreviewService {
       .eq('community_id', communityId)
       .eq('severity', 'high')
       .limit(3);
-    
+
     return data || [];
   }
 
@@ -231,7 +231,7 @@ class CommunityPreviewService {
       .eq('community_id', communityId)
       .eq('replication_potential', 'high')
       .limit(3);
-    
+
     return data || [];
   }
 
@@ -244,12 +244,12 @@ class CommunityPreviewService {
     try {
       // Validate feedback content for cultural appropriateness
       if (feedback.comments) {
-        const culturalCheck = await analyzeCulturalSafety(feedback.comments);
-        if (!culturalCheck.isAppropriate) {
+        const culturalCheck = await analyzeCulturalSafety(feedback.comments, 'feedback');
+        if (culturalCheck.safetyLevel === 'sacred' || culturalCheck.safetyLevel === 'restricted') {
           throw new Error('Feedback contains culturally inappropriate content');
         }
       }
-      
+
       const { data, error } = await supabase
         .from('preview_feedback')
         .insert({
@@ -258,12 +258,12 @@ class CommunityPreviewService {
         })
         .select()
         .single();
-      
+
       if (error) throw error;
-      
+
       // Trigger feedback analysis update
       await this.updateFeedbackAnalysis(feedback.session_id);
-      
+
       return data;
     } catch (error) {
       console.error('Error submitting preview feedback:', error);
@@ -281,14 +281,14 @@ class CommunityPreviewService {
         })
         .select()
         .single();
-      
+
       if (error) throw error;
-      
+
       // Create follow-up tasks if required
       if (feedback.follow_up_required) {
         await this.createFollowUpTask(data.id);
       }
-      
+
       return data;
     } catch (error) {
       console.error('Error submitting stakeholder feedback:', error);
@@ -303,62 +303,62 @@ class CommunityPreviewService {
         .from('preview_feedback')
         .select('*')
         .eq('session_id', sessionId);
-      
+
       if (!feedbackList || feedbackList.length === 0) {
         throw new Error('No feedback found for session');
       }
-      
+
       // Calculate overall satisfaction
-      const overallSatisfaction = feedbackList.reduce((sum, f) => sum + f.rating, 0) / feedbackList.length;
-      
+      const overallSatisfaction = feedbackList.reduce((sum: number, f: PreviewFeedback) => sum + f.rating, 0) / feedbackList.length;
+
       // Calculate feature ratings
       const featureRatings: Record<string, number> = {};
-      const featureFeedback = feedbackList.filter(f => f.specific_feature);
-      
-      featureFeedback.forEach(f => {
+      const featureFeedback = feedbackList.filter((f: PreviewFeedback) => f.specific_feature);
+
+      featureFeedback.forEach((f: PreviewFeedback) => {
         if (!featureRatings[f.specific_feature!]) {
           featureRatings[f.specific_feature!] = 0;
         }
         featureRatings[f.specific_feature!] += f.rating;
       });
-      
+
       Object.keys(featureRatings).forEach(feature => {
-        const count = featureFeedback.filter(f => f.specific_feature === feature).length;
+        const count = featureFeedback.filter((f: PreviewFeedback) => f.specific_feature === feature).length;
         featureRatings[feature] = featureRatings[feature] / count;
       });
-      
+
       // Extract common themes using AI
-      const allComments = feedbackList.map(f => f.comments).join(' ');
+      const allComments = feedbackList.map((f: PreviewFeedback) => f.comments).join(' ');
       const themeAnalysis = await analyzeDocumentChunk(allComments, 'feedback_analysis');
-      
+
       // Identify critical issues
       const criticalIssues = feedbackList
-        .filter(f => f.rating <= 2 || f.cultural_concerns?.length || f.privacy_concerns?.length)
-        .map(f => f.comments);
-      
+        .filter((f: PreviewFeedback) => f.rating <= 2 || f.cultural_concerns?.length || f.privacy_concerns?.length)
+        .map((f: PreviewFeedback) => f.comments);
+
       // Calculate cultural compliance score
-      const culturalConcerns = feedbackList.filter(f => f.cultural_concerns?.length).length;
+      const culturalConcerns = feedbackList.filter((f: PreviewFeedback) => f.cultural_concerns?.length).length;
       const culturalComplianceScore = Math.max(0, 100 - (culturalConcerns / feedbackList.length * 100));
-      
+
       // Calculate accessibility score
-      const accessibilityIssues = feedbackList.filter(f => f.accessibility_issues?.length).length;
+      const accessibilityIssues = feedbackList.filter((f: PreviewFeedback) => f.accessibility_issues?.length).length;
       const accessibilityScore = Math.max(0, 100 - (accessibilityIssues / feedbackList.length * 100));
-      
+
       // Generate recommendations
       const recommendations = await this.generateRecommendations(feedbackList);
-      
+
       const analysis: FeedbackAnalysis = {
         session_id: sessionId,
         overall_satisfaction: overallSatisfaction,
         feature_ratings: featureRatings,
-        common_themes: themeAnalysis.themes.map(t => t.theme),
+        common_themes: themeAnalysis.themes.map((t: any) => t.name),
         critical_issues: criticalIssues,
         improvement_priorities: await this.prioritizeImprovements(feedbackList),
         cultural_compliance_score: culturalComplianceScore,
         accessibility_score: accessibilityScore,
         recommendations: recommendations
       };
-      
+
       // Store analysis
       const { data, error } = await supabase
         .from('feedback_analysis')
@@ -369,9 +369,9 @@ class CommunityPreviewService {
         })
         .select()
         .single();
-      
+
       if (error) throw error;
-      
+
       return analysis;
     } catch (error) {
       console.error('Error updating feedback analysis:', error);
@@ -381,44 +381,44 @@ class CommunityPreviewService {
 
   async generateRecommendations(feedbackList: PreviewFeedback[]): Promise<string[]> {
     const recommendations: string[] = [];
-    
+
     // Analyze ratings by feature
     const lowRatedFeatures = feedbackList
-      .filter(f => f.rating <= 2 && f.specific_feature)
-      .map(f => f.specific_feature!);
-    
+      .filter((f: PreviewFeedback) => f.rating <= 2 && f.specific_feature)
+      .map((f: PreviewFeedback) => f.specific_feature!);
+
     if (lowRatedFeatures.length > 0) {
       recommendations.push(`Prioritize improvements to: ${[...new Set(lowRatedFeatures)].join(', ')}`);
     }
-    
+
     // Cultural concerns
-    const culturalConcerns = feedbackList.flatMap(f => f.cultural_concerns || []);
+    const culturalConcerns = feedbackList.flatMap((f: PreviewFeedback) => f.cultural_concerns || []);
     if (culturalConcerns.length > 0) {
       recommendations.push('Conduct additional cultural safety review with community elders');
     }
-    
+
     // Accessibility issues
-    const accessibilityIssues = feedbackList.flatMap(f => f.accessibility_issues || []);
+    const accessibilityIssues = feedbackList.flatMap((f: PreviewFeedback) => f.accessibility_issues || []);
     if (accessibilityIssues.length > 0) {
       recommendations.push('Address accessibility concerns before launch');
     }
-    
+
     // Privacy concerns
-    const privacyConcerns = feedbackList.flatMap(f => f.privacy_concerns || []);
+    const privacyConcerns = feedbackList.flatMap((f: PreviewFeedback) => f.privacy_concerns || []);
     if (privacyConcerns.length > 0) {
       recommendations.push('Review and strengthen privacy protections');
     }
-    
+
     return recommendations;
   }
 
   async prioritizeImprovements(feedbackList: PreviewFeedback[]): Promise<string[]> {
     const improvements: Array<{ suggestion: string; frequency: number; avgRating: number }> = [];
-    
+
     // Collect all improvement suggestions
-    feedbackList.forEach(feedback => {
-      feedback.improvement_suggestions.forEach(suggestion => {
-        const existing = improvements.find(i => i.suggestion === suggestion);
+    feedbackList.forEach((feedback: PreviewFeedback) => {
+      feedback.improvement_suggestions.forEach((suggestion: string) => {
+        const existing = improvements.find((i: any) => i.suggestion === suggestion);
         if (existing) {
           existing.frequency++;
           existing.avgRating = (existing.avgRating + feedback.rating) / 2;
@@ -431,14 +431,14 @@ class CommunityPreviewService {
         }
       });
     });
-    
+
     // Sort by frequency and low rating (high priority)
     improvements.sort((a, b) => {
       const priorityA = a.frequency * (6 - a.avgRating); // Higher frequency + lower rating = higher priority
       const priorityB = b.frequency * (6 - b.avgRating);
       return priorityB - priorityA;
     });
-    
+
     return improvements.slice(0, 10).map(i => i.suggestion);
   }
 
@@ -450,15 +450,15 @@ class CommunityPreviewService {
   async getPreviewSessions(communityId?: string): Promise<PreviewSession[]> {
     try {
       let query = supabase.from('preview_sessions').select('*');
-      
+
       if (communityId) {
         query = query.eq('community_id', communityId);
       }
-      
+
       const { data, error } = await query.order('scheduled_date', { ascending: false });
-      
+
       if (error) throw error;
-      
+
       return data || [];
     } catch (error) {
       console.error('Error getting preview sessions:', error);
@@ -473,9 +473,9 @@ class CommunityPreviewService {
         .select('*')
         .eq('session_id', sessionId)
         .order('submitted_at', { ascending: false });
-      
+
       if (error) throw error;
-      
+
       return data || [];
     } catch (error) {
       console.error('Error getting session feedback:', error);
@@ -486,15 +486,15 @@ class CommunityPreviewService {
   async getStakeholderFeedback(stakeholderType?: string): Promise<StakeholderFeedback[]> {
     try {
       let query = supabase.from('stakeholder_feedback').select('*');
-      
+
       if (stakeholderType) {
         query = query.eq('stakeholder_type', stakeholderType);
       }
-      
+
       const { data, error } = await query.order('submitted_at', { ascending: false });
-      
+
       if (error) throw error;
-      
+
       return data || [];
     } catch (error) {
       console.error('Error getting stakeholder feedback:', error);
@@ -509,9 +509,9 @@ class CommunityPreviewService {
         .select('analysis')
         .eq('session_id', sessionId)
         .single();
-      
+
       if (error) throw error;
-      
+
       return data?.analysis || null;
     } catch (error) {
       console.error('Error getting feedback analysis:', error);
@@ -528,9 +528,9 @@ class CommunityPreviewService {
           implemented_changes: implementedChanges,
           implementation_date: new Date().toISOString()
         });
-      
+
       if (error) throw error;
-      
+
       // Update session status
       await supabase
         .from('preview_sessions')
@@ -540,7 +540,7 @@ class CommunityPreviewService {
           updated_at: new Date().toISOString()
         })
         .eq('id', sessionId);
-      
+
     } catch (error) {
       console.error('Error implementing feedback improvements:', error);
       throw error;
@@ -554,10 +554,10 @@ class CommunityPreviewService {
         .select('*')
         .eq('id', sessionId)
         .single();
-      
+
       const feedback = await this.getSessionFeedback(sessionId);
       const analysis = await this.getFeedbackAnalysis(sessionId);
-      
+
       return {
         session: session.data,
         feedback_summary: {

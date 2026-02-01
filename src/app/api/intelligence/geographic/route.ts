@@ -143,12 +143,12 @@ Format as JSON with clear geographic categorization and actionable intelligence.
 // Helper function to extract sections from text
 function extractSection(text: string, sectionName: string): string[] {
   const lines = text.split('\n')
-  const sectionStart = lines.findIndex(line => 
+  const sectionStart = lines.findIndex(line =>
     line.toUpperCase().includes(sectionName.toUpperCase())
   )
-  
+
   if (sectionStart === -1) return []
-  
+
   const sectionLines = []
   for (let i = sectionStart + 1; i < lines.length; i++) {
     const line = lines[i].trim()
@@ -159,15 +159,15 @@ function extractSection(text: string, sectionName: string): string[] {
       sectionLines.push(line)
     }
   }
-  
-  return sectionLines.filter(line => line.length > 0)
+
+  return sectionLines.filter((line: string) => line.length > 0)
 }
 
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
     const focusArea = url.searchParams.get('focusArea') || 'tennant-creek'
-    
+
     // Get all documents with geographic intelligence
     const { data: documents, error } = await supabase
       .from('documents')

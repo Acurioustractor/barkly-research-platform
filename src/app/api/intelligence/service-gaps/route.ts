@@ -99,30 +99,33 @@ export async function GET(request: NextRequest) {
     }
 
     // Prepare documents for analysis
-    const documentsForAnalysis = await Promise.all(
-      (documents as any[]).map(async (doc) => {
-        let communityContext = '';
-        if (doc.community_id) {
-          try {
-            if (!prisma) throw new Error('Database service unavailable');
-            const community = await prisma.$queryRaw<Array<{ name: string; description?: string }>>`
-              SELECT name, description FROM communities WHERE id = ${doc.community_id}::uuid
-            `;
-            if (community[0]) {
-              communityContext = `Community: ${community[0].name}. ${community[0].description || ''}`;
+    let documentsForAnalysis: { content: string; context: string; communityContext: string }[] = [];
+    if (documents && (documents as any[]).length > 0) {
+      documentsForAnalysis = await Promise.all(
+        (documents as any[]).map(async (doc: any) => {
+          let communityContext = '';
+          if (doc.community_id) {
+            try {
+              if (!prisma) throw new Error('Database service unavailable');
+              const community = await prisma.$queryRaw<Array<{ name: string; description?: string }>>`
+                SELECT name, description FROM communities WHERE id = ${doc.community_id}::uuid
+              `;
+              if (community[0]) {
+                communityContext = `Community: ${community[0].name}. ${community[0].description || ''}`;
+              }
+            } catch (error) {
+              console.warn('Could not get community context:', error);
             }
-          } catch (error) {
-            console.warn('Could not get community context:', error);
           }
-        }
 
-        return {
-          content: doc.content || '',
-          context: doc.title || 'Document analysis',
-          communityContext
-        };
-      })
-    );
+          return {
+            content: doc.content || '',
+            context: doc.title || 'Document analysis',
+            communityContext
+          };
+        })
+      );
+    }
 
     // Analyze all documents
     const result = await serviceGapAnalysisService.analyzeMultipleDocuments(documentsForAnalysis);
@@ -131,7 +134,7 @@ export async function GET(request: NextRequest) {
     let filteredResult = result;
 
     if (serviceType || urgency || gapType || location) {
-      const filteredGaps = result.gaps.filter(gap => {
+      const filteredGaps = result.gaps.filter((gap: any) => {
         if (serviceType && gap.serviceType !== serviceType) return false;
         if (urgency && gap.urgency !== urgency) return false;
         if (gapType && gap.gapType !== gapType) return false;
@@ -143,22 +146,22 @@ export async function GET(request: NextRequest) {
         ...result,
         gaps: filteredGaps,
         gapsByType: {
-          missing: filteredGaps.filter(g => g.gapType === 'missing'),
-          inadequate: filteredGaps.filter(g => g.gapType === 'inadequate'),
-          inaccessible: filteredGaps.filter(g => g.gapType === 'inaccessible'),
-          culturally_inappropriate: filteredGaps.filter(g => g.gapType === 'culturally_inappropriate'),
-          under_resourced: filteredGaps.filter(g => g.gapType === 'under_resourced')
+          missing: filteredGaps.filter((g: any) => g.gapType === 'missing'),
+          inadequate: filteredGaps.filter((g: any) => g.gapType === 'inadequate'),
+          inaccessible: filteredGaps.filter((g: any) => g.gapType === 'inaccessible'),
+          culturally_inappropriate: filteredGaps.filter((g: any) => g.gapType === 'culturally_inappropriate'),
+          under_resourced: filteredGaps.filter((g: any) => g.gapType === 'under_resourced')
         },
         gapsByUrgency: {
-          critical: filteredGaps.filter(g => g.urgency === 'critical'),
-          high: filteredGaps.filter(g => g.urgency === 'high'),
-          medium: filteredGaps.filter(g => g.urgency === 'medium'),
-          low: filteredGaps.filter(g => g.urgency === 'low')
+          critical: filteredGaps.filter((g: any) => g.urgency === 'critical'),
+          high: filteredGaps.filter((g: any) => g.urgency === 'high'),
+          medium: filteredGaps.filter((g: any) => g.urgency === 'medium'),
+          low: filteredGaps.filter((g: any) => g.urgency === 'low')
         },
         summary: {
           ...result.summary,
           totalGaps: filteredGaps.length,
-          criticalGaps: filteredGaps.filter(g => g.urgency === 'critical').length
+          criticalGaps: filteredGaps.filter((g: any) => g.urgency === 'critical').length
         }
       };
     }
@@ -200,12 +203,11 @@ async function getDocumentsContent(documentIds: string[]) {
     `;
 
     return Promise.all(
-      documents.map(async (doc) => {
+      documents.map(async (doc: any) => {
         let communityContext = '';
         if (doc.community_id) {
           try {
-            if (!prisma) throw new Error('Database service unavailable');
-            const community = await prisma.$queryRaw<Array<{ name: string; description?: string }>>`
+            const community = await prisma!.$queryRaw<Array<{ name: string; description?: string }>>`
               SELECT name, description FROM communities WHERE id = ${doc.community_id}::uuid
             `;
             if (community[0]) {
@@ -217,7 +219,7 @@ async function getDocumentsContent(documentIds: string[]) {
         }
 
         return {
-          content: doc.content,
+          content: doc.content || '',
           context: doc.title || 'Document analysis',
           communityContext
         };

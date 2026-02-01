@@ -16,11 +16,11 @@ function sendSSE(writer: WritableStreamDefaultWriter, data: unknown) {
 
 export async function POST(request: NextRequest) {
   console.log('[upload-sse] Request received');
-  
+
   // Set up SSE response
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();
-  
+
   // Start the response immediately
   const response = new Response(stream.readable, {
     headers: {
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   (async () => {
     try {
       sendSSE(writer, { type: 'status', message: 'Starting upload process...' });
-      
+
       if (!prisma) {
         sendSSE(writer, { type: 'error', message: 'Database not available' });
         await writer.close();
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
       const formData = await request.formData();
       const files = formData.getAll('files') as File[];
-      
+
       // Get AI analysis options from form data
       const aiEnabled = formData.get('aiEnabled') === 'true';
       const processingType = formData.get('processingType') as 'quick' | 'standard' | 'deep' | 'world-class' || 'standard';
@@ -52,37 +52,37 @@ export async function POST(request: NextRequest) {
       const extractQuotes = formData.get('extractQuotes') === 'true';
       const extractThemes = formData.get('extractThemes') === 'true';
       const extractInsights = formData.get('extractInsights') === 'true';
-      
+
       // Legacy support for useAI parameter
       const useAI = aiEnabled || formData.get('useAI') === 'true' || extractSystems;
-      
+
       if (!files || files.length === 0) {
         sendSSE(writer, { type: 'error', message: 'No files provided' });
         await writer.close();
         return;
       }
-      
-      console.log('[upload-sse] Processing options:', { 
+
+      console.log('[upload-sse] Processing options:', {
         aiEnabled,
-        useAI, 
-        processingType, 
+        useAI,
+        processingType,
         priority,
         extractSystems,
         extractQuotes,
         extractThemes,
         extractInsights,
-        fileCount: files.length 
+        fileCount: files.length
       });
 
-      sendSSE(writer, { 
-        type: 'init', 
+      sendSSE(writer, {
+        type: 'init',
         totalFiles: files.length,
         message: aiEnabled ? `Queuing ${files.length} file(s) for AI analysis...` : `Processing ${files.length} file(s)...`,
-        options: { 
+        options: {
           aiEnabled,
-          useAI, 
-          processingType, 
-          priority, 
+          useAI,
+          processingType,
+          priority,
           extractSystems,
           extractQuotes,
           extractThemes,
@@ -92,12 +92,12 @@ export async function POST(request: NextRequest) {
 
       const jobIds = [];
       const results = [];
-      
+
       // Process files - either queue for background processing or process immediately
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
-        sendSSE(writer, { 
+
+        sendSSE(writer, {
           type: 'file_start',
           fileIndex: i,
           fileName: file.name,
@@ -109,21 +109,21 @@ export async function POST(request: NextRequest) {
           if (file.type !== 'application/pdf') {
             throw new Error('Only PDF files are supported');
           }
-          
+
           if (file.size > 50 * 1024 * 1024) { // Increased limit to 50MB
             throw new Error('File size exceeds 50MB limit');
           }
 
           sendSSE(writer, { type: 'status', message: 'Reading file...' });
           const buffer = Buffer.from(await file.arrayBuffer());
-          
+
           // For complex processing or large files, use background job queue
           if (useAI || buffer.length > 5 * 1024 * 1024 || processingType === 'world-class') {
-            sendSSE(writer, { 
-              type: 'status', 
-              message: 'Queuing for background processing...' 
+            sendSSE(writer, {
+              type: 'status',
+              message: 'Queuing for background processing...'
             });
-            
+
             const jobId = await globalDocumentProcessor.addJob(
               buffer,
               file.name,
@@ -145,9 +145,9 @@ export async function POST(request: NextRequest) {
                 maxRetries: processingType === 'world-class' ? 5 : 3,
               }
             );
-            
+
             jobIds.push(jobId);
-            
+
             results.push({
               jobId,
               fileName: file.name,
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
               message: 'Queued for background processing',
               estimatedDuration: globalDocumentProcessor.getJob(jobId)?.estimatedDuration,
             });
-            
+
             const job = globalDocumentProcessor.getJob(jobId);
             const estimatedDuration = job?.estimatedDuration || 0;
             const processingMessage = {
@@ -164,8 +164,8 @@ export async function POST(request: NextRequest) {
               'deep': 'Advanced analysis with insights',
               'world-class': 'Full systems mapping'
             }[processingType] || 'AI analysis';
-            
-            sendSSE(writer, { 
+
+            sendSSE(writer, {
               type: 'file_queued',
               fileIndex: i,
               fileName: file.name,
@@ -177,12 +177,12 @@ export async function POST(request: NextRequest) {
           } else {
             // Simple processing for small files without AI
             sendSSE(writer, { type: 'status', message: 'Processing immediately...' });
-            
+
             const extractor = new ImprovedPDFExtractor(buffer);
             const extraction = await extractor.extractText();
-            
+
             const wordCount = extraction.text.trim() ? extraction.text.trim().split(/\s+/).length : 0;
-            
+
             sendSSE(writer, { type: 'status', message: 'Storing document...' });
             const document = await prisma.document.create({
               data: {
@@ -201,10 +201,10 @@ export async function POST(request: NextRequest) {
             sendSSE(writer, { type: 'status', message: 'Creating document chunks...' });
             const chunker = new DocumentChunker();
             const chunks = chunker.chunkDocument(extraction.text);
-            
+
             if (chunks.length > 0) {
               await prisma.documentChunk.createMany({
-                data: chunks.map((chunk, idx) => ({
+                data: chunks.map((chunk: any, idx: number) => ({
                   documentId: document.id,
                   chunkIndex: idx,
                   text: chunk.text,
@@ -227,8 +227,8 @@ export async function POST(request: NextRequest) {
               insights: 0,
               keywords: 0
             });
-            
-            sendSSE(writer, { 
+
+            sendSSE(writer, {
               type: 'file_complete',
               fileIndex: i,
               fileName: file.name,
@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
 
         } catch (error) {
           console.error(`[upload-sse] Error processing ${file.name}:`, error);
-          
+
           results.push({
             fileName: file.name,
             status: 'FAILED',
@@ -251,7 +251,7 @@ export async function POST(request: NextRequest) {
             errorMessage: error instanceof Error ? error.message : 'Processing failed'
           });
 
-          sendSSE(writer, { 
+          sendSSE(writer, {
             type: 'file_error',
             fileIndex: i,
             fileName: file.name,
@@ -263,10 +263,10 @@ export async function POST(request: NextRequest) {
       // Send completion with job tracking information
       const summary = {
         totalFiles: files.length,
-        completed: results.filter(r => r.status === 'COMPLETED').length,
-        queued: results.filter(r => r.status === 'QUEUED').length,
-        failed: results.filter(r => r.status === 'FAILED').length,
-        totalChunks: results.reduce((sum, r) => sum + (r.chunks || 0), 0),
+        completed: results.filter((r: any) => r.status === 'COMPLETED').length,
+        queued: results.filter((r: any) => r.status === 'QUEUED').length,
+        failed: results.filter((r: any) => r.status === 'FAILED').length,
+        totalChunks: results.reduce((sum: number, r: any) => sum + (r.chunks || 0), 0),
         jobIds: jobIds,
         queueStats: globalDocumentProcessor.getStats(),
         processingOptions: {
@@ -290,34 +290,34 @@ export async function POST(request: NextRequest) {
       } else {
         message = 'Upload completed';
       }
-      
+
       if (aiEnabled && summary.queued > 0) {
         const features = [];
         if (extractSystems) features.push('systems mapping');
         if (extractThemes) features.push('theme extraction');
         if (extractQuotes) features.push('quote extraction');
         if (extractInsights) features.push('insight generation');
-        
+
         if (features.length > 0) {
           message += ` with ${features.join(', ')}`;
         }
       }
 
-      sendSSE(writer, { 
+      sendSSE(writer, {
         type: 'complete',
         summary,
         results,
         message,
         jobStreamUrl: jobIds.length > 0 ? '/api/jobs/stream' : null,
-        nextSteps: aiEnabled && summary.queued > 0 ? 
+        nextSteps: aiEnabled && summary.queued > 0 ?
           'Documents are being analyzed in the background. You can monitor progress in the Job Queue or check back later for results.' :
           'Documents have been processed and are ready for analysis.'
       });
 
     } catch (error) {
       console.error('[upload-sse] Fatal error:', error);
-      sendSSE(writer, { 
-        type: 'error', 
+      sendSSE(writer, {
+        type: 'error',
         message: error instanceof Error ? error.message : 'Upload failed'
       });
     } finally {

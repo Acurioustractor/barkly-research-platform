@@ -13,43 +13,43 @@ export interface StorySubmission {
   themes: string[];
   communityId: string;
   userId?: string;
-  
+
   // Multimedia content
   audioFiles?: File[];
   videoFiles?: File[];
   imageFiles?: File[];
   documentFiles?: File[];
-  
+
   // Metadata
   duration?: number; // for audio/video in seconds
   language?: string;
   dialect?: string;
   location?: string;
   recordedAt?: Date;
-  
+
   // Community priorities and themes
   communityPriorities: string[];
   culturalThemes: string[];
   traditionalKnowledge: boolean;
   requiresElderReview: boolean;
-  
+
   // Accessibility
   hasTranscript?: boolean;
   hasSubtitles?: boolean;
   hasSignLanguage?: boolean;
   accessibilityNotes?: string;
-  
+
   // Moderation
   moderationStatus: 'pending' | 'approved' | 'rejected' | 'needs_review';
   moderationNotes?: string;
   moderatedBy?: string;
   moderatedAt?: Date;
-  
+
   // Engagement
   isInspiring: boolean;
   allowComments: boolean;
   allowSharing: boolean;
-  
+
   // Publishing
   published: boolean;
   publishedAt?: Date;
@@ -121,7 +121,7 @@ export async function submitStory(storyData: Partial<StorySubmission>): Promise<
       themes: storyData.themes || [],
       community_id: storyData.communityId,
       user_id: storyData.userId,
-      
+
       // Multimedia
       media_urls: mediaUrls,
       duration: storyData.duration,
@@ -129,32 +129,31 @@ export async function submitStory(storyData: Partial<StorySubmission>): Promise<
       dialect: storyData.dialect,
       location: storyData.location,
       recorded_at: storyData.recordedAt?.toISOString(),
-      
+
       // Community context
       community_priorities: storyData.communityPriorities || [],
       cultural_themes: storyData.culturalThemes || [],
       traditional_knowledge: storyData.traditionalKnowledge || false,
-      requires_elder_review: storyData.requiresElderReview || false,
-      
+
       // Accessibility
       has_transcript: storyData.hasTranscript || false,
       has_subtitles: storyData.hasSubtitles || false,
       has_sign_language: storyData.hasSignLanguage || false,
       accessibility_notes: storyData.accessibilityNotes,
-      
+
       // Moderation
       moderation_status: 'pending',
       requires_cultural_review: moderationRequirements.culturalReview,
       requires_elder_review: moderationRequirements.elderReview,
       requires_technical_review: moderationRequirements.technicalReview,
-      
+
       // Settings
       is_inspiring: storyData.isInspiring || false,
       allow_comments: storyData.allowComments !== false,
       allow_sharing: storyData.allowSharing !== false,
       published: false,
       scheduled_for: storyData.scheduledFor?.toISOString(),
-      
+
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -350,7 +349,7 @@ function determineModerationRequirements(storyData: Partial<StorySubmission>): {
 
   // Community themes that require review
   const sensitiveThemes = ['ceremony', 'sacred', 'traditional', 'cultural'];
-  if (storyData.culturalThemes?.some(theme => 
+  if (storyData.culturalThemes?.some(theme =>
     sensitiveThemes.some(sensitive => theme.toLowerCase().includes(sensitive))
   )) {
     needsModeration = true;
@@ -371,7 +370,7 @@ function determineModerationRequirements(storyData: Partial<StorySubmission>): {
  * Add story to moderation queue
  */
 async function addToModerationQueue(
-  storyId: string, 
+  storyId: string,
   requirements: any
 ): Promise<void> {
   try {
@@ -477,7 +476,7 @@ export async function getStoryCategories(communityId: string): Promise<StoryCate
       throw new Error(`Failed to fetch story categories: ${error.message}`);
     }
 
-    return data?.map(category => ({
+    return data?.map((category: any) => ({
       id: category.id,
       name: category.name,
       description: category.description,
@@ -510,7 +509,7 @@ export async function getCommunityThemes(communityId: string): Promise<Community
       throw new Error(`Failed to fetch community themes: ${error.message}`);
     }
 
-    return data?.map(theme => ({
+    return data?.map((theme: any) => ({
       id: theme.id,
       name: theme.name,
       description: theme.description,
@@ -575,7 +574,7 @@ export async function getModerationQueue(
       throw new Error(`Failed to fetch moderation queue: ${error.message}`);
     }
 
-    return data?.map(item => ({
+    return data?.map((item: any) => ({
       id: item.id,
       storyId: item.story_id,
       story: item.enhanced_community_stories,
@@ -680,11 +679,11 @@ async function notifyStoryAuthor(
       user_id: story.user_id,
       type: 'story_moderation',
       title: `Story "${story.title}" ${decision}`,
-      message: decision === 'approved' 
+      message: decision === 'approved'
         ? 'Your story has been approved and published!'
         : decision === 'rejected'
-        ? 'Your story was not approved for publication.'
-        : 'Your story needs some revisions before it can be published.',
+          ? 'Your story was not approved for publication.'
+          : 'Your story needs some revisions before it can be published.',
       data: {
         storyId,
         decision,

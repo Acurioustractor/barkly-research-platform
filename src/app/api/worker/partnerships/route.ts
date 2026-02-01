@@ -471,9 +471,9 @@ function identifyPotentialSynergies(organizations: any[]): string[] {
 }
 
 function categorizeServices(services: string[]): string[] {
-  const categories = new Set();
+  const categories = new Set<string>();
 
-  services.forEach(service => {
+  services.forEach((service: string) => {
     const lowerService = service.toLowerCase();
     if (lowerService.includes('health') || lowerService.includes('medical')) {
       categories.add('health');

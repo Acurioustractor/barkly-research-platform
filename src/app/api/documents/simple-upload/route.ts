@@ -74,9 +74,10 @@ export async function POST(request: NextRequest) {
           const pdfData = await pdfParse(buffer);
 
           extractedText = pdfData.text || '';
-          pageCount = pdfData.numpages || 1;
-          wordCount = extractedText.split(/\s+/).filter(w => w.length > 0).length;
-
+          if (extractedText.trim()) { // Assuming 'extraction.text' was a typo for 'extractedText'
+            wordCount = extractedText.trim().split(/\s+/).filter((w: string) => w.length > 0).length;
+          }
+          pageCount = pdfData.numpages || 1; // This line was present in the original and should remain.
           console.log(`[simple-upload] Extracted ${wordCount} words from ${pageCount} pages`);
         } catch (pdfError) {
           console.error(`[simple-upload] PDF extraction failed:`, pdfError);
@@ -122,20 +123,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const successful = results.filter(r => r.status === 'COMPLETED').length;
-    const failed = results.filter(r => r.status === 'FAILED').length;
+    const successCount = results.filter((r: any) => r.status === 'COMPLETED').length;
+    const failureCount = results.filter((r: any) => r.status === 'FAILED').length;
 
-    console.log(`[simple-upload] Summary: ${successful} successful, ${failed} failed`);
+    console.log(`[simple-upload] Summary: ${successCount} successful, ${failureCount} failed`);
 
     return NextResponse.json({
       success: true,
-      summary: {
-        totalFiles: files.length,
-        successful,
-        failed
-      },
       results,
-      message: `Processed ${successful} of ${files.length} files successfully`
+      summary: {
+        successful: successCount,
+        failed: failureCount,
+        totalFiles: results.length
+      },
+      message: `Processed ${successCount} of ${results.length} files`
     });
 
   } catch (error) {

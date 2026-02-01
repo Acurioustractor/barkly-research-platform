@@ -223,8 +223,8 @@ export class EnhancedWorldClassDocumentProcessor {
         keyTakeaways: analysisResult.keyTakeaways,
         warnings,
         degradedCapabilities: Object.entries(degradation.getCapabilities())
-          .filter(([, enabled]) => !enabled)
-          .map(([cap]) => cap),
+          .filter(([, enabled]: [string, boolean]) => !enabled)
+          .map(([cap]: [string, boolean]) => cap),
         processingLevel
       };
 
@@ -259,8 +259,8 @@ export class EnhancedWorldClassDocumentProcessor {
           errorMessage: degradation.getDegradationMessage(),
           warnings,
           degradedCapabilities: Object.entries(degradation.getCapabilities())
-            .filter(([, enabled]) => !enabled)
-            .map(([cap]) => cap),
+            .filter(([, enabled]: [string, boolean]) => !enabled)
+            .map(([cap]: [string, boolean]) => cap),
           processingLevel: 'minimal'
         };
       }
@@ -339,7 +339,7 @@ export class EnhancedWorldClassDocumentProcessor {
         text: extractionResult.text,
         metadata: {
           pageCount: extractionResult.pageCount,
-          wordCount: extractionResult.text.split(/\s+/).filter(w => w.length > 0).length
+          wordCount: extractionResult.text.split(/\s+/).filter((w: string) => w.length > 0).length
         },
         extractionWarnings: extractionResult.warnings
       };
@@ -378,8 +378,8 @@ export class EnhancedWorldClassDocumentProcessor {
       const str = buffer.toString('utf8', 0, Math.min(buffer.length, 100000));
       const textMatches = str.match(/\(([^)]+)\)/g) || [];
       return textMatches
-        .map(match => match.slice(1, -1))
-        .filter(text => text.length > 2)
+        .map((match: string) => match.slice(1, -1))
+        .filter((text: string) => text.length > 2)
         .join(' ')
         .substring(0, 10000);
     } catch {
@@ -408,7 +408,7 @@ export class EnhancedWorldClassDocumentProcessor {
     }
 
     // Fallback to basic chunking
-    return FallbackStrategies.basicChunking(text, 1000).map((chunk, index) => ({
+    return FallbackStrategies.basicChunking(text, 1000).map((chunk: any, index: number) => ({
       ...chunk,
       chunkNumber: index + 1,
       totalChunks: 0
@@ -459,7 +459,7 @@ export class EnhancedWorldClassDocumentProcessor {
     }
 
     // Fallback to basic analysis
-    const combinedText = chunks.map(c => c.text).join(' ');
+    const combinedText = chunks.map((c: any) => c.text).join(' ');
     const basicAnalysis = await FallbackStrategies.basicAnalysis(combinedText);
 
     return {
@@ -524,7 +524,7 @@ export class EnhancedWorldClassDocumentProcessor {
     if (!prisma) return [];
 
     const chunkRecords = await Promise.all(
-      chunks.map((chunk, index) =>
+      chunks.map((chunk: any, index: number) =>
         prisma!.documentChunk.create({
           data: {
             documentId,
@@ -577,7 +577,7 @@ export class EnhancedWorldClassDocumentProcessor {
     if (!prisma || themes.length === 0) return;
 
     await Promise.all(
-      themes.map(theme =>
+      themes.map((theme: any) =>
         prisma!.documentTheme.create({
           data: {
             documentId,
@@ -595,7 +595,7 @@ export class EnhancedWorldClassDocumentProcessor {
     if (!prisma || quotes.length === 0) return;
 
     await Promise.all(
-      quotes.map(quote =>
+      quotes.map((quote: any) =>
         prisma!.documentQuote.create({
           data: {
             documentId,
@@ -614,7 +614,7 @@ export class EnhancedWorldClassDocumentProcessor {
     if (!prisma || insights.length === 0) return;
 
     await Promise.all(
-      insights.map(insight =>
+      insights.map((insight: any) =>
         prisma!.documentInsight.create({
           data: {
             documentId,
@@ -633,7 +633,7 @@ export class EnhancedWorldClassDocumentProcessor {
     if (!prisma || keywords.length === 0) return;
 
     await Promise.all(
-      keywords.map(keyword =>
+      keywords.map((keyword: any) =>
         prisma!.documentKeyword.create({
           data: {
             documentId,

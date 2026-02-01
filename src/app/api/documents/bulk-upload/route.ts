@@ -43,14 +43,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const invalidFiles = files.filter(file =>
-      file.type !== 'application/pdf' || file.size > maxSize
+    // Validate files
+    const invalidFiles = files.filter((file: any) =>
+      file.type !== 'application/pdf' || file.size > 20 * 1024 * 1024
     );
 
     if (invalidFiles.length > 0) {
       return NextResponse.json(
         {
-          error: `${invalidFiles.length} files rejected. Only PDF files under 10MB are allowed.`,
+          error: `${invalidFiles.length} files rejected. Only PDF files under 20MB are allowed.`,
           rejectedFiles: invalidFiles.map((f: any) => ({ name: f.name, size: f.size, type: f.type }))
         },
         { status: 400 }
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
     const processingOptions = {
       source,
       category,
-      tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+      tags: tags ? tags.split(',').map((tag: string) => tag.trim()) : [],
       useAI,
       generateSummary,
       generateEmbeddings
@@ -160,20 +161,20 @@ export async function POST(request: NextRequest) {
     // Summary statistics
     const summary = {
       totalFiles: files.length,
-      successful: results.filter(r => r.status === 'COMPLETED').length,
-      failed: results.filter(r => r.status === 'FAILED').length,
-      totalChunks: results.reduce((sum, r) => sum + r.chunks, 0),
-      totalThemes: results.reduce((sum, r) => sum + r.themes, 0),
-      totalQuotes: results.reduce((sum, r) => sum + r.quotes, 0),
-      totalInsights: results.reduce((sum, r) => sum + r.insights, 0),
-      totalKeywords: results.reduce((sum, r) => sum + r.keywords, 0)
+      successful: results.filter((r: any) => r.status === 'COMPLETED').length,
+      failed: results.filter((r: any) => r.status === 'FAILED').length,
+      totalChunks: results.reduce((sum: number, r: any) => sum + (r.chunks || 0), 0),
+      totalThemes: results.reduce((sum: number, r: any) => sum + (r.themes || 0), 0),
+      totalQuotes: results.reduce((sum: number, r: any) => sum + (r.quotes || 0), 0),
+      totalInsights: results.reduce((sum: number, r: any) => sum + (r.insights || 0), 0),
+      totalKeywords: results.reduce((sum: number, r: any) => sum + (r.keywords || 0), 0)
     };
 
     const response = {
       success: true,
       summary,
       results,
-      message: `Successfully processed ${summary.successful} of ${summary.totalFiles} documents`
+      message: `Processed ${summary.successful} of ${summary.totalFiles} files`
     };
 
     console.log(`[bulk-upload] Request completed successfully at:`, new Date().toISOString());

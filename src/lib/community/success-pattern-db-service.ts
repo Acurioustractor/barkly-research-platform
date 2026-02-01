@@ -106,7 +106,7 @@ export async function saveSuccessPattern(
 
     // Communities
     if (communities.length > 0) {
-      const communityRecords = communities.map(community => ({
+      const communityRecords = communities.map((community: string) => ({
         pattern_id: patternId,
         community_name: community,
         effectiveness_score: 0.8 // Default score, could be calculated
@@ -118,7 +118,7 @@ export async function saveSuccessPattern(
 
     // Requirements
     if (requirements.length > 0) {
-      const requirementRecords = requirements.map((req, index) => ({
+      const requirementRecords = requirements.map((req: string, index: number) => ({
         pattern_id: patternId,
         requirement_text: req,
         requirement_type: 'general',
@@ -131,7 +131,7 @@ export async function saveSuccessPattern(
 
     // Evidence
     if (evidence.length > 0) {
-      const evidenceRecords = evidence.map(ev => ({
+      const evidenceRecords = evidence.map((ev: any) => ({
         pattern_id: patternId,
         evidence_text: ev.text,
         evidence_type: 'qualitative',
@@ -145,7 +145,7 @@ export async function saveSuccessPattern(
 
     // Outcomes
     if (outcomes.length > 0) {
-      const outcomeRecords = outcomes.map(outcome => ({
+      const outcomeRecords = outcomes.map((outcome: string) => ({
         pattern_id: patternId,
         outcome_text: outcome,
         outcome_type: 'community_benefit',
@@ -158,7 +158,7 @@ export async function saveSuccessPattern(
 
     // Success factors
     if (successFactors.length > 0) {
-      const factorRecords = successFactors.map((factor, index) => ({
+      const factorRecords = successFactors.map((factor: string, index: number) => ({
         pattern_id: patternId,
         factor_text: factor,
         factor_category: 'implementation',
@@ -171,7 +171,7 @@ export async function saveSuccessPattern(
 
     // Challenges
     if (challenges.length > 0) {
-      const challengeRecords = challenges.map(challenge => ({
+      const challengeRecords = challenges.map((challenge: any) => ({
         pattern_id: patternId,
         challenge_text: challenge.text,
         challenge_type: 'implementation',
@@ -184,7 +184,7 @@ export async function saveSuccessPattern(
 
     // Resources
     if (resources.length > 0) {
-      const resourceRecords = resources.map(resource => ({
+      const resourceRecords = resources.map((resource: any) => ({
         pattern_id: patternId,
         resource_text: resource.text,
         resource_type: resource.type,
@@ -197,7 +197,7 @@ export async function saveSuccessPattern(
 
     // Stakeholders
     if (stakeholders.length > 0) {
-      const stakeholderRecords = stakeholders.map(stakeholder => ({
+      const stakeholderRecords = stakeholders.map((stakeholder: any) => ({
         pattern_id: patternId,
         stakeholder_name: stakeholder.name,
         stakeholder_type: stakeholder.type,

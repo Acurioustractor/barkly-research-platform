@@ -62,8 +62,8 @@ export async function GET(request: NextRequest) {
     // Add summary statistics
     result.summary = {
       totalEntities: analysis.entityConnections.length,
-      averageConnectionsPerEntity: analysis.entityConnections.length > 0 ?
-        analysis.entityConnections.reduce((sum, entity) => sum + entity.connectionCount, 0) / analysis.entityConnections.length : 0,
+      avgRelationshipsPerEntity: analysis.entityConnections.length > 0 ?
+        analysis.entityConnections.reduce((sum: number, entity: any) => sum + entity.connectionCount, 0) / analysis.entityConnections.length : 0,
       strongRelationshipsCount: analysis.strongestRelationships.filter((rel: any) => rel.strength >= 0.7).length,
       relationshipTypeDistribution: analysis.relationshipTypes,
       topConnectedEntities: analysis.entityConnections

@@ -84,8 +84,8 @@ async function getQueueStats(communityId?: string | null): Promise<any> {
     const pending = items.filter((item: any) => item.status === 'queued' || item.status === 'in_review').length;
     const urgent = items.filter((item: any) => item.priority === 'urgent').length;
 
-    const distribution = items.reduce((acc, item) => {
-      acc[item.priority] = (acc[item.priority] || 0) + 1;
+    const distribution = items.reduce((acc: any, item: any) => {
+      acc[item.category] = (acc[item.category] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 

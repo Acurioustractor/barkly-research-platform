@@ -10,36 +10,36 @@ const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().url().describe('PostgreSQL connection string'),
   DIRECT_URL: z.string().url().optional().describe('Direct PostgreSQL connection for migrations'),
-  
+
   // AI Services
   OPENAI_API_KEY: z.string().min(1).optional().describe('OpenAI API key for GPT models'),
   ANTHROPIC_API_KEY: z.string().min(1).optional().describe('Anthropic API key for Claude models'),
   MOONSHOT_API_KEY: z.string().min(1).optional().describe('Moonshot API key for cost-effective AI models'),
-  
+
   // Redis (optional)
   REDIS_URL: z.string().url().optional().describe('Redis connection string for job queue'),
-  
+
   // Sentry (optional)
   SENTRY_DSN: z.string().url().optional().describe('Sentry DSN for error monitoring'),
-  
+
   // Environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  
+
   // AI Configuration
   AI_DEFAULT_MODEL: z.string().optional().describe('Default AI model to use'),
   AI_DEFAULT_PROFILE: z.string().optional().describe('Default processing profile'),
   AI_DEFAULT_EMBEDDING_MODEL: z.string().optional().describe('Default embedding model'),
-  
+
   // Feature Flags
   ENABLE_AI_ANALYSIS: z.string().transform(val => val === 'true').default('true'),
   ENABLE_EMBEDDINGS: z.string().transform(val => val === 'true').default('true'),
   ENABLE_PARALLEL_PROCESSING: z.string().transform(val => val === 'true').default('true'),
-  
+
   // Limits
   MAX_FILE_SIZE: z.string().transform(val => parseInt(val)).default('10485760'), // 10MB
   MAX_CONCURRENT_UPLOADS: z.string().transform(val => parseInt(val)).default('3'),
   CHUNK_SIZE: z.string().transform(val => parseInt(val)).default('1000'),
-  
+
   // Timeouts
   AI_TIMEOUT_MS: z.string().transform(val => parseInt(val)).default('30000'),
   PDF_EXTRACTION_TIMEOUT_MS: z.string().transform(val => parseInt(val)).default('60000'),
@@ -70,28 +70,28 @@ function parseEnv() {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const missingVars = error.errors
-        .filter(err => err.code === 'invalid_type' && err.received === 'undefined')
-        .map(err => err.path.join('.'));
-      
+        .filter((err: any) => err.code === 'invalid_type' && err.received === 'undefined')
+        .map((err: any) => err.path.join('.'));
+
       const invalidVars = error.errors
-        .filter(err => err.code !== 'invalid_type' || err.received !== 'undefined')
-        .map(err => `${err.path.join('.')}: ${err.message}`);
-      
+        .filter((err: any) => err.code !== 'invalid_type' || err.received !== 'undefined')
+        .map((err: any) => `${err.path.join('.')}: ${err.message}`);
+
       console.error('❌ Environment validation failed:');
-      
+
       if (missingVars.length > 0) {
         console.error('\nMissing required environment variables:');
-        missingVars.forEach(varName => {
+        missingVars.forEach((varName: string) => {
           const field = envSchema.shape[varName as keyof typeof envSchema.shape];
           console.error(`  - ${varName}: ${field._def.description || 'No description'}`);
         });
       }
-      
+
       if (invalidVars.length > 0) {
         console.error('\nInvalid environment variables:');
-        invalidVars.forEach(msg => console.error(`  - ${msg}`));
+        invalidVars.forEach((msg: string) => console.error(`  - ${msg}`));
       }
-      
+
       throw new Error('Invalid environment configuration');
     }
     throw error;
@@ -110,7 +110,7 @@ export const features = {
   hasRedis: () => typeof window === 'undefined' ? !!config.REDIS_URL : false,
   isProduction: () => config.NODE_ENV === 'production',
   isDevelopment: () => config.NODE_ENV === 'development',
-  
+
   // Feature flags
   aiAnalysisEnabled: () => config.ENABLE_AI_ANALYSIS && features.hasAnyAI(),
   embeddingsEnabled: () => config.ENABLE_EMBEDDINGS && features.hasOpenAI(),
@@ -122,7 +122,7 @@ export const limits = {
   maxFileSize: config.MAX_FILE_SIZE,
   maxConcurrentUploads: config.MAX_CONCURRENT_UPLOADS,
   chunkSize: config.CHUNK_SIZE,
-  
+
   // Human-readable versions
   maxFileSizeMB: Math.round(config.MAX_FILE_SIZE / 1024 / 1024),
 };
@@ -135,19 +135,19 @@ export const timeouts = {
 // Validate minimum requirements
 export function validateMinimumRequirements() {
   const errors: string[] = [];
-  
+
   if (!config.DATABASE_URL) {
     errors.push('DATABASE_URL is required');
   }
-  
+
   if (!features.hasAnyAI()) {
     console.warn('⚠️  No AI service configured. Document processing will use fallback methods.');
   }
-  
+
   if (!features.hasRedis()) {
     console.warn('⚠️  Redis not configured. Using in-memory job queue (not recommended for production).');
   }
-  
+
   if (errors.length > 0) {
     throw new Error(`Configuration errors:\n${errors.join('\n')}`);
   }

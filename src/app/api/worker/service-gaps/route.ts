@@ -273,13 +273,14 @@ function analyzeGapsByType(services: any[], needs: any[]): Record<string, any> {
     if (!acc[type]) acc[type] = [];
     acc[type].push(need);
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, any[]>);
 
   const gaps: Record<string, any> = {};
 
   // Identify categories with high needs but low services
-  Object.keys(needsByType).forEach(category => {
-    const needCount = needsByType[category].length; // Count needs from the array
+  Object.keys(needsByType).forEach((category: string) => {
+    const needsInCategory = needsByType[category];
+    const needCount = needsInCategory.length; // Count needs from the array
     const serviceCount = servicesByType[category] || 0;
     const gapRatio = serviceCount > 0 ? needCount / serviceCount : needCount;
 
@@ -303,18 +304,20 @@ function analyzeGapsByLocation(services: any[], needs: any[]): Record<string, an
     return acc;
   }, {} as Record<string, any>);
 
-  const needsByLocation = needs.reduce((acc: Record<string, any>, need: any) => {
+  const needsByLocation = needs.reduce((acc: Record<string, any[]>, need: any) => {
     const location = need.communities?.name || 'Unknown';
-    acc[location] = (acc[location] || 0) + 1;
+    if (!acc[location]) acc[location] = [];
+    acc[location].push(need);
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, any[]>);
 
   const gaps: Record<string, any> = {};
 
-  Object.keys(needsByLocation).forEach(location => {
-    const needCount = needsByLocation[location];
+  Object.keys(needsByLocation).forEach((location: string) => {
+    const needsInLocation = needsByLocation[location];
+    const needCount = needsInLocation.length;
     const serviceCount = servicesByLocation[location] || 0;
-    const population = needs.find(n => n.communities?.name === location)?.communities?.population || 1000;
+    const population = needsInLocation.find((n: any) => n.communities?.name === location)?.communities?.population || 1000;
 
     gaps[location] = {
       needCount,
@@ -334,7 +337,7 @@ function identifyPriorityGaps(services: any[], needs: any[]): any[] {
   // High-urgency needs with no corresponding services
   const highUrgencyNeeds = needs.filter((need: any) => need.urgency_score >= 8);
 
-  highUrgencyNeeds.forEach(need => {
+  highUrgencyNeeds.forEach((need: any) => {
     const matchingServices = services.filter((service: any) =>
       service.category === need.need_category &&
       service.communities?.name === need.communities?.name

@@ -415,7 +415,7 @@ async function generateBenchmarkComparison(
         programEffectiveness: {
           organization: organizationMetrics.averageEffectiveness,
           average: comparisonMetrics.length > 0
-            ? Math.round(comparisonMetrics.reduce((sum, m) => sum + m.averageEffectiveness, 0) / comparisonMetrics.length)
+            ? Math.round(comparisonMetrics.reduce((sum: number, m: any) => sum + m.averageEffectiveness, 0) / comparisonMetrics.length)
             : 0,
           percentile: calculatePercentile(
             organizationMetrics.averageEffectiveness,
@@ -425,7 +425,7 @@ async function generateBenchmarkComparison(
         programReach: {
           organization: organizationMetrics.totalReach,
           average: comparisonMetrics.length > 0
-            ? Math.round(comparisonMetrics.reduce((sum, m) => sum + m.totalReach, 0) / comparisonMetrics.length)
+            ? Math.round(comparisonMetrics.reduce((sum: number, m: any) => sum + m.totalReach, 0) / comparisonMetrics.length)
             : 0,
           percentile: calculatePercentile(
             organizationMetrics.totalReach,
@@ -435,7 +435,7 @@ async function generateBenchmarkComparison(
         gapResolution: {
           organization: organizationMetrics.gapResolutionRate,
           average: comparisonMetrics.length > 0
-            ? Math.round(comparisonMetrics.reduce((sum, m) => sum + m.gapResolutionRate, 0) / comparisonMetrics.length)
+            ? Math.round(comparisonMetrics.reduce((sum: number, m: any) => sum + m.gapResolutionRate, 0) / comparisonMetrics.length)
             : 0,
           percentile: calculatePercentile(
             organizationMetrics.gapResolutionRate,

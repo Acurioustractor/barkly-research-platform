@@ -262,7 +262,7 @@ function generateComparisonInsights(programs: any[], comparisonType: string): st
   const avgEffectiveness = effectivenessScores.reduce((a: number, b: number) => a + b, 0) / effectivenessScores.length;
 
   if (maxEffectiveness - minEffectiveness > 20) {
-    const bestProgram = programs.find(p => p.effectiveness_score === maxEffectiveness);
+    const bestProgram = programs.find((p: any) => p.effectiveness_score === maxEffectiveness);
     insights.push(`${bestProgram?.program_name} shows significantly higher effectiveness (${maxEffectiveness}%) compared to others`);
   }
 
@@ -271,7 +271,7 @@ function generateComparisonInsights(programs: any[], comparisonType: string): st
   if (costPerBeneficiary.length > 1) {
     const minCost = Math.min(...costPerBeneficiary);
     const maxCost = Math.max(...costPerBeneficiary);
-    const mostEfficient = programs.find(p => p.cost_per_beneficiary === minCost);
+    const mostEfficient = programs.find((p: any) => p.cost_per_beneficiary === minCost);
 
     if (maxCost > minCost * 2) {
       insights.push(`${mostEfficient?.program_name} is most cost-efficient at $${minCost} per beneficiary`);
@@ -282,7 +282,7 @@ function generateComparisonInsights(programs: any[], comparisonType: string): st
   const reachCounts = programs.map((p: any) => p.reach_count || 0);
   const totalReach = reachCounts.reduce((a: number, b: number) => a + b, 0);
   const maxReach = Math.max(...reachCounts);
-  const programWithMaxReach = programs.find(p => p.reach_count === maxReach);
+  const programWithMaxReach = programs.find((p: any) => p.reach_count === maxReach);
 
   if (maxReach > totalReach * 0.5) {
     insights.push(`${programWithMaxReach?.program_name} reaches ${maxReach} people, more than half of total program reach`);

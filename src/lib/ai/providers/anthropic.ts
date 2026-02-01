@@ -50,8 +50,8 @@ export class AnthropicProvider implements AIProvider {
         try {
             // Basic extraction if it contains markdown code blocks
             const text = content.text;
-            const jsonMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) ||
-                text.match(/(\{[\s\S]*\})/);
+            const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/) ||
+                text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
 
             const jsonString = jsonMatch ? jsonMatch[1] : text;
             return JSON.parse(jsonString) as T;

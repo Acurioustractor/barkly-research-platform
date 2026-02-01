@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
         top_categories: Object.entries(categories)
           .sort(([, a], [, b]) => (b as number) - (a as number))
           .slice(0, 3)
-          .map(([cat, count]) => ({ category: cat, count })),
+          .map(([cat, count]: [string, any]) => ({ category: cat, count })),
         ai_analysis: doc.ai_analysis,
         summary: summary,
         quality_score: calculateDocumentQuality(doc, categories),

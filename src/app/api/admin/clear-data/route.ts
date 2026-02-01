@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
         docEntities: counts[8],
         docEntityRelationships: counts[9]
       },
-      total_records: counts.reduce((sum, count) => sum + count, 0)
+      total_records: counts.reduce((sum: number, count: number) => sum + count, 0)
     });
 
   } catch (error) {
