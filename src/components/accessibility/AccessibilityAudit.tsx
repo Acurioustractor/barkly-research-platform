@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/core/Card';
+import { Button } from '@/components/core/Button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/core/Alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
+import {
   Shield,
   CheckCircle,
   AlertTriangle,
@@ -151,7 +151,7 @@ export default function AccessibilityAudit({
     const blob = new Blob([JSON.stringify(reportData, null, 2)], {
       type: 'application/json'
     });
-    
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -366,18 +366,18 @@ export default function AccessibilityAudit({
                                 {issue.type.replace('-', ' ')}
                               </Badge>
                             </div>
-                            
+
                             <h4 className="font-medium mb-1">{issue.description}</h4>
                             <p className="text-sm text-gray-600 mb-2">
                               Element: <code className="bg-gray-100 px-1 rounded">{issue.element}</code>
                             </p>
-                            
+
                             <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2">
                               <p className="text-sm">
                                 <strong>Suggestion:</strong> {issue.suggestion}
                               </p>
                             </div>
-                            
+
                             <div className="flex items-center space-x-4 text-xs text-gray-500">
                               <span>WCAG Criterion: {issue.wcagCriterion}</span>
                               {issue.culturalContext && (
@@ -385,7 +385,7 @@ export default function AccessibilityAudit({
                               )}
                             </div>
                           </div>
-                          
+
                           <Button
                             variant="outline"
                             size="sm"
@@ -516,7 +516,7 @@ export default function AccessibilityAudit({
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  This audit covers automated testing only. Manual testing by users with disabilities 
+                  This audit covers automated testing only. Manual testing by users with disabilities
                   and accessibility experts is recommended for comprehensive evaluation.
                 </AlertDescription>
               </Alert>
