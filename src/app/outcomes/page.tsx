@@ -40,11 +40,11 @@ export default function OutcomesPage() {
       // Load themes and extract success patterns
       const themesResponse = await fetch('/api/documents/themes');
       const themesData = await themesResponse.json();
-      
+
       if (themesData.success) {
         const successThemes = extractSuccessThemes(themesData.themes);
         const successStories = generateSuccessStories(themesData.themes);
-        
+
         setThemes(successThemes);
         setSuccessStories(successStories);
         setStats({
@@ -67,19 +67,19 @@ export default function OutcomesPage() {
   const extractSuccessThemes = (themes: any[]): SuccessTheme[] => {
     // Group themes by success-related categories
     const successKeywords = [
-      'employment', 'training', 'development', 'support', 'program', 
+      'employment', 'training', 'development', 'support', 'program',
       'education', 'leadership', 'Aboriginal', 'community', 'initiative',
       'partnership', 'collaboration', 'capacity', 'growth'
     ];
 
     const successfulThemes: { [key: string]: any } = {};
-    
+
     themes.forEach(theme => {
       const name = theme.name.toLowerCase();
-      const isSuccessRelated = successKeywords.some(keyword => 
+      const isSuccessRelated = successKeywords.some(keyword =>
         name.includes(keyword) && theme.confidence >= 0.8
       );
-      
+
       if (isSuccessRelated) {
         const category = getThemeCategory(theme.name);
         if (!successfulThemes[category]) {
@@ -100,10 +100,10 @@ export default function OutcomesPage() {
 
   const generateSuccessStories = (themes: any[]): SuccessStory[] => {
     const stories: SuccessStory[] = [];
-    
+
     // Generate stories from high-confidence themes
     const highConfidenceThemes = themes.filter(t => t.confidence >= 0.85);
-    
+
     const storyTemplates = [
       {
         category: 'Employment & Training',
@@ -192,7 +192,7 @@ export default function OutcomesPage() {
       successfulPrograms: 12,
       averageConfidence: 0.87
     });
-    
+
     setSuccessStories([
       {
         id: 'james-story',
@@ -225,7 +225,7 @@ export default function OutcomesPage() {
   };
 
   const getCategoryDescription = (category: string): string => {
-    const descriptions = {
+    const descriptions: { [key: string]: string } = {
       'Employment & Training': 'Programs creating sustainable employment through culturally-appropriate training',
       'Community Leadership': 'Aboriginal-led initiatives demonstrating self-determination in action',
       'Youth Development': 'Holistic approaches to supporting young people in the community',
@@ -237,7 +237,7 @@ export default function OutcomesPage() {
   };
 
   const getCategoryColor = (category: string): string => {
-    const colors = {
+    const colors: { [key: string]: string } = {
       'Employment & Training': 'bg-blue-500',
       'Community Leadership': 'bg-purple-500',
       'Youth Development': 'bg-green-500',
@@ -248,8 +248,8 @@ export default function OutcomesPage() {
     return colors[category] || 'bg-gray-500';
   };
 
-  const filteredStories = selectedCategory === 'all' 
-    ? successStories 
+  const filteredStories = selectedCategory === 'all'
+    ? successStories
     : successStories.filter(story => story.category === selectedCategory);
 
   const categories = ['all', ...Array.from(new Set(successStories.map(s => s.category)))];
@@ -283,7 +283,7 @@ export default function OutcomesPage() {
             <p className="text-lg text-muted-foreground mb-6">
               Success stories, progress updates, and positive outcomes from our community.
             </p>
-            
+
             {/* Success Metrics */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
               <div className="bg-white rounded-lg p-4 text-center shadow-sm">
@@ -337,7 +337,7 @@ export default function OutcomesPage() {
                     <div className="flex-1">
                       <CardTitle className="text-lg mb-2">{story.title}</CardTitle>
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge 
+                        <Badge
                           className={`text-white ${getCategoryColor(story.category)}`}
                         >
                           {story.category}
@@ -356,7 +356,7 @@ export default function OutcomesPage() {
                   <p className="text-sm text-muted-foreground mb-4">
                     {story.description}
                   </p>
-                  
+
                   {story.metrics && (
                     <div className="mb-4">
                       <div className="text-sm font-medium mb-2">Key Outcomes:</div>
@@ -369,7 +369,7 @@ export default function OutcomesPage() {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="text-xs text-muted-foreground">
                     Source: {story.source}
                   </div>
