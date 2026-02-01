@@ -6,10 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  BarChart3, 
-  Users, 
-  Target, 
+import {
+  BarChart3,
+  Users,
+  Target,
   TrendingUp,
   AlertTriangle,
   CheckCircle,
@@ -18,7 +18,7 @@ import {
   FileText,
   MessageSquare,
   Lightbulb,
-  HandHeart,
+  HeartHandshake,
   Share2,
   Award,
   Clock,
@@ -87,10 +87,10 @@ interface WorkerNGODashboardProps {
   region?: string;
 }
 
-export default function WorkerNGODashboard({ 
-  organizationId, 
-  userRole, 
-  region 
+export default function WorkerNGODashboard({
+  organizationId,
+  userRole,
+  region
 }: WorkerNGODashboardProps) {
   const [serviceGaps, setServiceGaps] = useState<ServiceGap[]>([]);
   const [programAnalyses, setProgramAnalyses] = useState<ProgramAnalysis[]>([]);
@@ -321,7 +321,7 @@ export default function WorkerNGODashboard({
                   {summaryMetrics.activePartnerships}
                 </p>
               </div>
-              <HandHeart className="h-8 w-8 text-orange-500" />
+              <HeartHandshake className="h-8 w-8 text-orange-500" />
             </div>
           </CardContent>
         </Card>
@@ -357,7 +357,7 @@ export default function WorkerNGODashboard({
               Advanced Analysis
             </Button>
           </div>
-          
+
           <div className="grid gap-4">
             {serviceGaps.slice(0, 8).map((gap) => (
               <Card key={gap.id}>
@@ -433,7 +433,7 @@ export default function WorkerNGODashboard({
               Compare Programs
             </Button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {programAnalyses.map((program) => (
               <Card key={program.id}>
@@ -461,7 +461,7 @@ export default function WorkerNGODashboard({
                         </div>
                         <div className="text-sm text-gray-600">People Reached</div>
                       </div>
-                      
+
                       <div className="text-center">
                         <div className="text-lg font-bold text-purple-600">
                           {program.satisfaction}%
@@ -517,11 +517,11 @@ export default function WorkerNGODashboard({
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Collaboration Opportunities</h2>
             <Button variant="outline" size="sm">
-              <HandHeart className="h-4 w-4 mr-2" />
+              <HeartHandshake className="h-4 w-4 mr-2" />
               Find Partners
             </Button>
           </div>
-          
+
           <div className="grid gap-4">
             {partnerships.map((partnership) => (
               <Card key={partnership.id}>
@@ -599,7 +599,7 @@ export default function WorkerNGODashboard({
               Generate Report
             </Button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {impactEvidence.map((evidence) => (
               <Card key={evidence.id}>
