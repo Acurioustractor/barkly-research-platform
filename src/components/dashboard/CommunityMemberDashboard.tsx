@@ -6,11 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Heart, 
-  Users, 
-  Calendar, 
-  MapPin, 
+import {
+  Heart,
+  Users,
+  Calendar,
+  MapPin,
   Star,
   TrendingUp,
   MessageCircle,
@@ -21,7 +21,7 @@ import {
   Award,
   Target,
   Lightbulb,
-  HandHeart
+  HeartHandshake
 } from 'lucide-react';
 
 interface CommunityHealth {
@@ -103,9 +103,9 @@ interface CommunityMemberDashboardProps {
   userId?: string;
 }
 
-export default function CommunityMemberDashboard({ 
-  communityId, 
-  userId 
+export default function CommunityMemberDashboard({
+  communityId,
+  userId
 }: CommunityMemberDashboardProps) {
   const [communityHealth, setCommunityHealth] = useState<CommunityHealth | null>(null);
   const [services, setServices] = useState<ServiceListing[]>([]);
@@ -271,7 +271,7 @@ export default function CommunityMemberDashboard({
                   {communityHealth.healthScore}/100
                 </span>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div>
@@ -281,7 +281,7 @@ export default function CommunityMemberDashboard({
                     </div>
                     <Progress value={communityHealth.indicators.youthEngagement} />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Service Access</span>
@@ -289,7 +289,7 @@ export default function CommunityMemberDashboard({
                     </div>
                     <Progress value={communityHealth.indicators.serviceAccess} />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Cultural Connection</span>
@@ -298,7 +298,7 @@ export default function CommunityMemberDashboard({
                     <Progress value={communityHealth.indicators.culturalConnection} />
                   </div>
                 </div>
-                
+
                 <div className="space-y-3">
                   <div>
                     <div className="flex justify-between text-sm mb-1">
@@ -307,7 +307,7 @@ export default function CommunityMemberDashboard({
                     </div>
                     <Progress value={communityHealth.indicators.economicOpportunity} />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Safety & Wellbeing</span>
@@ -338,7 +338,7 @@ export default function CommunityMemberDashboard({
               View All Services
             </Button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {services.slice(0, 6).map((service) => (
               <Card key={service.id}>
@@ -353,24 +353,24 @@ export default function CommunityMemberDashboard({
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-600 mb-3">{service.description}</p>
-                  
+
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center space-x-2">
                       <MapPin className="h-4 w-4 text-gray-500" />
                       <span>{service.location}</span>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <Phone className="h-4 w-4 text-gray-500" />
                       <span>{service.contact}</span>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <Clock className="h-4 w-4 text-gray-500" />
                       <span>{service.hours}</span>
                     </div>
                   </div>
-                  
+
                   {service.culturallySafe && (
                     <div className="mt-3">
                       <Badge variant="outline" className="text-green-600 border-green-600">
@@ -378,7 +378,7 @@ export default function CommunityMemberDashboard({
                       </Badge>
                     </div>
                   )}
-                  
+
                   {service.languages.length > 0 && (
                     <div className="mt-2">
                       <p className="text-xs text-gray-500">
@@ -400,7 +400,7 @@ export default function CommunityMemberDashboard({
               Share Your Story
             </Button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {stories.map((story) => (
               <Card key={story.id}>
@@ -420,7 +420,7 @@ export default function CommunityMemberDashboard({
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-700 mb-3">{story.excerpt}</p>
-                  
+
                   <div className="flex flex-wrap gap-1 mb-3">
                     {story.themes.slice(0, 3).map((theme, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">
@@ -428,7 +428,7 @@ export default function CommunityMemberDashboard({
                       </Badge>
                     ))}
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <span>{new Date(story.publishedAt).toLocaleDateString()}</span>
                     <div className="flex items-center space-x-1">
@@ -450,7 +450,7 @@ export default function CommunityMemberDashboard({
               View All Opportunities
             </Button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {opportunities.map((opportunity) => (
               <Card key={opportunity.id}>
@@ -470,13 +470,13 @@ export default function CommunityMemberDashboard({
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-700 mb-3">{opportunity.description}</p>
-                  
+
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center space-x-2">
                       <MapPin className="h-4 w-4 text-gray-500" />
                       <span>{opportunity.location}</span>
                     </div>
-                    
+
                     {opportunity.deadline && (
                       <div className="flex items-center space-x-2">
                         <Calendar className="h-4 w-4 text-gray-500" />
@@ -484,7 +484,7 @@ export default function CommunityMemberDashboard({
                       </div>
                     )}
                   </div>
-                  
+
                   {opportunity.requirements.length > 0 && (
                     <div className="mt-3">
                       <p className="text-xs font-medium text-gray-700 mb-1">Requirements:</p>
@@ -495,7 +495,7 @@ export default function CommunityMemberDashboard({
                       </ul>
                     </div>
                   )}
-                  
+
                   <div className="mt-4">
                     <Button size="sm" className="w-full">
                       Learn More
@@ -515,7 +515,7 @@ export default function CommunityMemberDashboard({
               View Calendar
             </Button>
           </div>
-          
+
           <div className="space-y-4">
             {events.map((event) => (
               <Card key={event.id}>
@@ -524,24 +524,24 @@ export default function CommunityMemberDashboard({
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg">{event.title}</h3>
                       <p className="text-sm text-gray-600 mt-1">{event.description}</p>
-                      
+
                       <div className="flex items-center space-x-4 mt-3 text-sm text-gray-500">
                         <div className="flex items-center space-x-1">
                           <Calendar className="h-4 w-4" />
                           <span>{new Date(event.date).toLocaleDateString()}</span>
                         </div>
-                        
+
                         <div className="flex items-center space-x-1">
                           <MapPin className="h-4 w-4" />
                           <span>{event.location}</span>
                         </div>
-                        
+
                         <div className="flex items-center space-x-1">
                           <Users className="h-4 w-4" />
                           <span>{event.organizer}</span>
                         </div>
                       </div>
-                      
+
                       {event.culturalProtocols.length > 0 && (
                         <div className="mt-2">
                           <p className="text-xs text-blue-600">
@@ -550,16 +550,16 @@ export default function CommunityMemberDashboard({
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="flex flex-col items-end space-y-2">
                       <Badge variant="outline">{event.category}</Badge>
-                      
+
                       {event.capacity && event.registered && (
                         <div className="text-xs text-gray-500">
                           {event.registered}/{event.capacity} registered
                         </div>
                       )}
-                      
+
                       <Button size="sm">
                         {event.registrationRequired ? 'Register' : 'Learn More'}
                       </Button>
@@ -586,14 +586,14 @@ export default function CommunityMemberDashboard({
               <Upload className="h-6 w-6" />
               <span>Share Your Story</span>
             </Button>
-            
+
             <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
               <MessageCircle className="h-6 w-6" />
               <span>Provide Feedback</span>
             </Button>
-            
+
             <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
-              <HandHeart className="h-6 w-6" />
+              <HeartHandshake className="h-6 w-6" />
               <span>Volunteer</span>
             </Button>
           </div>
