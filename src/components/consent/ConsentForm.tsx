@@ -78,7 +78,7 @@ export default function ConsentForm({
     try {
       const response = await fetch(`/api/consent/templates?contentType=${contentType}${communityId ? `&communityId=${communityId}` : ''}`);
       const result = await response.json();
-      
+
       if (result.success) {
         setTemplates(result.data);
         // Auto-select first template if available
@@ -138,7 +138,7 @@ export default function ConsentForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -164,7 +164,7 @@ export default function ConsentForm({
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         onConsentGranted?.(result.data.consentId);
       } else {
@@ -181,7 +181,7 @@ export default function ConsentForm({
   const handleScopeChange = (scope: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      consentScope: checked 
+      consentScope: checked
         ? [...prev.consentScope, scope]
         : prev.consentScope.filter(s => s !== scope)
     }));
@@ -267,7 +267,7 @@ export default function ConsentForm({
           )}
 
           {/* Cultural Considerations */}
-          {selectedTemplate?.culturalConsiderations.length > 0 && (
+          {selectedTemplate?.culturalConsiderations && selectedTemplate.culturalConsiderations.length > 0 && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start">
                 <Info className="w-5 h-5 text-blue-600 mt-0.5 mr-2" />
@@ -385,9 +385,9 @@ export default function ConsentForm({
             <Input
               type="number"
               value={formData.expiryDays || ''}
-              onChange={(e) => setFormData(prev => ({ 
-                ...prev, 
-                expiryDays: e.target.value ? parseInt(e.target.value) : undefined 
+              onChange={(e) => setFormData(prev => ({
+                ...prev,
+                expiryDays: e.target.value ? parseInt(e.target.value) : undefined
               }))}
               placeholder="Leave empty for no expiry"
             />
