@@ -45,7 +45,7 @@ export default function DocumentsPage() {
   const handleExportLibrary = async () => {
     try {
       setIsExporting(true);
-      
+
       // Prepare export data
       const exportData = {
         exported_at: new Date().toISOString(),
@@ -107,8 +107,8 @@ export default function DocumentsPage() {
         ])
       ];
 
-      const csvContent = csvData.map(row => 
-        row.map(cell => `"${cell}"`).join(',')
+      const csvContent = csvData.map((row: any[]) =>
+        row.map((cell: any) => `"${cell}"`).join(',')
       ).join('\n');
 
       const csvBlob = new Blob([csvContent], { type: 'text/csv' });
@@ -122,8 +122,8 @@ export default function DocumentsPage() {
       URL.revokeObjectURL(csvUrl);
 
       console.log(`📊 Exported ${documents.length} documents in JSON and CSV formats`);
-      
-    } catch (error) {
+
+    } catch (error: any) {
       console.error('Export failed:', error);
       alert('Export failed. Please try again.');
     } finally {
@@ -136,12 +136,12 @@ export default function DocumentsPage() {
       console.log('[DocumentsPage] Fetching documents from API...');
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-      
+
       // Try multiple endpoints to find the real documents
       let response = await fetch('/api/documents/overview', {
         signal: controller.signal
       });
-      
+
       // If overview fails, try the main documents endpoint
       if (!response.ok) {
         console.log('[DocumentsPage] Overview API failed, trying main documents API...');
@@ -149,7 +149,7 @@ export default function DocumentsPage() {
           signal: controller.signal
         });
       }
-      
+
       // If that fails, try the list endpoint
       if (!response.ok) {
         console.log('[DocumentsPage] Main API failed, trying list API...');
@@ -158,11 +158,11 @@ export default function DocumentsPage() {
         });
       }
       clearTimeout(timeoutId);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('[DocumentsPage] API Response:', data);
-        
+
         // Handle different API response formats
         let documentsArray = [];
         if (data.documents) {
@@ -172,9 +172,9 @@ export default function DocumentsPage() {
         } else if (Array.isArray(data)) {
           documentsArray = data;
         }
-        
+
         console.log(`[DocumentsPage] Found ${documentsArray.length} documents in response`);
-        
+
         // Transform the API response to match our interface
         const transformedDocs = documentsArray.map((doc: any) => {
           // Debug logging
@@ -182,51 +182,51 @@ export default function DocumentsPage() {
             console.log('First document data:', doc);
             console.log('Thumbnail path:', doc.thumbnailPath);
           }
-          
+
           // Extract numbers from summary text if available
           const summary = doc.summary || 'AI-processed community document with extracted themes and insights';
-          
+
           // Parse themes count from summary (e.g., "Found 5 community themes/services")
           const themesMatch = summary.match(/Found (\d+) community themes/);
           const quotesMatch = summary.match(/and (\d+) quotes/);
           const confidenceMatch = summary.match(/confidence: (\d+)%/);
-          
+
           const themesCount = Math.min(
             parseInt(themesMatch?.[1] || '0') ||
-            doc._count?.themes || 
-            doc.themes_count || 
-            doc.themesCount || 
-            doc.themes?.length || 
+            doc._count?.themes ||
+            doc.themes_count ||
+            doc.themesCount ||
+            doc.themes?.length ||
             0, 100);
           const quotesCount = Math.min(
             parseInt(quotesMatch?.[1] || '0') ||
-            doc._count?.insights || 
+            doc._count?.insights ||
             doc._count?.quotes ||
-            doc.insights_count || 
-            doc.quotes_count || 
-            doc.insights?.length || 
-            doc.quotes?.length || 
+            doc.insights_count ||
+            doc.quotes_count ||
+            doc.insights?.length ||
+            doc.quotes?.length ||
             0, 50);
           const confidence = Math.min(
             (parseInt(confidenceMatch?.[1] || '85') / 100) ||
-            doc.avg_confidence || 
-            doc.confidence || 
+            doc.avg_confidence ||
+            doc.confidence ||
             0.85, 1);
-          
+
           // Try multiple field variations for title
-          const title = doc.originalName || 
-                       doc.filename || 
-                       doc.title || 
-                       doc.name || 
-                       doc.document_name ||
-                       'Untitled Document';
-          
+          const title = doc.originalName ||
+            doc.filename ||
+            doc.title ||
+            doc.name ||
+            doc.document_name ||
+            'Untitled Document';
+
           // Handle different date field formats
           const uploadDate = doc.uploadedAt || doc.created_at || doc.createdAt || new Date().toISOString();
-          
+
           // Handle different size field formats
           const size = doc.file_size || doc.content_length || doc.size || 1024;
-          
+
           // Handle tags from different sources
           let tags = ['general'];
           if (doc.tags && typeof doc.tags === 'string') {
@@ -240,7 +240,7 @@ export default function DocumentsPage() {
           } else if (doc.category) {
             tags = [doc.category];
           }
-          
+
           return {
             id: doc.id,
             title: title,
@@ -255,36 +255,37 @@ export default function DocumentsPage() {
               // Extract from actual document content, NOT the processing summary
               if (doc.fullText && doc.fullText.length > 100) {
                 // Get meaningful sentences from the actual document
-                const sentences = doc.fullText.split(/[.!?]+/)
-                  .filter(s => s.trim().length > 40 && !s.includes('processed') && !s.includes('extraction'))
-                  .map(s => s.trim());
-                
+                const sentences = (doc.fullText || '')
+                  .split(/[.!?]+/)
+                  .filter((s: string) => s.trim().length > 40 && !s.includes('processed') && !s.includes('extraction'))
+                  .map((s: string) => s.trim());
+
                 if (sentences.length >= 3) {
                   return sentences.slice(0, 3);
                 }
               }
-              
+
               // If actual insights exist in database, use those
               if (doc.insights && doc.insights.length > 0) {
-                return doc.insights.slice(0, 3).map((insight: any) => 
+                return doc.insights.slice(0, 3).map((insight: any) =>
                   insight.insight || insight.text || insight.description
                 );
               }
-              
+
               // If themes exist, use those as insights
               if (doc.themes && doc.themes.length > 0) {
-                return doc.themes.slice(0, 3).map((theme: any) => 
+                return doc.themes.slice(0, 3).map((theme: any) =>
                   theme.description || theme.name || theme
                 );
               }
-              
+
               // Create UNIQUE insights based on the specific document
               const title = (doc.originalName || doc.filename || doc.title || '').toLowerCase();
               const docId = doc.id;
-              
+
               // Use document ID hash to create variety
               const hash = docId.charCodeAt(0) + docId.charCodeAt(1) + docId.length;
-              
+
               const insightSets = [
                 [
                   "Employment and training opportunities for community members",
@@ -292,13 +293,13 @@ export default function DocumentsPage() {
                   "Service delivery gaps and improvement strategies"
                 ],
                 [
-                  "Youth development and education pathway recommendations", 
+                  "Youth development and education pathway recommendations",
                   "Community health and wellbeing service integration",
                   "Stakeholder collaboration and partnership opportunities"
                 ],
                 [
                   "Housing and infrastructure development priorities",
-                  "Economic development and business support initiatives", 
+                  "Economic development and business support initiatives",
                   "Cultural safety and community-led service design"
                 ],
                 [
@@ -327,7 +328,7 @@ export default function DocumentsPage() {
                   "Emergency response and community resilience planning"
                 ]
               ];
-              
+
               return insightSets[hash % insightSets.length];
             })(),
             documentPreview: doc.fullText ? doc.fullText.substring(0, 300) + '...' : 'Content preview not available',
@@ -347,9 +348,9 @@ export default function DocumentsPage() {
         console.error('Failed to fetch documents:', response.statusText);
         setDocuments([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch documents:', error);
-      if (error.name === 'AbortError') {
+      if (error && error.name === 'AbortError') {
         console.warn('[DocumentsPage] API request timed out');
       }
       setDocuments([]);
@@ -390,22 +391,22 @@ export default function DocumentsPage() {
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 B';
-    
+
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
-    
+
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     const size = parseFloat((bytes / Math.pow(k, i)).toFixed(1));
-    
+
     return `${size} ${sizes[i]}`;
   };
 
   const filteredDocuments = documents.filter(doc => {
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      doc.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesType = selectedType === 'all' || doc.type === selectedType;
     const matchesSensitivity = selectedSensitivity === 'all' || doc.culturalSensitivity === selectedSensitivity;
-    
+
     return matchesSearch && matchesType && matchesSensitivity;
   });
 
@@ -440,7 +441,7 @@ export default function DocumentsPage() {
           <div className="max-w-4xl">
             <h1 className="text-3xl font-bold mb-4">Document Intelligence Library</h1>
             <p className="text-lg text-muted-foreground mb-6">
-              AI-powered analysis of community research, policy documents, and cultural knowledge 
+              AI-powered analysis of community research, policy documents, and cultural knowledge
               with appropriate cultural protocols and access controls.
             </p>
             <div className="flex flex-wrap gap-4">
@@ -470,7 +471,7 @@ export default function DocumentsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-6">
                 <div className="text-center">
@@ -479,7 +480,7 @@ export default function DocumentsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-6">
                 <div className="text-center">
@@ -488,7 +489,7 @@ export default function DocumentsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-6">
                 <div className="text-center">
@@ -497,7 +498,7 @@ export default function DocumentsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-6">
                 <div className="text-center">
@@ -553,12 +554,12 @@ export default function DocumentsPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                
+
                 {/* Mobile-optimized filters */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Document Type</label>
-                    <select 
+                    <select
                       className="w-full p-3 border rounded-md text-base"
                       value={selectedType}
                       onChange={(e) => setSelectedType(e.target.value)}
@@ -571,10 +572,10 @@ export default function DocumentsPage() {
                       <option value="meeting-notes">Meeting Notes</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium mb-2">Cultural Sensitivity</label>
-                    <select 
+                    <select
                       className="w-full p-3 border rounded-md text-base"
                       value={selectedSensitivity}
                       onChange={(e) => setSelectedSensitivity(e.target.value)}
@@ -585,10 +586,10 @@ export default function DocumentsPage() {
                       <option value="sacred">Sacred</option>
                     </select>
                   </div>
-                  
+
                   <div className="flex items-end">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full"
                       onClick={() => {
                         setSearchTerm('');
@@ -600,7 +601,7 @@ export default function DocumentsPage() {
                     </Button>
                   </div>
                 </div>
-                
+
                 {/* Results count - mobile friendly */}
                 <div className="flex justify-between items-center text-sm text-muted-foreground border-t pt-4">
                   <span>Showing {filteredDocuments.length} of {documents.length} documents</span>
@@ -628,8 +629,8 @@ export default function DocumentsPage() {
               {filteredDocuments.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">No documents found matching your criteria.</p>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="mt-4"
                     onClick={() => window.open('/upload.html', '_blank')}
                   >
@@ -644,127 +645,127 @@ export default function DocumentsPage() {
                       console.log(`🖼️ Document with thumbnail: ${doc.title} -> ${doc.thumbnailPath}`);
                     }
                     return (
-                    <Card key={doc.id} className="hover:shadow-lg transition-shadow">
-                      <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 rounded-t-lg relative overflow-hidden">
-                        {/* Document Thumbnail with improved system */}
-                        {(() => {
-                          const thumbnailPath = getDocumentThumbnail(doc);
-                          console.log(`🖼️ Thumbnail for ${doc.title}: ${thumbnailPath}`);
-                          
-                          return thumbnailPath ? (
-                            <img 
-                              src={thumbnailPath}
-                              alt={`${doc.title} preview`}
-                              className="w-full h-full object-cover"
-                              onLoad={() => {
-                                console.log(`✅ Thumbnail loaded: ${doc.title}`);
-                              }}
-                              onError={(e) => {
-                                console.error(`❌ Thumbnail failed: ${doc.title}`, e);
-                                // Hide broken image and show fallback
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                                const parent = target.parentElement;
-                                if (parent) {
-                                  const fallback = parent.querySelector('.fallback-preview') as HTMLElement;
-                                  if (fallback) fallback.style.display = 'flex';
-                                }
-                              }}
-                            />
-                          ) : null;
-                        })()}
-                        
-                        {/* Fallback mock preview */}
-                        <div className={`fallback-preview absolute inset-0 items-center justify-center ${getDocumentThumbnail(doc) ? 'hidden' : 'flex'}`}>
-                          <div className="bg-white shadow-lg rounded border-2 border-gray-200 w-3/4 h-5/6 flex flex-col">
-                            {/* Document Header */}
-                            <div className="bg-gray-100 h-8 flex items-center px-2 border-b">
-                              <div className="w-2 h-2 bg-red-400 rounded-full mr-1"></div>
-                              <div className="w-2 h-2 bg-yellow-400 rounded-full mr-1"></div>
-                              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                            </div>
-                            
-                            {/* Document Content Preview */}
-                            <div className="flex-1 p-2 overflow-hidden">
-                              <div className="text-[6px] leading-relaxed text-gray-600 space-y-1">
-                                <div className="h-1 bg-gray-300 rounded w-full"></div>
-                                <div className="h-1 bg-gray-300 rounded w-4/5"></div>
-                                <div className="h-1 bg-gray-300 rounded w-full"></div>
-                                <div className="h-1 bg-gray-300 rounded w-3/5"></div>
-                                <div className="h-1 bg-gray-300 rounded w-full"></div>
-                                <div className="h-1 bg-gray-300 rounded w-4/5"></div>
-                                <div className="h-1 bg-blue-400 rounded w-2/3"></div>
-                                <div className="h-1 bg-gray-300 rounded w-full"></div>
-                                <div className="h-1 bg-gray-300 rounded w-3/4"></div>
+                      <Card key={doc.id} className="hover:shadow-lg transition-shadow">
+                        <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 rounded-t-lg relative overflow-hidden">
+                          {/* Document Thumbnail with improved system */}
+                          {(() => {
+                            const thumbnailPath = getDocumentThumbnail(doc);
+                            console.log(`🖼️ Thumbnail for ${doc.title}: ${thumbnailPath}`);
+
+                            return thumbnailPath ? (
+                              <img
+                                src={thumbnailPath}
+                                alt={`${doc.title} preview`}
+                                className="w-full h-full object-cover"
+                                onLoad={() => {
+                                  console.log(`✅ Thumbnail loaded: ${doc.title}`);
+                                }}
+                                onError={(e) => {
+                                  console.error(`❌ Thumbnail failed: ${doc.title}`, e);
+                                  // Hide broken image and show fallback
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  const parent = target.parentElement;
+                                  if (parent) {
+                                    const fallback = parent.querySelector('.fallback-preview') as HTMLElement;
+                                    if (fallback) fallback.style.display = 'flex';
+                                  }
+                                }}
+                              />
+                            ) : null;
+                          })()}
+
+                          {/* Fallback mock preview */}
+                          <div className={`fallback-preview absolute inset-0 items-center justify-center ${getDocumentThumbnail(doc) ? 'hidden' : 'flex'}`}>
+                            <div className="bg-white shadow-lg rounded border-2 border-gray-200 w-3/4 h-5/6 flex flex-col">
+                              {/* Document Header */}
+                              <div className="bg-gray-100 h-8 flex items-center px-2 border-b">
+                                <div className="w-2 h-2 bg-red-400 rounded-full mr-1"></div>
+                                <div className="w-2 h-2 bg-yellow-400 rounded-full mr-1"></div>
+                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                              </div>
+
+                              {/* Document Content Preview */}
+                              <div className="flex-1 p-2 overflow-hidden">
+                                <div className="text-[6px] leading-relaxed text-gray-600 space-y-1">
+                                  <div className="h-1 bg-gray-300 rounded w-full"></div>
+                                  <div className="h-1 bg-gray-300 rounded w-4/5"></div>
+                                  <div className="h-1 bg-gray-300 rounded w-full"></div>
+                                  <div className="h-1 bg-gray-300 rounded w-3/5"></div>
+                                  <div className="h-1 bg-gray-300 rounded w-full"></div>
+                                  <div className="h-1 bg-gray-300 rounded w-4/5"></div>
+                                  <div className="h-1 bg-blue-400 rounded w-2/3"></div>
+                                  <div className="h-1 bg-gray-300 rounded w-full"></div>
+                                  <div className="h-1 bg-gray-300 rounded w-3/4"></div>
+                                </div>
+                              </div>
+
+                              {/* File Type Icon */}
+                              <div className="absolute top-2 right-2 text-lg">
+                                {doc.type === 'policy' ? '📋' :
+                                  doc.type === 'research' ? '🔬' :
+                                    doc.type === 'report' ? '📊' :
+                                      doc.type === 'community-story' ? '📖' : '📄'}
                               </div>
                             </div>
-                            
-                            {/* File Type Icon */}
-                            <div className="absolute top-2 right-2 text-lg">
-                              {doc.type === 'policy' ? '📋' : 
-                               doc.type === 'research' ? '🔬' :
-                               doc.type === 'report' ? '📊' :
-                               doc.type === 'community-story' ? '📖' : '📄'}
-                            </div>
+                          </div>
+
+                          {/* Cultural Sensitivity Badge */}
+                          <div className="absolute top-2 left-2">
+                            {getSensitivityBadge(doc.culturalSensitivity)}
                           </div>
                         </div>
-                        
-                        {/* Cultural Sensitivity Badge */}
-                        <div className="absolute top-2 left-2">
-                          {getSensitivityBadge(doc.culturalSensitivity)}
-                        </div>
-                      </div>
-                      
-                      <CardContent className="p-4">
-                        <div className="space-y-3">
-                          <div>
-                            <h3 className="font-medium text-sm line-clamp-2 leading-tight">
-                              {doc.title}
-                            </h3>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {doc.type.replace('-', ' ')} • {formatFileSize(doc.size)}
-                            </p>
-                          </div>
-                          
-                          {doc.summary && (
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {doc.summary}
-                            </p>
-                          )}
-                          
-                          {doc.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {doc.tags.slice(0, 2).map((tag, index) => (
-                                <Badge key={index} variant="outline" className="text-xs px-1 py-0">
-                                  {tag}
-                                </Badge>
-                              ))}
-                              {doc.tags.length > 2 && (
-                                <span className="text-xs text-muted-foreground">
-                                  +{doc.tags.length - 2}
-                                </span>
-                              )}
+
+                        <CardContent className="p-4">
+                          <div className="space-y-3">
+                            <div>
+                              <h3 className="font-medium text-sm line-clamp-2 leading-tight">
+                                {doc.title}
+                              </h3>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {doc.type.replace('-', ' ')} • {formatFileSize(doc.size)}
+                              </p>
                             </div>
-                          )}
-                          
-                          <div className="flex gap-1">
-                            <Button 
-                              size="sm" 
-                              variant="primary" 
-                              className="flex-1 text-xs"
-                              onClick={() => window.open(`/api/documents/${doc.id}/view`, '_blank')}
-                            >
-                              📄 View Document
-                            </Button>
-                            <Link href={`/documents/${doc.id}`} className="flex-1">
-                              <Button size="sm" variant="outline" className="w-full text-xs">
-                                📊 Analysis
+
+                            {doc.summary && (
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {doc.summary}
+                              </p>
+                            )}
+
+                            {doc.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {doc.tags.slice(0, 2).map((tag, index) => (
+                                  <Badge key={index} variant="outline" className="text-xs px-1 py-0">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                                {doc.tags.length > 2 && (
+                                  <span className="text-xs text-muted-foreground">
+                                    +{doc.tags.length - 2}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="primary"
+                                className="flex-1 text-xs"
+                                onClick={() => window.open(`/api/documents/${doc.id}/view`, '_blank')}
+                              >
+                                📄 View Document
                               </Button>
-                            </Link>
+                              <Link href={`/documents/${doc.id}`} className="flex-1">
+                                <Button size="sm" variant="outline" className="w-full text-xs">
+                                  📊 Analysis
+                                </Button>
+                              </Link>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
                     );
                   })}
                 </div>
@@ -784,29 +785,29 @@ export default function DocumentsPage() {
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                         <div>
                           <p className="font-medium mb-1">Type</p>
                           <p className="capitalize">{doc.type.replace('-', ' ')}</p>
                         </div>
-                        
+
                         <div>
                           <p className="font-medium mb-1">Upload Date</p>
                           <p>{new Date(doc.uploadDate).toLocaleDateString()}</p>
                         </div>
-                        
+
                         <div>
                           <p className="font-medium mb-1">Size</p>
                           <p>{formatFileSize(doc.size)}</p>
                         </div>
-                        
+
                         <div>
                           <p className="font-medium mb-1">Community</p>
                           <p>{doc.community || 'General'}</p>
                         </div>
                       </div>
-                      
+
                       {doc.tags.length > 0 && (
                         <div>
                           <p className="text-sm font-medium mb-2">Tags</p>
@@ -819,7 +820,7 @@ export default function DocumentsPage() {
                           </div>
                         </div>
                       )}
-                      
+
                       {doc.keyInsights && doc.keyInsights.length > 0 && (
                         <div>
                           <p className="text-sm font-medium mb-2">Key Insights</p>
@@ -830,31 +831,31 @@ export default function DocumentsPage() {
                           </ul>
                         </div>
                       )}
-                      
+
                       <div className="flex space-x-2 flex-wrap">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="primary"
                           onClick={() => window.open(`/api/documents/${doc.id}/view`, '_blank')}
                         >
                           📄 View Document
                         </Button>
                         <Link href={`/documents/${doc.id}`}>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                           >
                             📊 AI Analysis
                           </Button>
                         </Link>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="ghost"
                           onClick={async () => {
                             try {
                               // First try to download the original file
                               const response = await fetch(`/api/documents/${doc.id}/file?download=true`);
-                              
+
                               if (response.ok) {
                                 // If original file is available, download it directly
                                 const blob = await response.blob();
@@ -922,21 +923,21 @@ export default function DocumentsPage() {
                       Automatically identify key themes and topics across documents
                     </p>
                   </div>
-                  
+
                   <div className="p-3 bg-muted/30 rounded-lg">
                     <h4 className="font-medium text-sm">Cross-Document Analysis</h4>
                     <p className="text-xs text-muted-foreground mt-1">
                       Find connections and patterns between different documents
                     </p>
                   </div>
-                  
+
                   <div className="p-3 bg-muted/30 rounded-lg">
                     <h4 className="font-medium text-sm">Sentiment Analysis</h4>
                     <p className="text-xs text-muted-foreground mt-1">
                       Understand community sentiment and priorities from text
                     </p>
                   </div>
-                  
+
                   <div className="p-3 bg-muted/30 rounded-lg">
                     <h4 className="font-medium text-sm">Entity Recognition</h4>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -946,7 +947,7 @@ export default function DocumentsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Cultural Protocols</CardTitle>
@@ -960,21 +961,21 @@ export default function DocumentsPage() {
                       Openly shareable information and research findings
                     </p>
                   </div>
-                  
+
                   <div className="p-3 bg-blue-50 rounded-lg">
                     <h4 className="font-medium text-sm text-blue-800">Community Knowledge</h4>
                     <p className="text-xs text-blue-700 mt-1">
                       Restricted to community members and authorized partners
                     </p>
                   </div>
-                  
+
                   <div className="p-3 bg-red-50 rounded-lg">
                     <h4 className="font-medium text-sm text-red-800">Sacred Knowledge</h4>
                     <p className="text-xs text-red-700 mt-1">
                       Requires elder approval and special cultural protocols
                     </p>
                   </div>
-                  
+
                   <div className="p-3 bg-purple-50 rounded-lg">
                     <h4 className="font-medium text-sm text-purple-800">Data Sovereignty</h4>
                     <p className="text-xs text-purple-700 mt-1">
@@ -998,15 +999,15 @@ export default function DocumentsPage() {
                 <CardDescription>Add new documents to the knowledge base</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   onClick={() => window.open('/upload.html', '_blank')}
                 >
                   Upload Documents
                 </Button>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>AI Analysis</CardTitle>
@@ -1016,7 +1017,7 @@ export default function DocumentsPage() {
                 <Button className="w-full">Analyze Collection</Button>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Knowledge Export</CardTitle>

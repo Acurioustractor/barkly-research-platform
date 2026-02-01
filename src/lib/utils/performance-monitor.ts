@@ -80,7 +80,7 @@ export class PerformanceMonitor extends EventEmitter {
   private alerts: PerformanceAlert[] = [];
   private isCollecting = false;
   private collectionInterval: NodeJS.Timeout | null = null;
-  
+
   private alertThresholds = {
     maxProcessingTime: 30000, // 30 seconds
     minSuccessRate: 0.9,
@@ -109,7 +109,7 @@ export class PerformanceMonitor extends EventEmitter {
         this.metrics.push(metrics);
         this.checkAlerts(metrics);
         this.emit('metrics:collected', metrics);
-        
+
         // Keep only last 1000 metrics to prevent memory issues
         if (this.metrics.length > 1000) {
           this.metrics = this.metrics.slice(-1000);
@@ -190,7 +190,7 @@ export class PerformanceMonitor extends EventEmitter {
       failoverEvents: 0
     };
   }
-  
+
   /**
    * Collect chunking metrics
    */
@@ -203,7 +203,7 @@ export class PerformanceMonitor extends EventEmitter {
       qualityScore: 0.8
     };
   }
-  
+
   /**
    * Collect validation metrics
    */
@@ -216,14 +216,14 @@ export class PerformanceMonitor extends EventEmitter {
       recommendationsGenerated: 0
     };
   }
-  
+
   /**
    * Collect system metrics
    */
   private async collectSystemMetrics(): Promise<PerformanceMetrics['system']> {
     const memoryUsage = process.memoryUsage();
     const uptime = process.uptime();
-    
+
     return {
       memoryUsage: memoryUsage.heapUsed / memoryUsage.heapTotal,
       cpuUsage: await this.getCPUUsage(),
@@ -232,7 +232,7 @@ export class PerformanceMonitor extends EventEmitter {
       uptime
     };
   }
-  
+
   /**
    * Get CPU usage percentage
    */
@@ -240,12 +240,12 @@ export class PerformanceMonitor extends EventEmitter {
     return new Promise((resolve) => {
       const startUsage = process.cpuUsage();
       const startTime = Date.now();
-      
+
       setTimeout(() => {
         const endUsage = process.cpuUsage(startUsage);
         const endTime = Date.now();
         const timeDiff = endTime - startTime;
-        
+
         const cpuPercent = (endUsage.user + endUsage.system) / (timeDiff * 1000);
         resolve(Math.min(cpuPercent, 1.0));
       }, 100);
@@ -257,7 +257,7 @@ export class PerformanceMonitor extends EventEmitter {
    */
   private checkAlerts(metrics: PerformanceMetrics): void {
     const alerts: PerformanceAlert[] = [];
-    
+
     // Check processing time
     if (metrics.documentProcessing.averageProcessingTime > this.alertThresholds.maxProcessingTime) {
       alerts.push({
@@ -273,7 +273,7 @@ export class PerformanceMonitor extends EventEmitter {
         resolved: false
       });
     }
-    
+
     // Check memory usage
     if (metrics.system.memoryUsage > this.alertThresholds.maxMemoryUsage) {
       alerts.push({
@@ -289,15 +289,15 @@ export class PerformanceMonitor extends EventEmitter {
         resolved: false
       });
     }
-    
+
     // Add new alerts
     this.alerts.push(...alerts);
-    
+
     // Emit alerts
     alerts.forEach(alert => {
       this.emit('alert:triggered', alert);
     });
-    
+
     // Clean up old alerts (keep last 100)
     if (this.alerts.length > 100) {
       this.alerts = this.alerts.slice(-100);
@@ -310,14 +310,14 @@ export class PerformanceMonitor extends EventEmitter {
   getCurrentMetrics(): PerformanceMetrics | null {
     return this.metrics.length > 0 ? this.metrics[this.metrics.length - 1] : null;
   }
-  
+
   /**
    * Get active alerts
    */
   getActiveAlerts(): PerformanceAlert[] {
     return this.alerts.filter(alert => !alert.resolved);
   }
-  
+
   /**
    * Export metrics data
    */
@@ -325,7 +325,7 @@ export class PerformanceMonitor extends EventEmitter {
     if (format === 'json') {
       return JSON.stringify(this.metrics, null, 2);
     }
-    
+
     // CSV format
     const headers = [
       'timestamp',
@@ -335,7 +335,7 @@ export class PerformanceMonitor extends EventEmitter {
       'memoryUsage',
       'cpuUsage'
     ];
-    
+
     const rows = this.metrics.map(m => [
       m.timestamp.toISOString(),
       m.documentProcessing.totalDocuments,
@@ -344,8 +344,8 @@ export class PerformanceMonitor extends EventEmitter {
       m.system.memoryUsage,
       m.system.cpuUsage
     ]);
-    
-    return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+
+    return [headers.join(','), ...rows.map((row: any[]) => row.join(','))].join('\n');
   }
 }
 

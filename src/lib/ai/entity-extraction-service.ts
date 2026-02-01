@@ -8,7 +8,7 @@ import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 
 // Initialize AI clients
-const openai = process.env.OPENAI_API_KEY 
+const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
 
@@ -184,11 +184,11 @@ Requirements:
     }
 
     const result = extractJSON(response);
-    
+
     // Process and normalize entities
     const processedEntities = processEntities(result.entities || []);
     const processedRelationships = processRelationships(result.relationships || [], processedEntities);
-    
+
     // Create entity map for quick lookup
     const entityMap = new Map<string, Entity>();
     processedEntities.forEach(entity => {
@@ -213,11 +213,11 @@ Requirements:
  */
 function processEntities(rawEntities: any[]): Entity[] {
   const entityMap = new Map<string, Entity>();
-  
+
   rawEntities.forEach(entity => {
     const normalizedName = normalizeEntityName(entity.name || entity.canonicalName);
     const id = entity.id || generateEntityId(normalizedName, entity.type);
-    
+
     if (entityMap.has(normalizedName)) {
       // Merge with existing entity
       const existing = entityMap.get(normalizedName)!;
@@ -244,10 +244,10 @@ function processEntities(rawEntities: any[]): Entity[] {
       });
     }
   });
-  
+
   return Array.from(entityMap.values())
     .filter(entity => entity.confidence >= 0.3)
-    .sort((a, b) => b.importance - a.importance);
+    .sort((a: any, b: any) => b.importance - a.importance);
 }
 
 /**
@@ -255,7 +255,7 @@ function processEntities(rawEntities: any[]): Entity[] {
  */
 function processRelationships(rawRelationships: any[], entities: Entity[]): EntityRelationship[] {
   const entityIds = new Set(entities.map(e => e.id));
-  
+
   return rawRelationships
     .filter(rel => entityIds.has(rel.fromEntity) && entityIds.has(rel.toEntity))
     .map(rel => ({
@@ -298,18 +298,18 @@ function extractJSON(text: string): any {
     if (jsonMatch) {
       try {
         return JSON.parse(jsonMatch[1]);
-      } catch {}
+      } catch { }
     }
-    
+
     // Try to find JSON object in the text
     const firstBrace = text.indexOf('{');
     const lastBrace = text.lastIndexOf('}');
     if (firstBrace !== -1 && lastBrace !== -1) {
       try {
         return JSON.parse(text.substring(firstBrace, lastBrace + 1));
-      } catch {}
+      } catch { }
     }
-    
+
     throw new Error('No valid JSON found in response');
   }
 }
@@ -338,16 +338,16 @@ export async function batchExtractEntities(
   const batchSize = options.batchSize || 5;
   const allEntities: Entity[] = [];
   const allRelationships: EntityRelationship[] = [];
-  
+
   // Process chunks in batches
   for (let i = 0; i < textChunks.length; i += batchSize) {
     const batch = textChunks.slice(i, i + batchSize);
-    const batchPromises = batch.map(chunk => 
+    const batchPromises = batch.map(chunk =>
       extractEntitiesFromText(chunk, context, options)
     );
-    
+
     const batchResults = await Promise.allSettled(batchPromises);
-    
+
     batchResults.forEach(result => {
       if (result.status === 'fulfilled') {
         allEntities.push(...result.value.entities);
@@ -355,18 +355,18 @@ export async function batchExtractEntities(
       }
     });
   }
-  
+
   // Deduplicate and merge entities
   const mergedEntities = mergeEntities(allEntities);
   const mergedRelationships = deduplicateRelationships(allRelationships);
-  
+
   // Create entity map
   const entityMap = new Map<string, Entity>();
   mergedEntities.forEach(entity => {
     entityMap.set(entity.id, entity);
     entityMap.set(entity.name.toLowerCase(), entity);
   });
-  
+
   return {
     entities: mergedEntities,
     relationships: mergedRelationships,
@@ -379,20 +379,20 @@ export async function batchExtractEntities(
  */
 function mergeEntities(entities: Entity[]): Entity[] {
   const entityMap = new Map<string, Entity>();
-  
+
   entities.forEach(entity => {
     const key = `${entity.type}-${normalizeEntityName(entity.name)}`;
-    
+
     if (entityMap.has(key)) {
       const existing = entityMap.get(key)!;
       existing.mentions += entity.mentions;
       existing.contexts = [...new Set([...existing.contexts, ...entity.contexts])];
       existing.confidence = Math.max(existing.confidence, entity.confidence);
       existing.importance = Math.max(existing.importance, entity.importance);
-      
+
       // Merge attributes
       existing.attributes = { ...existing.attributes, ...entity.attributes };
-      
+
       // Merge aliases
       if (entity.aliases) {
         existing.aliases = [...new Set([...(existing.aliases || []), ...entity.aliases])];
@@ -401,9 +401,9 @@ function mergeEntities(entities: Entity[]): Entity[] {
       entityMap.set(key, { ...entity });
     }
   });
-  
+
   return Array.from(entityMap.values())
-    .sort((a, b) => b.importance - a.importance);
+    .sort((a: any, b: any) => b.importance - a.importance);
 }
 
 /**
@@ -411,10 +411,10 @@ function mergeEntities(entities: Entity[]): Entity[] {
  */
 function deduplicateRelationships(relationships: EntityRelationship[]): EntityRelationship[] {
   const relationshipMap = new Map<string, EntityRelationship>();
-  
+
   relationships.forEach(rel => {
     const key = `${rel.fromEntity}-${rel.toEntity}-${rel.relationship}`;
-    
+
     if (relationshipMap.has(key)) {
       const existing = relationshipMap.get(key)!;
       existing.strength = Math.max(existing.strength, rel.strength);
@@ -423,7 +423,7 @@ function deduplicateRelationships(relationships: EntityRelationship[]): EntityRe
       relationshipMap.set(key, { ...rel });
     }
   });
-  
+
   return Array.from(relationshipMap.values())
-    .sort((a, b) => b.strength - a.strength);
+    .sort((a: any, b: any) => b.strength - a.strength);
 } 

@@ -165,7 +165,7 @@ export class WorldClassDocumentProcessor {
       const text = extractionResult.text;
       const metadata = {
         pageCount: extractionResult.pageCount,
-        wordCount: text.split(/\s+/).filter(w => w.length > 0).length
+        wordCount: text.split(/\s+/).filter((w: string) => w.length > 0).length
       };
 
       // Create chunks using selected strategy
@@ -695,7 +695,7 @@ export class WorldClassDocumentProcessor {
         occurrences: data.occurrences,
         relatedThemes: Array.from(data.relatedThemes)
       }))
-      .sort((a, b) => {
+      .sort((a: any, b: any) => {
         // Sort by combination of confidence and occurrences
         const scoreA = a.confidence * Math.log(a.occurrences + 1);
         const scoreB = b.confidence * Math.log(b.occurrences + 1);
@@ -725,7 +725,7 @@ export class WorldClassDocumentProcessor {
     }
 
     return Array.from(uniqueQuotes.values())
-      .sort((a, b) => b.confidence - a.confidence);
+      .sort((a: any, b: any) => b.confidence - a.confidence);
   }
 
   /**
@@ -758,7 +758,7 @@ export class WorldClassDocumentProcessor {
     }
 
     return Array.from(insightMap.values())
-      .sort((a, b) => {
+      .sort((a: any, b: any) => {
         // Sort by combination of importance and actionability
         const actionabilityA = 'actionability' in a ? (a.actionability || 0) : 0;
         const actionabilityB = 'actionability' in b ? (b.actionability || 0) : 0;
