@@ -47,7 +47,7 @@
     "framer-motion": "^10.16.5",
     "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
-    "lucide-react": "^0.294.0",
+    "lucide-react": "^0.544.0",
     "mammoth": "^1.10.0",
     "next": "14.0.3",
     "openai": "^4.20.1",
